@@ -6,7 +6,7 @@ Meta Quest 3로 Unitree G1 시뮬레이터를 조종하기 위한 실험 저장�
 | 백엔드 | 용도 | 현재 상태 |
 | --- | --- | --- |
 | [`browser/`](browser/) | Quest Browser WebXR → Unitree TeleVuer | 머리·양손 컨트롤러 입력 수신 프로브와 테스트 구현 완료 |
-| [`alvr/`](alvr/) | Quest ALVR → SteamVR/OpenVR → G1 시뮬레이터 | HMD·컨트롤러 입력 프로브 구현 완료 |
+| [`alvr/`](alvr/) | Quest ALVR → SteamVR/OpenVR → G1 시뮬레이터 | 공식 G1 14개 태스크 런처·입력 어댑터·안전 게이트 구현 완료 |
 
 ## 선택 기준
 

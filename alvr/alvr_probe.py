@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import fcntl
 import json
 import math
 import os
@@ -22,6 +23,7 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_MANIFEST = ROOT / "actions.json"
 APPLICATION_MANIFEST = ROOT / "app.vrmanifest"
 APPLICATION_KEY = "io.github.limchanju.vr_teleop.alvr_probe"
+INSTANCE_LOCK = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / f"vr-teleop-alvr-{os.getuid()}.lock"
 
 ANALOG_ACTIONS = {
     "trigger": "vector1",
@@ -88,6 +90,16 @@ def tracking_result_names(vr: Any) -> dict[int, str]:
     }
 
 
+def pose_is_running_ok(vr: Any, pose: Any) -> bool:
+    """Accept only a connected, valid pose with fully running tracking."""
+
+    return bool(
+        pose.bDeviceIsConnected
+        and pose.bPoseIsValid
+        and int(pose.eTrackingResult) == int(vr.TrackingResult_Running_OK)
+    )
+
+
 def choose_device_indexes(vr: Any, system: Any, poses: Any) -> dict[str, int | None]:
     """Find the best connected HMD and controller for each role every frame."""
 
@@ -95,7 +107,11 @@ def choose_device_indexes(vr: Any, system: Any, poses: Any) -> dict[str, int | N
     for index, pose in enumerate(poses):
         device_class = system.getTrackedDeviceClass(index)
         if device_class == vr.TrackedDeviceClass_HMD:
-            score = 4 * bool(pose.bDeviceIsConnected) + 2 * bool(pose.bPoseIsValid)
+            score = (
+                8 * bool(pose.bDeviceIsConnected)
+                + 4 * bool(pose.bPoseIsValid)
+                + 2 * pose_is_running_ok(vr, pose)
+            )
             head_candidates.append((score, index))
 
     head_index = max(head_candidates, default=(-1, None))[1]
@@ -135,7 +151,12 @@ def choose_device_indexes(vr: Any, system: Any, poses: Any) -> dict[str, int | N
             elif "right" in identity:
                 side = "right"
         if side:
-            score = 4 * bool(pose.bDeviceIsConnected) + 2 * bool(pose.bPoseIsValid) + int(role != 0)
+            score = (
+                8 * bool(pose.bDeviceIsConnected)
+                + 4 * bool(pose.bPoseIsValid)
+                + 2 * pose_is_running_ok(vr, pose)
+                + int(role != 0)
+            )
             candidates[side].append((score, index))
 
     return {
@@ -148,8 +169,9 @@ def choose_device_indexes(vr: Any, system: Any, poses: Any) -> dict[str, int | N
 class ActionReader:
     """SteamVR Input action reader with Quest Touch and hand-tracking bindings."""
 
-    def __init__(self, vr: Any, manifest: Path):
+    def __init__(self, vr: Any, manifest: Path, origin: int):
         self.vr = vr
+        self.origin = origin
         self.input = vr.VRInput()
         self.input.setActionManifestPath(str(manifest.resolve()))
         action_set_handle = self.input.getActionSetHandle("/actions/teleop")
@@ -163,6 +185,10 @@ class ActionReader:
                 name: self.input.getActionHandle(f"/actions/teleop/in/{hand}_{name}")
                 for name in names
             }
+        self.pose_handles = {
+            hand: self.input.getActionHandle(f"/actions/teleop/in/{hand}_aim_pose")
+            for hand in ("left", "right")
+        }
 
     def read(self) -> dict[str, dict[str, Any]]:
         self.input.updateActionState(self.active_sets)
@@ -198,6 +224,38 @@ class ActionReader:
                     "device_index": next(iter(device_indexes)) if len(device_indexes) == 1 else None,
                 }
             )
+            try:
+                pose_data = self.input.getPoseActionDataRelativeToNow(
+                    self.pose_handles[hand],
+                    self.origin,
+                    0.0,
+                    self.vr.k_ulInvalidInputValueHandle,
+                )
+                pose_device_index = None
+                if pose_data.bActive and pose_data.activeOrigin:
+                    info = self.input.getOriginTrackedDeviceInfo(pose_data.activeOrigin)
+                    if info.trackedDeviceIndex != self.vr.k_unTrackedDeviceIndexInvalid:
+                        pose_device_index = int(info.trackedDeviceIndex)
+                pose_valid = bool(
+                    pose_data.bActive
+                    and pose_is_running_ok(self.vr, pose_data.pose)
+                )
+                values["aim_pose"] = {
+                    "active": bool(pose_data.bActive),
+                    "pose_valid": pose_valid,
+                    "tracking_result": int(pose_data.pose.eTrackingResult),
+                    "device_index": pose_device_index,
+                    **(
+                        matrix34_to_transform(pose_data.pose.mDeviceToAbsoluteTracking)
+                        if pose_valid
+                        else {"position_m": None, "orientation_xyzw": None, "matrix_3x4": None}
+                    ),
+                }
+            except Exception as error:
+                # Pose actions are an accuracy enhancement. Keep valid button
+                # actions usable so the adapter can calibrate the raw pose.
+                values["aim_pose"] = empty_controller_input()["aim_pose"]
+                values["aim_pose_error"] = f"{type(error).__name__}: {error}"
             result[hand] = values
         return result
 
@@ -243,7 +301,40 @@ def empty_controller_input(source: str = "none") -> dict[str, Any]:
         "available": {name: False for name in (*ANALOG_ACTIONS, *DIGITAL_ACTIONS)},
         "source": source,
         "device_index": None,
+        "aim_pose": {
+            "active": False,
+            "pose_valid": False,
+            "tracking_result": None,
+            "device_index": None,
+            "position_m": None,
+            "orientation_xyzw": None,
+            "matrix_3x4": None,
+        },
     }
+
+
+def resolve_controller_input(
+    vr: Any,
+    system: Any,
+    device_index: int | None,
+    action_input: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Merge action aim poses with action or legacy button channels safely."""
+
+    controller_input = dict(action_input or empty_controller_input())
+    aim_pose = dict(controller_input.get("aim_pose", empty_controller_input()["aim_pose"]))
+    if controller_input.get("active") and controller_input.get("device_index") != device_index:
+        controller_input = empty_controller_input("mismatched_action_device")
+    if aim_pose.get("device_index") != device_index:
+        aim_pose = dict(empty_controller_input()["aim_pose"])
+    controller_input["aim_pose"] = aim_pose
+
+    if not controller_input.get("active"):
+        legacy_input = legacy_controller_input(vr, system, device_index)
+        if legacy_input["active"] or controller_input.get("source") == "none":
+            legacy_input["aim_pose"] = aim_pose
+            controller_input = legacy_input
+    return controller_input
 
 
 class OpenVRProbe:
@@ -259,35 +350,75 @@ class OpenVRProbe:
         self.action_error: str | None = None
         self.tracking_names = tracking_result_names(vr)
         self.device_properties: dict[int, dict[str, str | None]] = {}
+        self.device_connected: dict[int, bool] = {}
+        self.device_generations: dict[int, int] = {}
+        self.instance_lock: Any = None
 
     def start(self) -> None:
-        self.system = self.vr.init(self.vr.VRApplication_Background)
-        # Python executables otherwise share a generated SteamVR app key. A
-        # temporary, self-identified app keeps these bindings separate from
-        # Isaac Sim and other Python OpenVR clients.
-        self.applications = self.vr.VRApplications()
-        self.applications.addApplicationManifest(str(APPLICATION_MANIFEST.resolve()), True)
-        self.application_registered = True
-        self.applications.identifyApplication(os.getpid(), APPLICATION_KEY)
+        if self.system is not None or self.instance_lock is not None:
+            raise RuntimeError("OpenVRProbe is already started")
+        self.device_properties.clear()
+        self.device_connected.clear()
+        self.device_generations.clear()
+        self.action_error = None
+        self.instance_lock = INSTANCE_LOCK.open("a+", encoding="utf-8")
         try:
-            self.actions = ActionReader(self.vr, self.manifest)
-        except Exception as error:
-            self.action_error = f"{type(error).__name__}: {error}"
+            fcntl.flock(self.instance_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            self.instance_lock.close()
+            self.instance_lock = None
+            raise RuntimeError(
+                "another vr_teleop probe/adapter is already using OpenVR; stop it first"
+            ) from error
+        try:
+            self.system = self.vr.init(self.vr.VRApplication_Background)
+        except Exception:
+            fcntl.flock(self.instance_lock, fcntl.LOCK_UN)
+            self.instance_lock.close()
+            self.instance_lock = None
+            raise
+        try:
+            # Python executables otherwise share a generated SteamVR app key.
+            # A self-identified app keeps these bindings separate from Isaac.
+            self.applications = self.vr.VRApplications()
+            self.applications.addApplicationManifest(str(APPLICATION_MANIFEST.resolve()), True)
+            self.application_registered = True
+            self.applications.identifyApplication(os.getpid(), APPLICATION_KEY)
+            try:
+                self.actions = ActionReader(self.vr, self.manifest, self.origin)
+            except Exception as error:
+                self.action_error = f"{type(error).__name__}: {error}"
+        except Exception:
+            self.close()
+            raise
 
     def close(self) -> None:
-        if self.system is not None:
-            if self.application_registered:
+        try:
+            if self.system is not None:
+                if self.application_registered:
+                    try:
+                        self.applications.removeApplicationManifest(str(APPLICATION_MANIFEST.resolve()))
+                    except Exception:
+                        pass
                 try:
-                    self.applications.removeApplicationManifest(str(APPLICATION_MANIFEST.resolve()))
+                    self.vr.shutdown()
                 except Exception:
                     pass
-            self.vr.shutdown()
-            self.system = None
+                self.system = None
+        finally:
+            self.application_registered = False
+            self.applications = None
+            self.actions = None
+            if self.instance_lock is not None:
+                fcntl.flock(self.instance_lock, fcntl.LOCK_UN)
+                self.instance_lock.close()
+                self.instance_lock = None
 
     def _device(self, index: int | None, pose: Any | None) -> dict[str, Any]:
         if index is None or pose is None:
             return {
                 "device_index": None,
+                "connection_generation": None,
                 "connected": False,
                 "pose_valid": False,
                 "tracking_result": "Unavailable",
@@ -301,22 +432,38 @@ class OpenVRProbe:
                 "controller_type": None,
                 "tracking_system": None,
             }
-        valid = bool(pose.bPoseIsValid)
+        connected = bool(pose.bDeviceIsConnected)
+        previous_connected = self.device_connected.get(index)
+        if previous_connected is not None and previous_connected != connected:
+            self.device_generations[index] = self.device_generations.get(index, 0) + 1
+        self.device_connected[index] = connected
+        generation = self.device_generations.setdefault(index, 0)
+        valid = pose_is_running_ok(self.vr, pose)
         transform = matrix34_to_transform(pose.mDeviceToAbsoluteTracking) if valid else {
             "position_m": None,
             "orientation_xyzw": None,
             "matrix_3x4": None,
         }
-        if index not in self.device_properties:
+        serial = safe_property(self.vr, self.system, index, "Prop_SerialNumber_String")
+        tracking_system = safe_property(
+            self.vr, self.system, index, "Prop_TrackingSystemName_String"
+        )
+        cached = self.device_properties.get(index)
+        if (
+            cached is None
+            or cached.get("serial") != serial
+            or cached.get("tracking_system") != tracking_system
+        ):
             self.device_properties[index] = {
                 "model": safe_property(self.vr, self.system, index, "Prop_ModelNumber_String"),
-                "serial": safe_property(self.vr, self.system, index, "Prop_SerialNumber_String"),
+                "serial": serial,
                 "controller_type": safe_property(self.vr, self.system, index, "Prop_ControllerType_String"),
-                "tracking_system": safe_property(self.vr, self.system, index, "Prop_TrackingSystemName_String"),
+                "tracking_system": tracking_system,
             }
         return {
             "device_index": index,
-            "connected": bool(pose.bDeviceIsConnected),
+            "connection_generation": generation,
+            "connected": connected,
             "pose_valid": valid,
             "tracking_result": self.tracking_names.get(int(pose.eTrackingResult), str(int(pose.eTrackingResult))),
             **transform,
@@ -341,14 +488,12 @@ class OpenVRProbe:
             except Exception as error:
                 self.action_error = f"{type(error).__name__}: {error}"
         for hand in ("left", "right"):
-            controller_input = action_inputs.get(hand, empty_controller_input())
-            if controller_input["active"] and controller_input["device_index"] != indexes[hand]:
-                controller_input = empty_controller_input("mismatched_action_device")
-            if not controller_input["active"]:
-                legacy_input = legacy_controller_input(self.vr, self.system, indexes[hand])
-                if legacy_input["active"] or controller_input["source"] == "none":
-                    controller_input = legacy_input
-            devices[hand]["input"] = controller_input
+            devices[hand]["input"] = resolve_controller_input(
+                self.vr,
+                self.system,
+                indexes[hand],
+                action_inputs.get(hand),
+            )
 
         valid_channels = sum(bool(devices[name]["pose_valid"]) for name in ("head", "left", "right"))
         tracking_status = "RECEIVING" if valid_channels == 3 else ("PARTIAL" if valid_channels else "WAITING")
@@ -446,7 +591,7 @@ def main(argv: list[str] | None = None) -> int:
             ):
                 print(
                     "Controller poses are visible, but button actions are inactive. "
-                    "Wake both Touch controllers and disable Quest hand tracking for this test.",
+                    "Wake both Touch controllers and verify the SteamVR action binding.",
                     file=sys.stderr,
                 )
                 input_warning_printed = True

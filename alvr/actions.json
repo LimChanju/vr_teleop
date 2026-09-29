@@ -14,12 +14,14 @@
     { "name": "/actions/teleop/in/left_primary", "type": "boolean", "requirement": "optional" },
     { "name": "/actions/teleop/in/left_secondary", "type": "boolean", "requirement": "optional" },
     { "name": "/actions/teleop/in/left_thumbstick_click", "type": "boolean", "requirement": "optional" },
+    { "name": "/actions/teleop/in/left_aim_pose", "type": "pose", "requirement": "optional" },
     { "name": "/actions/teleop/in/right_trigger", "type": "vector1", "requirement": "optional" },
     { "name": "/actions/teleop/in/right_grip", "type": "vector1", "requirement": "optional" },
     { "name": "/actions/teleop/in/right_thumbstick", "type": "vector2", "requirement": "optional" },
     { "name": "/actions/teleop/in/right_primary", "type": "boolean", "requirement": "optional" },
     { "name": "/actions/teleop/in/right_secondary", "type": "boolean", "requirement": "optional" },
-    { "name": "/actions/teleop/in/right_thumbstick_click", "type": "boolean", "requirement": "optional" }
+    { "name": "/actions/teleop/in/right_thumbstick_click", "type": "boolean", "requirement": "optional" },
+    { "name": "/actions/teleop/in/right_aim_pose", "type": "pose", "requirement": "optional" }
   ],
   "default_bindings": [
     {
@@ -37,12 +39,14 @@
       "/actions/teleop/in/left_primary": "Left X button",
       "/actions/teleop/in/left_secondary": "Left Y button",
       "/actions/teleop/in/left_thumbstick_click": "Left thumbstick click",
+      "/actions/teleop/in/left_aim_pose": "Left controller aim pose",
       "/actions/teleop/in/right_trigger": "Right trigger",
       "/actions/teleop/in/right_grip": "Right grip",
       "/actions/teleop/in/right_thumbstick": "Right thumbstick",
       "/actions/teleop/in/right_primary": "Right A button",
       "/actions/teleop/in/right_secondary": "Right B button",
-      "/actions/teleop/in/right_thumbstick_click": "Right thumbstick click"
+      "/actions/teleop/in/right_thumbstick_click": "Right thumbstick click",
+      "/actions/teleop/in/right_aim_pose": "Right controller aim pose"
     }
   ]
 }

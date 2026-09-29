@@ -3,6 +3,10 @@
   "alias_info": {},
   "bindings": {
     "/actions/teleop": {
+      "poses": [
+        { "path": "/user/hand/left/pose/openxr_aim", "output": "/actions/teleop/in/left_aim_pose" },
+        { "path": "/user/hand/right/pose/openxr_aim", "output": "/actions/teleop/in/right_aim_pose" }
+      ],
       "sources": [
         { "path": "/user/hand/left/input/trigger", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/left_trigger" } } },
         { "path": "/user/hand/left/input/grip", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/left_grip" } } },
@@ -18,6 +22,6 @@
     }
   },
   "controller_type": "oculus_touch",
-  "description": "Quest Touch controls for the vr_teleop ALVR probe",
+  "description": "Quest Touch controls for the vr_teleop ALVR backend",
   "name": "vr_teleop Quest Touch"
 }

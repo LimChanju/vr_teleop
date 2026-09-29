@@ -5,6 +5,7 @@ import json
 import math
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,12 +20,14 @@ class FakeMatrix:
 
 
 class FakePose:
-    def __init__(self, connected, valid):
+    def __init__(self, connected, valid, tracking_result=200):
         self.bDeviceIsConnected = connected
         self.bPoseIsValid = valid
+        self.eTrackingResult = tracking_result
 
 
 class FakeVR:
+    TrackingResult_Running_OK = 200
     TrackedDeviceClass_HMD = 1
     TrackedDeviceClass_Controller = 2
     TrackedControllerRole_LeftHand = 1
@@ -74,6 +77,41 @@ class TransformTests(unittest.TestCase):
         self.assertEqual(indexes["left"], 1)
         self.assertIsNone(indexes["right"])
 
+    def test_legacy_buttons_preserve_a_valid_action_aim_pose(self):
+        action = probe.empty_controller_input("actions")
+        action["aim_pose"] = {
+            "active": True,
+            "pose_valid": True,
+            "device_index": 7,
+            "position_m": [1.0, 2.0, 3.0],
+            "orientation_xyzw": [0.0, 0.0, 0.0, 1.0],
+            "matrix_3x4": [[1, 0, 0, 1], [0, 1, 0, 2], [0, 0, 1, 3]],
+        }
+        legacy = probe.empty_controller_input("legacy")
+        legacy.update({"active": True, "device_index": 7, "trigger": 0.5})
+        with patch.object(probe, "legacy_controller_input", return_value=legacy):
+            merged = probe.resolve_controller_input(FakeVR, object(), 7, action)
+        self.assertEqual(merged["source"], "legacy")
+        self.assertEqual(merged["trigger"], 0.5)
+        self.assertTrue(merged["aim_pose"]["pose_valid"])
+        self.assertEqual(merged["aim_pose"]["position_m"], [1.0, 2.0, 3.0])
+
+    def test_mismatched_aim_pose_is_rejected(self):
+        action = probe.empty_controller_input("actions")
+        action["aim_pose"].update({"active": True, "pose_valid": True, "device_index": 99})
+        with patch.object(
+            probe,
+            "legacy_controller_input",
+            return_value=probe.empty_controller_input("legacy"),
+        ):
+            merged = probe.resolve_controller_input(FakeVR, object(), 7, action)
+        self.assertFalse(merged["aim_pose"]["pose_valid"])
+
+    def test_only_running_ok_tracking_is_accepted(self):
+        self.assertTrue(probe.pose_is_running_ok(FakeVR, FakePose(True, True, 200)))
+        self.assertFalse(probe.pose_is_running_ok(FakeVR, FakePose(True, True, 201)))
+        self.assertFalse(probe.pose_is_running_ok(FakeVR, FakePose(False, True, 200)))
+
 
 class ManifestTests(unittest.TestCase):
     def test_actions_and_bindings_are_consistent(self):
@@ -84,6 +122,10 @@ class ManifestTests(unittest.TestCase):
             for hand in ("left", "right")
             for name in (*probe.ANALOG_ACTIONS, *probe.DIGITAL_ACTIONS)
         }
+        expected.update(
+            f"/actions/teleop/in/{hand}_aim_pose"
+            for hand in ("left", "right")
+        )
         self.assertEqual(action_names, expected)
         for default in manifest["default_bindings"]:
             binding_path = ROOT / default["binding_url"]
@@ -92,6 +134,9 @@ class ManifestTests(unittest.TestCase):
             for source in binding["bindings"]["/actions/teleop"]["sources"]:
                 for output in source["inputs"].values():
                     self.assertIn(output["output"], action_names)
+            for pose_binding in binding["bindings"]["/actions/teleop"]["poses"]:
+                self.assertIn(pose_binding["output"], action_names)
+                self.assertTrue(pose_binding["path"].endswith("/pose/openxr_aim"))
 
 
 if __name__ == "__main__":
