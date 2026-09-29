@@ -1,0 +1,18 @@
+{
+  "source": "builtin",
+  "applications": [
+    {
+      "app_key": "io.github.limchanju.vr_teleop.alvr_probe",
+      "is_self_identified": true,
+      "launch_type": "binary",
+      "binary_path_linux": "run_probe.sh",
+      "arguments": "",
+      "action_manifest_path": "actions.json",
+      "strings": {
+        "en_us": {
+          "name": "vr_teleop ALVR input probe"
+        }
+      }
+    }
+  ]
+}

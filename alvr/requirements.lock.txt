@@ -1,0 +1,2 @@
+# Verified with Ubuntu 22.04, Python 3.10, SteamVR and ALVR 20.14.1.
+openvr==2.12.1401
