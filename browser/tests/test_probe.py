@@ -110,6 +110,12 @@ class ServerTests(unittest.TestCase):
                             else:
                                 self.fail("HTTPS listener did not start")
                             self.assertEqual(health["input"]["status"], "WAITING")
+                            handshake = subprocess.run(
+                                ["openssl", "s_client", "-connect", f"127.0.0.1:{port}",
+                                 "-servername", "127.0.0.1", "-msg"],
+                                input="", capture_output=True, text=True, timeout=10)
+                            self.assertEqual(handshake.returncode, 0, handshake.stderr)
+                            self.assertNotIn("CertificateRequest", handshake.stdout + handshake.stderr)
                             async with client.get(address + "/") as response:
                                 self.assertEqual(response.status, 200)
                                 html = await response.text()

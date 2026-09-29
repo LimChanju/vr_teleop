@@ -5,6 +5,7 @@ robot commands. Coordinates remain in the original OpenXR reference frame.
 """
 
 import argparse
+import asyncio
 from datetime import datetime, timezone
 import ipaddress
 import json
@@ -31,6 +32,28 @@ finally:
 
 ROOT = Path(__file__).resolve().parent
 BUTTON_FIELDS = ("trigger", "triggerValue", "squeeze", "squeezeValue", "thumbstick", "aButton", "bButton")
+
+
+def run_vuer_server_without_client_auth(server):
+    """Serve HTTPS without requesting an unnecessary browser client certificate."""
+
+    from aiohttp import web
+
+    async def init_server():
+        runner = web.AppRunner(server.app)
+        await runner.setup()
+        if not server.cert:
+            site = web.TCPSite(runner, server.host, server.port)
+        else:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain(certfile=server.cert, keyfile=server.key)
+            context.verify_mode = ssl.CERT_NONE
+            site = web.TCPSite(runner, server.host, server.port, ssl_context=context)
+        await site.start()
+
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(init_server())
+    event_loop.run_forever()
 
 
 def validate_pose(value):
@@ -136,6 +159,11 @@ class ControllerProbe(TeleVuer):
             return web.json_response({"service": "quest3-controller-probe", "input": self.probe_state.snapshot()})
 
         self.vuer.app.router.add_get("/healthz", health)
+        # Vuer 0.0.60 uses CERT_OPTIONAL when no CA is configured. That sends a
+        # TLS CertificateRequest which Quest Browser can reject even though no
+        # client certificate is actually required. Patch only this child process.
+        from vuer.base import Server
+        Server.run = run_vuer_server_without_client_auth
         self.vuer.run(kill=False)
 
     async def on_cam_move(self, event, session, fps=60):
