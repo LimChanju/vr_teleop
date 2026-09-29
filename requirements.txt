@@ -1,0 +1,7 @@
+# The same TeleVuer commit pinned by Unitree xr_teleoperate 817fb00.
+televuer @ git+https://github.com/unitreerobotics/televuer.git@766de45e74373ae0ea66321d942ce538385655a5
+vuer[all]==0.0.60
+# Vuer 0.0.60 imports Flag/PrefixProto, which params-proto 3.x removed.
+params-proto==2.13.2
+numpy==1.26.4
+opencv-python==4.11.0.86
