@@ -1,132 +1,109 @@
-# vr_teleop
+# vr_teleop — G1 · Quest 3 · ALVR
 
-Meta Quest 3 기본 컨트롤러 연결 테스트.
+Meta Quest 3의 머리·기본 컨트롤러 입력으로 **Isaac Sim 속 G1 29관절 정책**을 실행하는 연구용 코드다. ALVR/SteamVR 입력, 기준 자세 보정, 학습된 정책 추론, 실제 시뮬레이션 관절 제어와 G1 시점 XR 구성을 포함한다.
 
-공용 서버에서 **Quest 3의 머리와 양손 기본 컨트롤러 입력을 수신**하는 첫 단계입니다.
-Quest 브라우저의 WebXR 입력을 Unitree 공식 TeleVuer로 받아 위치·자세·버튼 값을 표시합니다.
-이 연결을 확인한 뒤 G1 시뮬레이터의 팔/그리퍼 제어에 연결할 수 있습니다.
-이번 코드에는 G1 제어, 카메라 영상 전송, bHaptics 출력은 포함되지 않습니다.
+기존 브라우저 입력 진단은 [WebXR 안내](docs/WEBXR_PROBE.md)에 보존했다. 이번 G1 경로는 브라우저 입력에 의존하지 않는다. bHaptics와 실제 하드웨어 G1 제어는 이번 범위에 포함하지 않는다.
 
-## 공용 서버에 준비할 것
+```mermaid
+flowchart LR
+  Q[Quest 3와 컨트롤러] --> A[ALVR · SteamVR]
+  A --> V[OpenVR 입력 · 보정 · 정지 처리]
+  V -->|localhost UDP 8765| P[학습된 G1 정책]
+  P --> S[Isaac Sim G1 · 29관절 PD 제어]
+  S --> X[OpenXR · G1 시점]
+  X --> A
+  A --> Q
+```
 
-- Ubuntu/Linux, Python **3.10 권장** (3.10에서 검증), `git`, `openssl`, Python `venv` 지원.
-- Quest 브라우저에서 접속할 수 있는 서버 IP 또는 DNS 이름.
-- 선택한 TCP 포트 접근 가능 여부. 기본은 `8012`이고 `--port`로 바꿀 수 있습니다.
-- 입력 수신만 확인하므로 GPU나 Isaac Sim 실행 없이 사용할 수 있습니다.
+## 먼저 읽기
 
-코드 폴더를 서버의 원하는 경로로 옮기거나 새 Git 저장소에 넣습니다.
-`vendor/`, `.venv/`, `certs/`, `logs/`는 옮기지 않아도 됩니다.
+- [설치와 공용 서버 이전](docs/g1/INSTALL.md)
+- [학습·재개·평가와 Teacher/Student 설정](docs/g1/TRAINING.md)
+- [ALVR 입력과 컨트롤러 조작](docs/g1/ALVR.md)
+- [G1 모델·관절·PD·좌표 계약](docs/g1/ROBOT.md)
+- [H1 → G1 동작 리타게팅](docs/g1/MOTION.md)
+- [평가 방법과 지표](docs/g1/VALIDATION_METHOD.md)
+- [기존 환경 보존과 변경 기록](docs/g1/CHANGELOG.md)
 
-### 1. 별도 Python 환경 설치
+실제 학습 횟수·평가 수치·최종 모델 선택은 별도 결과 보고서와 모델 폴더의 `result.json`을 기준으로 확인한다. 입력 테스트나 3회 PPO 실행을 사전학습 완료로 취급하지 않는다. 실제 Quest 연결·화면 검증과 가상 입력을 통한 시뮬레이션 검증은 구분한다.
+
+## 실행 환경
+
+Ubuntu 22.04, Python 3.10, Isaac Sim 4.5.0.0, Isaac Lab commit `91ad4944f2b7fad29d52c04a5264a082bcaad71d`, PyTorch 2.5.1+cu121, RSL-RL 2.3.3을 사용한다. 개발 GPU는 RTX 4090 24GB다. 환경 기록은 `config/g1/`에 있다.
+
+기존 정상 동작 환경을 복제해서 설치하려면 다음과 같이 실행한다. 원래 환경, 시스템 CUDA, 드라이버, ALVR 설정은 유지한다. 대상 환경이 이미 존재하면 설치 스크립트는 덮어쓰지 않는다.
 
 ```bash
-cd vr_teleop   # GitHub에서 clone한 폴더. 압축 파일을 풀었다면 실제 폴더 이름으로 변경
-bash scripts/setup.sh
+bash scripts/g1/setup.sh --source-env unitree_sim_env
+export G1_PYTHON="$HOME/anaconda3/envs/g1_teleop/bin/python"
 ```
 
-`setup.sh`는 이 폴더의 `.venv`에만 설치합니다. 기존 Conda/Isaac Sim 환경을 바꾸지 않습니다.
-Python 경로를 직접 고를 때는 `PYTHON_BIN=/원하는/python3.10 bash scripts/setup.sh`를 사용합니다.
-의존성은 `requirements.lock.txt`에 고정했고, 주요 직접 의존성은 `requirements.txt`에 표시했습니다.
-
-### 2. 서버 주소로 테스트용 인증서 생성
-
-아래 `192.168.1.20`을 **공용 서버의 실제 접속 주소**로 바꿉니다. 이 예시 IP는 실제 설정값이 아닙니다.
+자세한 설치 선택지와 실제 검증 범위는 설치 문서를 따른다. G1 USD 전체 폴더가 필요하며, 원래 Unitree 파일을 보유한 경우 별도 복사한다.
 
 ```bash
-.venv/bin/python scripts/make_cert.py --server-host 192.168.1.20
+python3 scripts/g1/assets.py --source /path/to/unitree_sim_isaaclab
+# 원본 파일이 없으면 공식 고정 버전 ZIP에서 필요한 G1 폴더만 추출
+python3 scripts/g1/assets.py --download
 ```
 
-`certs/cert.pem`과 `certs/key.pem`이 생깁니다. 기존 인증서가 있으면 덮어쓰지 않습니다.
-서버 주소를 바꾸면 다른 `--out-dir`로 새 인증서를 만들고 실행 시 `--cert`, `--key`로 지정하세요.
-기관에서 발급한 인증서가 있다면 생성 단계를 생략하고 그 인증서/키의 경로를 사용할 수 있습니다.
+## 모델 전달과 실행
 
-### 3. 컨트롤러 수신 서버 실행
+정책, 관절·좌표 설정, 데이터와 로봇 에셋을 담은 전달용 아카이브를 `bundle.py`로 검증하고 새 폴더에 푼다. `SHA256SUMS`와 아카이브 `.sha256`을 함께 보관한다. 모델의 SHA256 일치는 동작 성능이나 실제 Quest 연결 성공을 뜻하지 않는다.
 
 ```bash
-bash run_probe.sh --bind 0.0.0.0 --server-host 192.168.1.20 --port 8012
+python3 scripts/g1/bundle.py verify /path/to/g1_teleop_bundle.tar.gz
+python3 scripts/g1/bundle.py unpack /path/to/g1_teleop_bundle.tar.gz --destination /path/to/new_g1_bundle
 ```
 
-터미널에 출력된 주소를 **Quest 3 자체 브라우저**에서 엽니다.
-
-```text
-https://192.168.1.20:8012/?ws=wss://192.168.1.20:8012
-```
-
-1. 직접 생성한 인증서를 쓰면 인증서 경고가 나올 수 있습니다. 주소가 자신의 서버인지 확인하고
-   `고급 → 계속 진행`으로 해당 테스트 주소를 엽니다. 이 과정은 Unitree의 Quest 연결 절차에도 안내되어 있습니다.
-2. Vuer 화면의 `Virtual Reality` / `Pass-through` 등 XR 시작 버튼을 누르고 요청되는 추적 권한을 허용합니다.
-   버튼 표기는 브라우저와 모드에 따라 다를 수 있습니다. 이 프로그램은 패스스루 입력 테스트로 설정됩니다.
-3. 양손 기본 컨트롤러를 움직이고, 왼쪽·오른쪽 검지 트리거를 각각 눌렀다가 놓습니다.
-4. 서버 터미널의 좌표와 `trigger` 값이 실제 동작에 따라 바뀌는지 확인합니다.
-
-PC 브라우저로 페이지를 여는 것만으로 Quest 컨트롤러 입력이 생기지는 않습니다.
-기존 ALVR 연결 여부와 별개로 이 테스트는 Quest 브라우저에서 XR 세션을 시작해야 합니다.
-
-종료: 실행한 서버 터미널에서 `Ctrl+C`.
-
-## 출력 해석과 첫 성공 기준
-
-```text
-[Quest3] RECEIVING | head: ... (60 Hz) | left: ... trigger=0.75 | right: ... trigger=0.00
-```
-
-위 숫자는 출력 형식 예시입니다. 실제 수신율은 장치/브라우저/네트워크에 따라 달라집니다.
-
-- `WAITING`: 아직 유효한 위치 데이터가 없습니다.
-- `PARTIAL_OR_STALE`: 일부 장치만 들어오거나, 마지막 입력 이후 1초가 지났거나, 유효하지 않은 자세가 들어왔습니다.
-- `RECEIVING`: 머리와 양손 컨트롤러의 유효한 자세가 모두 최근 1초 안에 들어왔습니다.
-- `trigger`: 검지 트리거의 아날로그 값, 0은 놓은 상태이고 1은 끝까지 누른 상태입니다.
-- `Hz`: 해당 출력 구간에 실제로 받은 유효 패킷 수/초입니다.
-
-**실물 첫 성공 기준:** 머리를 움직이면 head 값이 바뀌고, 각 컨트롤러를 움직이면 해당 좌표가 바뀌며,
-왼쪽/오른쪽 트리거를 각각 누르면 해당 값이 올라갔다가 놓을 때 내려갑니다.
-`RECEIVING` 문자열만으로 장치 종류나 움직임의 정확성을 자동 인증하지는 않습니다.
-
-`logs/<실행시간>/latest.json`에는 최근 데이터, `summary.json`에는 종료 결과가 저장됩니다.
-JSON에는 4×4 자세 행렬, 위치, 트리거, 그립(squeeze), 스틱, 버튼 값과 입력 경과 시간이 포함됩니다.
-`aButton`/`bButton`은 Vuer의 공통 필드 이름입니다. 왼손의 물리 버튼 표시는 X/Y일 수 있습니다.
-좌표는 **OpenXR 기준: +X 오른쪽, +Y 위, -Z 앞쪽**, 길이 단위는 미터입니다.
-행렬은 열 우선(column-major)이고, G1 로봇 좌표 변환은 아직 적용하지 않았습니다.
-
-## 공용 서버 연결 팁
-
-- 주소는 기존 PC 주소가 아니라 **수신 프로그램을 실행하는 서버 주소**여야 합니다.
-- `8012`가 사용 중이면 양쪽 URL과 실행 옵션에서 다른 포트(예: `18012`)를 사용합니다.
-  프로그램은 포트를 차지한 다른 사용자의 프로세스를 종료하지 않습니다.
-- Quest Wi-Fi와 서버가 서로 접근 가능해야 합니다. 게스트 Wi-Fi 격리, VLAN, 서버 방화벽은 관리자 설정을 확인합니다.
-- 기본 바인딩은 `127.0.0.1`입니다. `--bind 0.0.0.0`은 신뢰하는 LAN/VPN에서 접속할 때 사용합니다.
-  이 진단 서버에는 사용자 인증이 없으므로 공용 인터넷에 직접 공개하지 않습니다.
-- `https://서버주소:포트/healthz`가 열리면 HTTPS 서버까지 접속된 것입니다. 이것만으로 XR 추적 연결이 확인되지는 않습니다.
-
-Quest가 **실행 서버에 USB로 연결되고 ADB가 이미 승인된 경우**에는 네트워크 대신 다음 경로도 쓸 수 있습니다.
-ADB 미설치/미승인 상태는 먼저 서버 관리 절차에 따라 준비합니다.
+설치 문서의 실제 CLI 표기를 확인한다. 모델 폴더에는 `model.pt`, `policy.pt`, `policy.json`, `run_config.json`, `nominal_targets.json`이 함께 있어야 한다. 아래에서 `G1_MODEL`은 전달받은 모델 폴더다.
 
 ```bash
-adb devices
-adb reverse tcp:8012 tcp:8012
-bash run_probe.sh --server-host localhost
+export G1_MODEL=/absolute/path/to/models/CHOSEN_MODEL
+
+# 먼저 화면 없는 평가로 관절/PD/좌표 계약과 정책을 확인
+bash scripts/g1/run.sh evaluate --headless --num-envs 64 --steps 3000 \
+  --seed 2026 --checkpoint "$G1_MODEL/model.pt" --use-exported-policy
+
+# 터미널 1: ALVR/SteamVR가 실행된 같은 서버에서 Quest 입력
+.venv-alvr/bin/python scripts/g1/alvr_input.py \
+  --backend openvr --nominal "$G1_MODEL/nominal_targets.json"
+
+# 터미널 2: G1 제어와 Quest용 native XR 화면
+export XR_RUNTIME_JSON="$HOME/.local/share/Steam/steamapps/common/SteamVR/steamxr_linux64.json"
+test -f "$XR_RUNTIME_JSON"  # Steam 라이브러리가 다른 위치면 위 경로를 변경
+bash scripts/g1/run.sh teleop --num-envs 1 --steps 0 --device cuda:0 --xr \
+  --checkpoint "$G1_MODEL/model.pt" --use-exported-policy
 ```
 
-이 경우 Quest 브라우저 주소는 `https://localhost:8012/?ws=wss://localhost:8012`입니다.
-종료 후 필요하면 `adb reverse --remove tcp:8012`로 해당 포워딩만 해제합니다.
-
-## 검증 및 코드 출처
+실제 헤드셋이 없을 때는 입력 프로세스를 다음 명령으로 바꾸고, 시뮬레이터의 `--xr`를 빼서 통합 동작을 확인한다. 이것은 실제 Quest 연결 검증이 아니다.
 
 ```bash
-.venv/bin/python -m unittest discover -s tests -v
+.venv-alvr/bin/python scripts/g1/alvr_input.py \
+  --backend synthetic --enable-synthetic --duration 60 \
+  --nominal "$G1_MODEL/nominal_targets.json"
 ```
 
-테스트는 루프백에서 HTTPS/WebSocket 서버를 잠깐 실행하고 **생성한 가상 입력 패킷**을 보냅니다.
-실제 Quest 장치나 외부 서버 접속 없이 패킷 파싱·열 우선 좌표·버튼·입력 끊김·인증서·정상 종료를 확인합니다.
-따라서 이 테스트 통과와 실물 Quest 연결 성공은 별도로 확인해야 합니다.
+## 조작 범위
 
-- 공식 수신/브라우저 기능: [Unitree TeleVuer](https://github.com/unitreerobotics/televuer),
-  커밋 `766de45e74373ae0ea66321d942ce538385655a5`, Vuer `0.0.60`.
-- 기준 공식 저장소: [Unitree xr_teleoperate](https://github.com/unitreerobotics/xr_teleoperate),
-  커밋 `817fb00c63cde15e5f24a0f8fa08e1e33ed89d3b`이 지정한 TeleVuer를 사용합니다.
-- `quest3_probe.py`, 스크립트와 테스트는 이 연결 확인용으로 작성한 별도 코드입니다.
-  공식 패키지 파일은 수정하지 않고 설정 가능한 포트·상태 출력·패킷 검증을 추가합니다.
-- `params-proto` 3.x에서는 Vuer 0.0.60이 사용하는 `Flag`/`PrefixProto`를 가져오지 못해
-  실제 import를 확인한 `2.13.2`로 고정했습니다.
+기준 자세 보정 후 머리·양손의 상대 위치를 로봇 목표점으로 변환한다. 머리 높이 변화는 앉기 명령에 반영하고, 균형과 하체 관절 동작은 정책이 생성한다. 헤드셋과 두 컨트롤러만으로 사람의 실제 발 위치나 무릎 자세를 복원하는 것은 아니다. 컨트롤러 자세 회전과 손가락을 그대로 복사하는 기능도 현재 정책에는 없다.
 
-현재 단계의 다음 작업은 서버에서 실물 입력을 확인한 뒤, 이 입력을 G1 팔 IK와 그리퍼 명령에 연결하는 것입니다.
+왼쪽 스틱은 전후·좌우 이동 속도, 오른쪽 스틱은 yaw 회전 명령 경로다. 현재 제공된 기본 동작 데이터는 제자리 동작이므로, **해당 모델의 별도 이동 평가가 통과한 범위에서만 이동 성능을 기대할 수 있다.** 학습되지 않은 속도 명령을 보행 성공으로 설명하지 않는다.
+
+입력이 끊기면 이동 명령을 0으로 하고 현재 도달한 자세에서 균형 제어를 유지한다. 낙상·연결 끊김 뒤에는 새로 시작 조작을 해야 한다. 양손 그립을 놓거나 정지 버튼을 누르면 원격 목표 추종을 멈춘다. 상세 버튼은 ALVR 안내에 있다.
+
+## 저장소 구조
+
+| 경로 | 내용 |
+|---|---|
+| `g1_teleop/sim/` | 같은 G1 학습·평가·실행 환경과 XR 시점 |
+| `g1_teleop/motion/` | G1 기구학, H1 리타게팅, 동작 로더 |
+| `g1_teleop/vr/` | OpenVR, 컨트롤러 바인딩, UDP, 기록·재생 |
+| `g1_teleop/training.py` | Sparse PPO, teacher, student 설정 |
+| `scripts/g1/` | 설치, 학습, 평가, 텔레옵, 데이터, 전달용 묶음 |
+| `tests/g1/` | 입력·좌표·실행 상태·리타게팅 검증 |
+| `config/g1/` | 버전과 환경 기록 |
+| `runs/` | 로컬 체크포인트·TensorBoard·평가·상태 추적, Git 기본 제외 |
+| `data/`, `assets/`, `models/` | 데이터·에셋·배포 정책, 전달용 묶음으로 이전 |
+| `quest3_probe.py` | 기존 WebXR 진단 기능 |
+
+데이터와 코드의 출처 및 적용 조건은 각 문서와 `g1_teleop/motion/licenses/`에 있다. 원본 H1 제공 동작에서 파생한 데이터는 CC BY-NC 4.0 연구 범위를 따른다.

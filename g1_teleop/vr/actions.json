@@ -1,0 +1,82 @@
+{
+  "action_sets": [
+    {
+      "name": "/actions/g1",
+      "usage": "leftright"
+    }
+  ],
+  "actions": [
+    {
+      "name": "/actions/g1/in/left_stick",
+      "type": "vector2",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/right_stick",
+      "type": "vector2",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/left_grip",
+      "type": "vector1",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/right_grip",
+      "type": "vector1",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/left_trigger",
+      "type": "vector1",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/right_trigger",
+      "type": "vector1",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/calibrate",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/arm",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/stop",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/g1/in/reset",
+      "type": "boolean",
+      "requirement": "mandatory"
+    }
+  ],
+  "default_bindings": [
+    {
+      "controller_type": "oculus_touch",
+      "binding_url": "bindings_oculus_touch.json"
+    }
+  ],
+  "localization": [
+    {
+      "language_tag": "en_US",
+      "/actions/g1": "G1 simulated whole-body teleop",
+      "/actions/g1/in/left_stick": "Left Stick",
+      "/actions/g1/in/right_stick": "Right Stick",
+      "/actions/g1/in/left_grip": "Left Grip",
+      "/actions/g1/in/right_grip": "Right Grip",
+      "/actions/g1/in/left_trigger": "Left Trigger",
+      "/actions/g1/in/right_trigger": "Right Trigger",
+      "/actions/g1/in/calibrate": "Calibrate",
+      "/actions/g1/in/arm": "Arm",
+      "/actions/g1/in/stop": "Stop",
+      "/actions/g1/in/reset": "Reset"
+    }
+  ]
+}

@@ -9,3 +9,10 @@ __pycache__/
 *.key
 .env
 .env.*
+.venv-*/
+runs/
+assets/
+data/
+models/
+backups/
+*.log
