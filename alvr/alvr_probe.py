@@ -319,7 +319,13 @@ def resolve_controller_input(
     device_index: int | None,
     action_input: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """Merge action aim poses with action or legacy button channels safely."""
+    """Merge action poses and controls with legacy channels safely.
+
+    SteamVR may auto-remap a Touch binding to another controller profile.  In
+    that case some actions remain active while unsupported channels disappear.
+    Keep every valid action channel, but fill only the missing controls from
+    the matching legacy controller state instead of rejecting the whole hand.
+    """
 
     controller_input = dict(action_input or empty_controller_input())
     aim_pose = dict(controller_input.get("aim_pose", empty_controller_input()["aim_pose"]))
@@ -329,11 +335,36 @@ def resolve_controller_input(
         aim_pose = dict(empty_controller_input()["aim_pose"])
     controller_input["aim_pose"] = aim_pose
 
-    if not controller_input.get("active"):
+    control_names = (*ANALOG_ACTIONS, *DIGITAL_ACTIONS)
+    action_available = controller_input.get("available", {})
+    needs_legacy = not controller_input.get("active") or not all(
+        action_available.get(name, False) for name in control_names
+    )
+    if needs_legacy:
         legacy_input = legacy_controller_input(vr, system, device_index)
-        if legacy_input["active"] or controller_input.get("source") == "none":
+        if legacy_input["active"]:
+            used_action = False
+            used_legacy = False
+            merged_available: dict[str, bool] = {}
+            for name in control_names:
+                if controller_input.get("active") and action_available.get(name, False):
+                    used_action = True
+                    merged_available[name] = True
+                else:
+                    controller_input[name] = legacy_input[name]
+                    merged_available[name] = bool(legacy_input["available"].get(name, False))
+                    used_legacy = used_legacy or merged_available[name]
+            controller_input["available"] = merged_available
+            controller_input["active"] = any(merged_available.values())
+            controller_input["device_index"] = device_index
+            if used_action and used_legacy:
+                controller_input["source"] = "actions+legacy"
+            elif used_legacy:
+                controller_input["source"] = "legacy"
+        elif controller_input.get("source") == "none":
             legacy_input["aim_pose"] = aim_pose
             controller_input = legacy_input
+    controller_input["aim_pose"] = aim_pose
     return controller_input
 
 

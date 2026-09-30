@@ -280,6 +280,7 @@ class LaunchCommandTests(unittest.TestCase):
         ]
         self.assertEqual(fixed_environment["PYTHONPATH"].split(os.pathsep)[:2], expected_prefix)
         self.assertEqual(fixed_environment["ALVR_WHOLEBODY"], "0")
+        self.assertEqual(fixed_environment["ALVR_POSE_MODE"], "aim")
         self.assertEqual(wholebody_environment["ALVR_WHOLEBODY"], "1")
         self.assertEqual(wholebody_environment["ALVR_TASK_ID"], wholebody.task_id)
         self.assertEqual(wholebody_environment["ALVR_END_EFFECTOR"], "dex3")

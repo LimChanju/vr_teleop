@@ -191,9 +191,13 @@ watchdog은 0.25초의 command 정지를 감지해 안전 상태로 latch합니�
 
 ## Pose 처리와 안전 장치
 
-- `/pose/openxr_aim`을 우선 사용해 공식 TeleVuer controller 좌표 수식과 맞춥니다.
-- aim action이 최소 3초 동안 오지 않으면 raw grip pose로 fallback합니다. 이때 좌우 컨트롤러를
-  교차하지 말고 최소 0.4초 동안 중립 자세로 정지해 calibration을 완료합니다.
+- logical aim action에는 Quest Touch와 SteamVR의 자동 변환 프로필이 함께 지원하는 `/pose/tip`을
+  연결하고, 공식 TeleVuer controller 좌표 수식으로 변환합니다. 일부 action만 제공되는 런타임은
+  같은 컨트롤러의 legacy 입력으로 누락된 버튼/축만 보완합니다.
+- 공식 태스크 launcher는 `ALVR_POSE_MODE=aim`을 기본값으로 써서 action pose가 없으면 안전하게
+  정지합니다. `ALVR_POSE_MODE=auto` 또는 `calibrated`를 명시한 경우에만 raw grip pose를
+  calibration fallback으로 사용하며, 이는 초기 자세 이후 상대 변화량이므로 공식 absolute
+  mapping과 체감이 다릅니다.
 - OpenVR `+X right, +Y up, -Z forward`를 Unitree `+X forward, +Y left, +Z up`으로 변환합니다.
 - HMD yaw-relative wrist pose, workspace clamp, 선속도/각속도 slew limit을 적용합니다.
 - `Running_OK`가 아닌 tracking 상태는 거부하며 tracking이 끊기면 항상 dead-man이 해제됩니다.
@@ -216,8 +220,10 @@ stereo VR layer로 직접 합성하거나 Quest pass-through와 합성하는 com
 
 - `[TRACKING_ONLY]`: Touch를 들어 버튼을 눌러 깨우고 SteamVR action binding을 확인합니다.
 - `PARTIAL`, `L=--` 또는 `R=--`: 컨트롤러 배터리와 ALVR tracking 상태를 확인합니다.
+- 실제 로봇 추종 시작 여부는 반드시 `[ALVR] Teleop state: ARMED`로 확인합니다. `DISARMED`라면
+  표시되는 readiness 원인을 해결한 뒤 양쪽 측면 grip을 한 번 놓고 다시 계속 잡습니다.
 - `aim_pose.pose_valid=false`: Touch를 사용 중인지 확인하고 SteamVR을 재시작합니다. 고정된 raw
-  calibration fallback도 사용할 수 있지만 aim pose가 더 정확합니다.
+  calibration fallback도 사용할 수 있지만 `/pose/tip` action pose가 더 정확합니다.
 - `another vr_teleop probe/adapter ...`: 실행 중인 `run_probe.sh` 또는 다른 teleop을 종료합니다.
 - doctor의 `sim asset missing`: 공식 simulator 환경/asset 설치가 끝나지 않은 상태입니다.
 - `teleop Python imports failed`: `TELEOP_PYTHON=... bash scripts/setup_teleop_env.sh`를 다시 확인합니다.

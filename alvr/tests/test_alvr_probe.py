@@ -89,6 +89,9 @@ class TransformTests(unittest.TestCase):
         }
         legacy = probe.empty_controller_input("legacy")
         legacy.update({"active": True, "device_index": 7, "trigger": 0.5})
+        legacy["available"] = {
+            name: True for name in (*probe.ANALOG_ACTIONS, *probe.DIGITAL_ACTIONS)
+        }
         with patch.object(probe, "legacy_controller_input", return_value=legacy):
             merged = probe.resolve_controller_input(FakeVR, object(), 7, action)
         self.assertEqual(merged["source"], "legacy")
@@ -106,6 +109,31 @@ class TransformTests(unittest.TestCase):
         ):
             merged = probe.resolve_controller_input(FakeVR, object(), 7, action)
         self.assertFalse(merged["aim_pose"]["pose_valid"])
+
+    def test_partial_actions_are_completed_from_matching_legacy_state(self):
+        action = probe.empty_controller_input("actions")
+        action.update({"active": True, "device_index": 7, "trigger": 0.75})
+        action["available"]["trigger"] = True
+        legacy = probe.empty_controller_input("legacy")
+        legacy.update(
+            {
+                "active": True,
+                "device_index": 7,
+                "trigger": 0.25,
+                "grip": 0.8,
+                "thumbstick": [0.1, -0.2],
+            }
+        )
+        legacy["available"] = {
+            name: True for name in (*probe.ANALOG_ACTIONS, *probe.DIGITAL_ACTIONS)
+        }
+        with patch.object(probe, "legacy_controller_input", return_value=legacy):
+            merged = probe.resolve_controller_input(FakeVR, object(), 7, action)
+        self.assertEqual(merged["source"], "actions+legacy")
+        self.assertEqual(merged["trigger"], 0.75)
+        self.assertEqual(merged["grip"], 0.8)
+        self.assertEqual(merged["thumbstick"], [0.1, -0.2])
+        self.assertTrue(all(merged["available"].values()))
 
     def test_only_running_ok_tracking_is_accepted(self):
         self.assertTrue(probe.pose_is_running_ok(FakeVR, FakePose(True, True, 200)))
@@ -136,7 +164,7 @@ class ManifestTests(unittest.TestCase):
                     self.assertIn(output["output"], action_names)
             for pose_binding in binding["bindings"]["/actions/teleop"]["poses"]:
                 self.assertIn(pose_binding["output"], action_names)
-                self.assertTrue(pose_binding["path"].endswith("/pose/openxr_aim"))
+                self.assertTrue(pose_binding["path"].endswith("/pose/tip"))
 
 
 if __name__ == "__main__":

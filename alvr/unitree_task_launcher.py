@@ -267,6 +267,9 @@ def teleop_environment(task: TaskSpec) -> dict[str, str]:
             "PYTHONPATH": os.pathsep.join(python_path),
             "PYTHONUNBUFFERED": "1",
             "ALVR_ACTION_MANIFEST": str((ROOT / "actions.json").resolve()),
+            # Official Unitree mapping expects an absolute ray/aim pose.  Do
+            # not silently command the robot from calibrated raw deltas.
+            "ALVR_POSE_MODE": environment.get("ALVR_POSE_MODE", "aim"),
             "ALVR_WHOLEBODY": "1" if task.wholebody else "0",
             "ALVR_TASK_ID": task.task_id,
             "ALVR_END_EFFECTOR": task.end_effector,

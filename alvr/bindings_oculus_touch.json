@@ -4,8 +4,8 @@
   "bindings": {
     "/actions/teleop": {
       "poses": [
-        { "path": "/user/hand/left/pose/openxr_aim", "output": "/actions/teleop/in/left_aim_pose" },
-        { "path": "/user/hand/right/pose/openxr_aim", "output": "/actions/teleop/in/right_aim_pose" }
+        { "path": "/user/hand/left/pose/tip", "output": "/actions/teleop/in/left_aim_pose" },
+        { "path": "/user/hand/right/pose/tip", "output": "/actions/teleop/in/right_aim_pose" }
       ],
       "sources": [
         { "path": "/user/hand/left/input/trigger", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/left_trigger" } } },

@@ -238,16 +238,23 @@ def _input(snapshot: dict[str, Any], hand: str) -> dict[str, Any]:
     return snapshot.get("devices", {}).get(hand, {}).get("input", {})
 
 
-def required_actions_available(snapshot: dict[str, Any], *, wholebody: bool) -> bool:
+def missing_required_actions(snapshot: dict[str, Any], *, wholebody: bool) -> tuple[str, ...]:
     required = ("trigger", "grip", "secondary", "thumbstick_click")
     if wholebody:
         required += ("thumbstick",)
+    missing: list[str] = []
     for hand in ("left", "right"):
         controls = _input(snapshot, hand)
         available = controls.get("available", {})
-        if not controls.get("active") or not all(available.get(name, False) for name in required):
-            return False
-    return True
+        if not controls.get("active"):
+            missing.append(f"{hand}:inactive")
+            continue
+        missing.extend(f"{hand}:{name}" for name in required if not available.get(name, False))
+    return tuple(missing)
+
+
+def required_actions_available(snapshot: dict[str, Any], *, wholebody: bool) -> bool:
+    return not missing_required_actions(snapshot, wholebody=wholebody)
 
 
 class PoseMapper:
@@ -444,7 +451,7 @@ class SafetyGate:
         self.armed = False
         self.estop_latched = False
         self.release_seen = False
-        self._reported_state: tuple[bool, bool] | None = None
+        self._reported_state: tuple[bool, bool, bool, bool, bool] | None = None
 
     def update(self, snapshot: dict[str, Any], ready: bool) -> bool:
         left = _input(snapshot, "left")
@@ -473,10 +480,19 @@ class SafetyGate:
         elif self.release_seen:
             self.armed = True
 
-        state = (self.armed, self.estop_latched)
+        state = (self.armed, self.estop_latched, ready, both_grips, self.release_seen)
         if state != self._reported_state:
-            label = "E_STOP" if self.estop_latched else ("ARMED" if self.armed else "DISARMED")
-            print(f"[ALVR] Teleop state: {label}", file=sys.stderr)
+            if self.estop_latched:
+                detail = "E_STOP (release grips and hold Y+B to reset)"
+            elif self.armed:
+                detail = "ARMED"
+            elif not ready:
+                detail = "DISARMED (pose/input/base not ready)"
+            elif both_grips:
+                detail = "DISARMED (release both grips once, then hold both)"
+            else:
+                detail = "DISARMED (ready; hold both side grip buttons to arm)"
+            print(f"[ALVR] Teleop state: {detail}", file=sys.stderr)
             self._reported_state = state
         return self.armed
 
@@ -811,6 +827,7 @@ class TeleVuerWrapper:
         self.angular_speed = _env_float("ALVR_MAX_WRIST_ANGULAR_SPEED", 4.0, 0.1, 20.0)
         self._last_update = time.monotonic()
         self._render_warning_printed = False
+        self._reported_readiness: tuple[str | None, bool, tuple[str, ...], bool] | None = None
         self._closed = False
 
         try:
@@ -849,8 +866,20 @@ class TeleVuerWrapper:
         snapshot = self.probe.sample()
 
         left_desired, right_desired, poses_ready = self.pose_mapper.map(snapshot)
-        actions_ready = required_actions_available(snapshot, wholebody=self.wholebody)
+        missing_actions = missing_required_actions(snapshot, wholebody=self.wholebody)
+        actions_ready = not missing_actions
         base_ready = self.base.healthy() if hasattr(self.base, "healthy") else True
+        pose_source = getattr(self.pose_mapper, "source", None)
+        readiness = (pose_source, poses_ready, missing_actions, base_ready)
+        if readiness != getattr(self, "_reported_readiness", None):
+            action_status = "ready" if actions_ready else f"missing={','.join(missing_actions)}"
+            print(
+                f"[ALVR] Readiness: pose={pose_source or 'waiting'}"
+                f"/{'ready' if poses_ready else 'waiting'}; actions={action_status}; "
+                f"base={'ready' if base_ready else 'blocked'}",
+                file=sys.stderr,
+            )
+            self._reported_readiness = readiness
         ready = poses_ready and actions_ready and base_ready
         armed = self.safety.update(snapshot, ready)
         if armed:
