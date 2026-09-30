@@ -1,0 +1,382 @@
+{
+  "schema": 1,
+  "runs": [
+    {
+      "run": "/home/railabchan/quest3_g1_teleop/runs/tracking_sweep_head1100_grounded",
+      "label": "tracking_sweep_head1100_grounded",
+      "status": "teleop_stopped",
+      "mode": "teleop",
+      "zero_policy": false,
+      "seed": 42,
+      "num_envs": 1,
+      "evaluation_horizon_steps": 4500,
+      "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/teleop_head_precision_v6/model_final.pt",
+      "motion_file": null,
+      "motion_sha256": null,
+      "motion_split": "train",
+      "coordinate_version": "g1-yaw-floor-relative-v1",
+      "kinematics_validation": {
+        "environment_count": 1,
+        "max_marker_error_m": 3.315271614757423e-07,
+        "mean_marker_error_m": 2.058696111472053e-07,
+        "tolerance_m": 0.002,
+        "passed": true,
+        "marker_names": [
+          "head_link",
+          "left_wrist_yaw_link",
+          "right_wrist_yaw_link"
+        ]
+      },
+      "population": {
+        "steps": 4500,
+        "simulated_seconds": 90.0,
+        "completed_episodes": 0,
+        "falls": 0,
+        "timeouts": 0,
+        "fall_rate_completed_episodes": null,
+        "mean_completed_episode_seconds": null,
+        "mean_metrics": {
+          "tracking_error_m": 0.0070797507861085855,
+          "head_error_m": 0.005969552027928229,
+          "hand_error_m": 0.007634849861910981,
+          "velocity_error": 0.02155260391221317,
+          "root_height": 0.7612560569975111,
+          "fallen": 0.0,
+          "episode_steps": 2250.5
+        },
+        "incomplete_episode_seconds_summary": {
+          "count": 1,
+          "mean": 90.0,
+          "p50": 90.0,
+          "p95": 90.0,
+          "max": 90.0
+        },
+        "falls_per_simulated_minute": 0.0
+      },
+      "environment_sha256": "9c37fd3a69b68f8e9a01b54a25008c4710e26a4bce155308f77e6286438e6dad",
+      "control_dt": 0.02,
+      "action_scale": 0.5,
+      "action_clip": [
+        -4.0,
+        4.0
+      ],
+      "input_sources": [
+        "synthetic"
+      ],
+      "accepted_input_steps": 2851,
+      "enabled_steps": 2851,
+      "physical_quest_verified": false,
+      "warnings": [
+        "Teleop input differs from scripted motion evaluation; compare input sources and active duration",
+        "No completed episodes: completed-episode fall rate is undefined, not zero"
+      ],
+      "trace": {
+        "scope": "environment_zero_only",
+        "frames": 4500,
+        "dt_seconds": 0.02,
+        "elapsed_simulation_seconds": 90.0,
+        "reset_rows": 0,
+        "reset_guard_frames": 1,
+        "excluded_boundary_rows": 0,
+        "valid_rows": 4500,
+        "finite": {
+          "target": true,
+          "actual": true,
+          "q": true,
+          "action": true
+        },
+        "nonfinite_rows": {
+          "target": 0,
+          "actual": 0,
+          "q": 0,
+          "action": 0
+        },
+        "point_tracking_m": {
+          "head": {
+            "count": 4500,
+            "mean": 0.0059695520215766,
+            "p50": 0.0046886863655597934,
+            "p95": 0.012494217715640507,
+            "max": 0.019973554934281497
+          },
+          "left_wrist": {
+            "count": 4500,
+            "mean": 0.006758257565700179,
+            "p50": 0.004580101149042833,
+            "p95": 0.014788605979995312,
+            "max": 0.04225325033138866
+          },
+          "right_wrist": {
+            "count": 4500,
+            "mean": 0.008511442175187078,
+            "p50": 0.0068541616827024286,
+            "p95": 0.020785522042051717,
+            "max": 0.04386548484768514
+          }
+        },
+        "mean_point_tracking_m": {
+          "count": 4500,
+          "mean": 0.0070797505874879525,
+          "p50": 0.006167423002193317,
+          "p95": 0.015756806522292985,
+          "max": 0.024067381253932662
+        },
+        "hand_tracking_m": {
+          "count": 4500,
+          "mean": 0.007634849870443628,
+          "p50": 0.006256305563452434,
+          "p95": 0.01822132337096397,
+          "max": 0.029999553621029733
+        },
+        "joint_speed_rad_s": {
+          "count": 130471,
+          "mean": 0.06996101089723801,
+          "p50": 0.014656782150268555,
+          "p95": 0.31839217990636826,
+          "max": 5.174729228019714
+        },
+        "action_step_change": {
+          "count": 130471,
+          "mean": 0.004496881855856273,
+          "p50": 0.0008773207664489746,
+          "p95": 0.020505905151367188,
+          "max": 1.6977169513702393
+        },
+        "raw_action_abs": {
+          "count": 130500,
+          "mean": 0.4664901319415812,
+          "p50": 0.22478163242340088,
+          "p95": 2.120156466960901,
+          "max": 4.269283294677734
+        },
+        "target_speed_m_s": {
+          "count": 13497,
+          "mean": 0.020415809947494958,
+          "p50": 0.0,
+          "p95": 0.11978787317678688,
+          "max": 0.4739696965399256
+        },
+        "actual_speed_m_s": {
+          "count": 13497,
+          "mean": 0.026255063524432253,
+          "p50": 0.006565569888447948,
+          "p95": 0.1263907154704065,
+          "max": 0.6821418164859384
+        },
+        "response": {
+          "head": {
+            "x": {
+              "target_std_m": 0.0053458377392392314,
+              "actual_std_m": 0.005039911151321184,
+              "target_range_m": 0.04999961145222187,
+              "actual_range_m": 0.04376833699643612,
+              "correlation": 0.9069455773765915,
+              "least_squares_gain": 0.8550437465601421,
+              "best_positive_lag_seconds": 0.04,
+              "best_positive_lag_correlation": 0.9104711754264301
+            },
+            "y": {
+              "target_std_m": 0.00639915171821374,
+              "actual_std_m": 0.004896997486745992,
+              "target_range_m": 0.04999188892543316,
+              "actual_range_m": 0.029608143493533134,
+              "correlation": 0.7828682303110879,
+              "least_squares_gain": 0.5990956184668833,
+              "best_positive_lag_seconds": 0.02,
+              "best_positive_lag_correlation": 0.7831270097674844
+            },
+            "z": {
+              "target_std_m": 0.006138895796621455,
+              "actual_std_m": 0.004818105110228073,
+              "target_range_m": 0.039998918771743774,
+              "actual_range_m": 0.04837489128112793,
+              "correlation": 0.9052217010744324,
+              "least_squares_gain": 0.7104621821788215,
+              "best_positive_lag_seconds": 0.1,
+              "best_positive_lag_correlation": 0.9113489155912993
+            }
+          },
+          "left_wrist": {
+            "x": {
+              "target_std_m": 0.011726634478074899,
+              "actual_std_m": 0.012500036960618775,
+              "target_range_m": 0.11998756229877472,
+              "actual_range_m": 0.11720230430364609,
+              "correlation": 0.9422814793154758,
+              "least_squares_gain": 1.0044274289244846,
+              "best_positive_lag_seconds": 0.02,
+              "best_positive_lag_correlation": 0.944451203948953
+            },
+            "y": {
+              "target_std_m": 0.012184414453234746,
+              "actual_std_m": 0.012762157262432322,
+              "target_range_m": 0.11997868120670319,
+              "actual_range_m": 0.1220952719449997,
+              "correlation": 0.9654427192354882,
+              "least_squares_gain": 1.0112206752358586,
+              "best_positive_lag_seconds": 0.02,
+              "best_positive_lag_correlation": 0.9654490685296699
+            },
+            "z": {
+              "target_std_m": 0.011833618071890721,
+              "actual_std_m": 0.012455177159596348,
+              "target_range_m": 0.11999443755485117,
+              "actual_range_m": 0.10870438814163208,
+              "correlation": 0.9395723048251151,
+              "least_squares_gain": 0.9889232050377721,
+              "best_positive_lag_seconds": 0.0,
+              "best_positive_lag_correlation": 0.9395723048251151
+            }
+          },
+          "right_wrist": {
+            "x": {
+              "target_std_m": 0.012288187306040308,
+              "actual_std_m": 0.012591322210686113,
+              "target_range_m": 0.11999918147921562,
+              "actual_range_m": 0.1265837401151657,
+              "correlation": 0.9714910977543814,
+              "least_squares_gain": 0.9954566228515824,
+              "best_positive_lag_seconds": 0.02,
+              "best_positive_lag_correlation": 0.9718255532752081
+            },
+            "y": {
+              "target_std_m": 0.011716873227924836,
+              "actual_std_m": 0.012927033854923468,
+              "target_range_m": 0.11999277770519257,
+              "actual_range_m": 0.11317652463912964,
+              "correlation": 0.8815511771760257,
+              "least_squares_gain": 0.9726009397321463,
+              "best_positive_lag_seconds": 0.02,
+              "best_positive_lag_correlation": 0.8828894206729363
+            },
+            "z": {
+              "target_std_m": 0.01169718998841988,
+              "actual_std_m": 0.008685423967503495,
+              "target_range_m": 0.11999141681008041,
+              "actual_range_m": 0.07739049196243286,
+              "correlation": 0.8795392478163433,
+              "least_squares_gain": 0.6530774716754012,
+              "best_positive_lag_seconds": 0.0,
+              "best_positive_lag_correlation": 0.8795392478163433
+            }
+          }
+        },
+        "note": "Boundary exclusion affects trace tracking/speeds only. Population fall count remains unchanged. Raw actions precede wrapper clipping.",
+        "enabled_rows": 2851,
+        "locomotion": {
+          "available_fields": [
+            "root_position_w",
+            "root_quaternion_wxyz",
+            "root_linear_velocity_b",
+            "foot_contact",
+            "foot_linear_velocity_w"
+          ],
+          "missing_fields": [],
+          "valid_rows": 4500,
+          "valid_adjacent_pairs": 4499,
+          "data_valid": true,
+          "invalid_rows": {
+            "root_position_w": 0,
+            "root_quaternion_wxyz": 0,
+            "root_linear_velocity_b": 0,
+            "foot_contact": 0,
+            "foot_linear_velocity_w": 0
+          },
+          "nonfinite_rows": {
+            "root_position_w": 0,
+            "root_quaternion_wxyz": 0,
+            "root_linear_velocity_b": 0,
+            "foot_contact": 0,
+            "foot_linear_velocity_w": 0
+          },
+          "note": "Environment zero only. Reset guards and invalid rows split segments. No gait success threshold is implied.",
+          "root_body_xy_speed_mps": {
+            "count": 4500,
+            "mean": 0.02155260391221317,
+            "p50": 0.010898885782808065,
+            "p95": 0.08587394244968893,
+            "max": 0.1514115184545517
+          },
+          "root_speed_mps": {
+            "count": 4500,
+            "mean": 0.03029654466981689,
+            "p50": 0.01806576456874609,
+            "p95": 0.08821153156459334,
+            "max": 0.25678032636642456
+          },
+          "root_motion_segments": [
+            {
+              "start_frame": 0,
+              "end_frame": 4499,
+              "samples": 4500,
+              "duration_seconds": 89.98,
+              "root_body_xy_speed_mps": {
+                "count": 4500,
+                "mean": 0.02155260391221317,
+                "p50": 0.010898885782808065,
+                "p95": 0.08587394244968893,
+                "max": 0.1514115184545517
+              },
+              "root_speed_mps": {
+                "count": 4500,
+                "mean": 0.03029654466981689,
+                "p50": 0.01806576456874609,
+                "p95": 0.08821153156459334,
+                "max": 0.25678032636642456
+              },
+              "planar_displacement_xy_m": [
+                0.045396655797958374,
+                -0.01105938758701086
+              ],
+              "planar_net_displacement_m": 0.04672436788678169,
+              "planar_path_length_m": 1.9006662368774414,
+              "yaw_drift_rad": -0.4576302383165853,
+              "yaw_path_rad": 5.829347450746113
+            }
+          ],
+          "root_planar_path_length_m": 1.9006662368774414,
+          "root_planar_speed_from_position_mps": {
+            "count": 4499,
+            "mean": 0.021123208695355056,
+            "p50": 0.010224957019090652,
+            "p95": 0.08703768998384473,
+            "max": 0.14649474620819092
+          },
+          "feet": {
+            "left": {
+              "valid_samples": 4500,
+              "contact_samples": 4500,
+              "contact_fraction": 1.0,
+              "liftoff_count": 0,
+              "touchdown_count": 0,
+              "foot_link_horizontal_velocity_during_contact_mps": {
+                "count": 4500,
+                "mean": 0.01104847936970489,
+                "p50": 0.011213771533221006,
+                "p95": 0.019303184375166895,
+                "max": 0.22336000204086304
+              }
+            },
+            "right": {
+              "valid_samples": 4500,
+              "contact_samples": 4499,
+              "contact_fraction": 0.9997777777777778,
+              "liftoff_count": 1,
+              "touchdown_count": 1,
+              "foot_link_horizontal_velocity_during_contact_mps": {
+                "count": 4499,
+                "mean": 0.008983817175235645,
+                "p50": 0.006890663877129555,
+                "p95": 0.012942323647439472,
+                "max": 0.7523411512374878
+              }
+            }
+          },
+          "foot_velocity_interpretation": "Horizontal world velocity of the tracked foot-link origin during contact; not exact contact-point slip. Link rotation can move this origin while a contact point remains fixed."
+        }
+      }
+    }
+  ],
+  "comparison_mismatches": {},
+  "note": "Population pre-reset metrics and env0 post-step traces are separate evidence. No pass/fail threshold is implied."
+}

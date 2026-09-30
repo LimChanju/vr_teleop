@@ -1,0 +1,37 @@
+test_failed_calibration_does_not_increment (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_old_packet_default_and_invalid_generation_rejection (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_receiver_preserves_monotonic_generation_per_session (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_reference_change_reset_and_calibration_have_distinct_generations (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_x_edges_increment_and_calibration_keeps_control_stopped (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_arbitrary_neutral_yaw_is_removed (test_vr_input.MappingTests) ... ok
+test_asymmetric_small_bounds_apply_after_robot_transform_and_scale (test_vr_input.MappingTests) ... ok
+test_bad_or_stale_pose_and_bad_inputs_fail_stopped (test_vr_input.MappingTests) ... ok
+test_bounds_json_units_axes_and_replay_option_are_explicit (test_vr_input.MappingTests) ... ok
+test_bounds_validate_shapes_finiteness_neutral_and_nonzero_span (test_vr_input.MappingTests) ... ok
+test_cli_velocity_limits_validate_caps_zero_axes_and_replay (test_vr_input.MappingTests) ... ok
+test_inactive_actions_or_sender_pause_cannot_resume_with_held_arm (test_vr_input.MappingTests) ... ok
+test_neutral_frame_does_not_use_human_height_as_robot_height (test_vr_input.MappingTests) ... ok
+test_reset_stop_and_tracking_origin_change (test_vr_input.MappingTests) ... ok
+test_tracking_loss_stops_and_requires_explicit_rearm (test_vr_input.MappingTests) ... ok
+test_workspace_clamp_and_velocity_signs (test_vr_input.MappingTests) ... ok
+test_cli_velocity_limits_reach_real_mapper_and_disable_yaw (test_vr_input.ProtocolTests) ... ok
+test_invalid_tracking_stops_immediately_and_duplicates_do_not_refresh (test_vr_input.ProtocolTests) ... ok
+test_replay_has_new_identity_and_explicit_enable_requirement (test_vr_input.ProtocolTests) ... ok
+test_schema_values_and_wallclock_are_validated (test_vr_input.ProtocolTests) ... ok
+test_sender_process_applies_selected_asymmetric_bounds (test_vr_input.ProtocolTests) ... ok
+test_sender_process_reaches_receiver_then_sends_stop (test_vr_input.ProtocolTests) ... ok
+test_udp_stale_reorder_session_and_reset_deduplication (test_vr_input.ProtocolTests) ... ok
+test_cleanup_continues_when_runtime_unregister_or_shutdown_fails (test_vr_openvr.OpenVRTests) ... ok
+test_dashboard_and_input_focus_fail_closed (test_vr_openvr.OpenVRTests) ... ok
+test_register_identify_and_action_failures_cleanup (test_vr_openvr.OpenVRTests) ... ok
+test_reject_duplicate_without_removing_existing_manifest (test_vr_openvr.OpenVRTests) ... ok
+test_role_lookup_and_background_action_bindings (test_vr_openvr.OpenVRTests) ... ok
+test_shutdown_even_if_runtime_init_fails (test_vr_openvr.OpenVRTests) ... ok
+test_success_return_with_missing_registration_or_identity_is_rejected (test_vr_openvr.OpenVRTests) ... ok
+test_tracking_origin_change_and_runtime_quit (test_vr_openvr.OpenVRTests) ... ok
+test_update_failure_never_reuses_previous_input (test_vr_openvr.OpenVRTests) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 1.482s
+
+OK

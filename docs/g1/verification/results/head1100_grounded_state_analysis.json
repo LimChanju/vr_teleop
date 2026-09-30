@@ -1,0 +1,539 @@
+{
+  "schema": "g1.runtime.scenario.analysis.v1",
+  "events": "/home/railabchan/quest3_g1_teleop/runs/runtime_state_head1100_grounded/scenario.jsonl",
+  "run": "/home/railabchan/quest3_g1_teleop/runs/runtime_state_head1100_grounded",
+  "grace_seconds": 0.15,
+  "receiver_timeout_assumed_s": 0.25,
+  "scenario_mode": "control_state",
+  "simulator_checks_passed": true,
+  "control_state_passed": true,
+  "tracking_quality_passed": true,
+  "control_and_tracking_passed": true,
+  "whole_body_checks_passed": null,
+  "velocity_tracking": null,
+  "contact_diagnostics": null,
+  "physical_quest_verified": false,
+  "checks": {
+    "producer_completed": {
+      "passed": true
+    },
+    "synthetic_source": {
+      "passed": true,
+      "observed": [
+        "synthetic"
+      ]
+    },
+    "teleop_result": {
+      "passed": true,
+      "status": "teleop_stopped"
+    },
+    "no_falls": {
+      "passed": true,
+      "falls": 0
+    },
+    "finite_state_action_targets": {
+      "passed": true,
+      "fields": {
+        "q": true,
+        "action": true,
+        "target": true,
+        "actual": true
+      }
+    },
+    "phase_idle": {
+      "passed": true,
+      "samples": 22,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 22,
+      "analyzed_wall_interval": [
+        1790770888.2828045,
+        1790770888.7329361
+      ]
+    },
+    "phase_calibrate": {
+      "passed": true,
+      "samples": 23,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 23,
+      "analyzed_wall_interval": [
+        1790770889.0330088,
+        1790770889.483069
+      ]
+    },
+    "phase_armed_motion": {
+      "passed": true,
+      "samples": 285,
+      "coverage": true,
+      "expected_enabled": true,
+      "declared_state_matches_event": true,
+      "enabled_samples": 285,
+      "fresh_samples": 285,
+      "analyzed_wall_interval": [
+        1790770889.78311,
+        1790770895.4831717
+      ]
+    },
+    "phase_deadman_release": {
+      "passed": true,
+      "samples": 135,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 135,
+      "analyzed_wall_interval": [
+        1790770895.7832134,
+        1790770898.483275
+      ]
+    },
+    "phase_rearm_motion": {
+      "passed": true,
+      "samples": 135,
+      "coverage": true,
+      "expected_enabled": true,
+      "declared_state_matches_event": true,
+      "enabled_samples": 135,
+      "fresh_samples": 135,
+      "analyzed_wall_interval": [
+        1790770898.7833176,
+        1790770901.483374
+      ]
+    },
+    "phase_producer_pause": {
+      "passed": true,
+      "samples": 48,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 0,
+      "analyzed_wall_interval": [
+        1790770902.03341,
+        1790770902.9834888
+      ]
+    },
+    "phase_held_arm_after_pause": {
+      "passed": true,
+      "samples": 135,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 135,
+      "analyzed_wall_interval": [
+        1790770903.2835572,
+        1790770905.9836142
+      ]
+    },
+    "phase_arm_release": {
+      "passed": true,
+      "samples": 60,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 60,
+      "analyzed_wall_interval": [
+        1790770906.283654,
+        1790770907.483711
+      ]
+    },
+    "phase_rearm_after_pause": {
+      "passed": true,
+      "samples": 135,
+      "coverage": true,
+      "expected_enabled": true,
+      "declared_state_matches_event": true,
+      "enabled_samples": 135,
+      "fresh_samples": 135,
+      "analyzed_wall_interval": [
+        1790770907.7837493,
+        1790770910.483836
+      ]
+    },
+    "phase_reset": {
+      "passed": true,
+      "samples": 60,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 60,
+      "analyzed_wall_interval": [
+        1790770910.7838993,
+        1790770911.9839585
+      ]
+    },
+    "phase_post_reset_rearm": {
+      "passed": true,
+      "samples": 135,
+      "coverage": true,
+      "expected_enabled": true,
+      "declared_state_matches_event": true,
+      "enabled_samples": 135,
+      "fresh_samples": 135,
+      "analyzed_wall_interval": [
+        1790770912.2840006,
+        1790770914.9841821
+      ]
+    },
+    "phase_final_stop": {
+      "passed": true,
+      "samples": 60,
+      "coverage": true,
+      "expected_enabled": false,
+      "declared_state_matches_event": true,
+      "enabled_samples": 0,
+      "fresh_samples": 60,
+      "analyzed_wall_interval": [
+        1790770915.2842295,
+        1790770916.4842882
+      ]
+    },
+    "one_manual_reset": {
+      "passed": true,
+      "expected": 1,
+      "trace_count": 1,
+      "result_count": 1
+    },
+    "active_inputs_match_sent_targets": {
+      "passed": true,
+      "active_steps": 762,
+      "unknown_sequence_rows": [],
+      "invalid_phase_rows": [],
+      "target_mismatch_rows": [],
+      "max_abs_target_error_m": 3.7067652697286846e-09
+    }
+  },
+  "phases": {
+    "idle": {
+      "samples": 22,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.009874092414975166,
+      "hand_error_p95_m": 0.011985759064555167,
+      "head_error_mean_m": 0.006022617220878601
+    },
+    "calibrate": {
+      "samples": 23,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.00930845644325018,
+      "hand_error_p95_m": 0.009794563427567482,
+      "head_error_mean_m": 0.003278953256085515
+    },
+    "armed_motion": {
+      "samples": 285,
+      "expected_enabled": true,
+      "hand_error_mean_m": 0.012382104061543941,
+      "hand_error_p95_m": 0.0209093302488327,
+      "head_error_mean_m": 0.007790197618305683,
+      "axis_tracking": {
+        "left_hand.z": {
+          "samples": 285,
+          "ls_gain": 0.8008609599374387,
+          "ls_intercept_m": -0.0025894659959693825,
+          "correlation": 0.9909504380622209,
+          "target_range_m": 0.1200000022072345,
+          "actual_range_m": 0.09511035680770874,
+          "range_ratio": 0.7925862921523744,
+          "mean_abs_error_m": 0.009838088346352155,
+          "rmse_m": 0.013162050898693746,
+          "error_bias_m": 0.008711239392690466,
+          "p95_abs_error_m": 0.025776688754558564,
+          "provisional_quality_passed": true,
+          "flags": []
+        },
+        "right_hand.x": {
+          "samples": 285,
+          "ls_gain": 0.9694242096753847,
+          "ls_intercept_m": -0.007831064879446337,
+          "correlation": 0.9989748507337789,
+          "target_range_m": 0.12000000104308128,
+          "actual_range_m": 0.11716580763459206,
+          "range_ratio": 0.9763817218012213,
+          "mean_abs_error_m": 0.007869230444837165,
+          "rmse_m": 0.00820658674533799,
+          "error_bias_m": -0.007869230444837165,
+          "p95_abs_error_m": 0.011085261404514313,
+          "provisional_quality_passed": true,
+          "flags": []
+        }
+      }
+    },
+    "deadman_release": {
+      "samples": 135,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.004693735856562853,
+      "hand_error_p95_m": 0.004784167930483818,
+      "head_error_mean_m": 0.0027914538513869047
+    },
+    "rearm_motion": {
+      "samples": 135,
+      "expected_enabled": true,
+      "hand_error_mean_m": 0.015358112752437592,
+      "hand_error_p95_m": 0.02398375403136015,
+      "head_error_mean_m": 0.009814610704779625,
+      "axis_tracking": {
+        "left_hand.z": {
+          "samples": 135,
+          "ls_gain": 0.8546655948563228,
+          "ls_intercept_m": 0.0012752991096380145,
+          "correlation": 0.9835521715789685,
+          "target_range_m": 0.12000000150874257,
+          "actual_range_m": 0.10340285301208496,
+          "range_ratio": 0.8616904309334661,
+          "mean_abs_error_m": 0.010904997078425906,
+          "rmse_m": 0.013461356813306643,
+          "error_bias_m": 0.00950259519568472,
+          "p95_abs_error_m": 0.025734180212020875,
+          "provisional_quality_passed": true,
+          "flags": []
+        },
+        "right_hand.x": {
+          "samples": 135,
+          "ls_gain": 1.0024829879935242,
+          "ls_intercept_m": -0.00817348117659858,
+          "correlation": 0.9980647807698849,
+          "target_range_m": 0.11999999731779099,
+          "actual_range_m": 0.12042849138379097,
+          "range_ratio": 1.0035707839631465,
+          "mean_abs_error_m": 0.008170038202122129,
+          "rmse_m": 0.008632044673423763,
+          "error_bias_m": -0.008170038202122129,
+          "p95_abs_error_m": 0.010611366480588913,
+          "provisional_quality_passed": true,
+          "flags": []
+        }
+      }
+    },
+    "producer_pause": {
+      "samples": 48,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.004284321796149015,
+      "hand_error_p95_m": 0.004438363783992827,
+      "head_error_mean_m": 0.0024402993731200695
+    },
+    "held_arm_after_pause": {
+      "samples": 135,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.004381527192890644,
+      "hand_error_p95_m": 0.004424170358106494,
+      "head_error_mean_m": 0.0019871380645781755
+    },
+    "arm_release": {
+      "samples": 60,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.004372514318674803,
+      "hand_error_p95_m": 0.004372759908437729,
+      "head_error_mean_m": 0.0019983721431344748
+    },
+    "rearm_after_pause": {
+      "samples": 135,
+      "expected_enabled": true,
+      "hand_error_mean_m": 0.015404267236590385,
+      "hand_error_p95_m": 0.02389269769191742,
+      "head_error_mean_m": 0.009846157394349575,
+      "axis_tracking": {
+        "left_hand.z": {
+          "samples": 135,
+          "ls_gain": 0.8561066109162396,
+          "ls_intercept_m": 0.0014059426950633822,
+          "correlation": 0.9835285002633894,
+          "target_range_m": 0.12000000197440386,
+          "actual_range_m": 0.1034432053565979,
+          "range_ratio": 0.8620266971217422,
+          "mean_abs_error_m": 0.010953213123785745,
+          "rmse_m": 0.013474101670768922,
+          "error_bias_m": 0.009551640876991398,
+          "p95_abs_error_m": 0.025700081139802933,
+          "provisional_quality_passed": true,
+          "flags": []
+        },
+        "right_hand.x": {
+          "samples": 135,
+          "ls_gain": 1.0011447372730131,
+          "ls_intercept_m": -0.008247550794448555,
+          "correlation": 0.9981217312837111,
+          "target_range_m": 0.12000000104308128,
+          "actual_range_m": 0.12014442309737206,
+          "range_ratio": 1.0012035171086284,
+          "mean_abs_error_m": 0.008245963291092603,
+          "rmse_m": 0.008689077734583297,
+          "error_bias_m": -0.008245963291092603,
+          "p95_abs_error_m": 0.010662263631820679,
+          "provisional_quality_passed": true,
+          "flags": []
+        }
+      }
+    },
+    "reset": {
+      "samples": 60,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.010103289037942886,
+      "hand_error_p95_m": 0.01678226413205266,
+      "head_error_mean_m": 0.0055444445461034775
+    },
+    "post_reset_rearm": {
+      "samples": 135,
+      "expected_enabled": true,
+      "hand_error_mean_m": 0.015001162886619568,
+      "hand_error_p95_m": 0.02570799570530653,
+      "head_error_mean_m": 0.009039055556058884,
+      "axis_tracking": {
+        "left_hand.z": {
+          "samples": 135,
+          "ls_gain": 0.8364560675113142,
+          "ls_intercept_m": 0.0005395533041886724,
+          "correlation": 0.9865108963130187,
+          "target_range_m": 0.11999999941326678,
+          "actual_range_m": 0.09915816783905029,
+          "range_ratio": 0.8263180693656547,
+          "mean_abs_error_m": 0.010473055229522289,
+          "rmse_m": 0.013689849482340182,
+          "error_bias_m": 0.009797823348910445,
+          "p95_abs_error_m": 0.02728384882211685,
+          "provisional_quality_passed": true,
+          "flags": []
+        },
+        "right_hand.x": {
+          "samples": 135,
+          "ls_gain": 1.0002219693525387,
+          "ls_intercept_m": -0.008952413808610421,
+          "correlation": 0.9982440424119927,
+          "target_range_m": 0.11999999731779099,
+          "actual_range_m": 0.12021946534514427,
+          "range_ratio": 1.0018289002688232,
+          "mean_abs_error_m": 0.008952106214645835,
+          "rmse_m": 0.009334842944460487,
+          "error_bias_m": -0.008952106214645835,
+          "p95_abs_error_m": 0.011851545050740242,
+          "provisional_quality_passed": true,
+          "flags": []
+        }
+      }
+    },
+    "final_stop": {
+      "samples": 60,
+      "expected_enabled": false,
+      "hand_error_mean_m": 0.006438868120312691,
+      "hand_error_p95_m": 0.007395672216080129,
+      "head_error_mean_m": 0.003998285625129938
+    }
+  },
+  "response": {
+    "actual_keypoint_range_m": [
+      [
+        0.014222385361790657,
+        0.013553686439990997,
+        0.012968063354492188
+      ],
+      [
+        0.022372201085090637,
+        0.02812035381793976,
+        0.1034432053565979
+      ],
+      [
+        0.12193335592746735,
+        0.028750941157341003,
+        0.01987236738204956
+      ]
+    ],
+    "target_keypoint_range_m": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.12000000476837158
+      ],
+      [
+        0.12000000476837158,
+        0.0,
+        0.0
+      ]
+    ],
+    "max_joint_range_rad": 1.3258055448532104
+  },
+  "metric_reset_guard_frames": 1,
+  "axis_tracking": {
+    "left_hand.z": {
+      "samples": 761,
+      "ls_gain": 0.8292514144745791,
+      "ls_intercept_m": -0.0005749459317550901,
+      "correlation": 0.9858555131107163,
+      "target_range_m": 0.1200000022072345,
+      "actual_range_m": 0.1034432053565979,
+      "range_ratio": 0.8620266954491903,
+      "mean_abs_error_m": 0.010166545831275943,
+      "rmse_m": 0.01304940989418411,
+      "error_bias_m": 0.009127328008459284,
+      "p95_abs_error_m": 0.025822333991527557,
+      "provisional_quality_passed": true,
+      "flags": []
+    },
+    "right_hand.x": {
+      "samples": 761,
+      "ls_gain": 0.9868486226198432,
+      "ls_intercept_m": -0.007788227753461678,
+      "correlation": 0.9973879192703016,
+      "target_range_m": 0.12000000104308128,
+      "actual_range_m": 0.12193335965275764,
+      "range_ratio": 1.016111321607258,
+      "mean_abs_error_m": 0.007841366113964517,
+      "rmse_m": 0.008382436580472627,
+      "error_bias_m": -0.00780366820798154,
+      "p95_abs_error_m": 0.011348824948072433,
+      "provisional_quality_passed": true,
+      "flags": []
+    }
+  },
+  "tracking_quality": {
+    "provisional": true,
+    "min_ls_gain": 0.5,
+    "min_correlation": 0.6,
+    "min_excitation_range_m": 0.005,
+    "comparison": "zero-lag actual versus desired; LS fit includes intercept",
+    "axis_results": {
+      "left_hand.z": {
+        "samples": 761,
+        "ls_gain": 0.8292514144745791,
+        "ls_intercept_m": -0.0005749459317550901,
+        "correlation": 0.9858555131107163,
+        "target_range_m": 0.1200000022072345,
+        "actual_range_m": 0.1034432053565979,
+        "range_ratio": 0.8620266954491903,
+        "mean_abs_error_m": 0.010166545831275943,
+        "rmse_m": 0.01304940989418411,
+        "error_bias_m": 0.009127328008459284,
+        "p95_abs_error_m": 0.025822333991527557,
+        "provisional_quality_passed": true,
+        "flags": []
+      },
+      "right_hand.x": {
+        "samples": 761,
+        "ls_gain": 0.9868486226198432,
+        "ls_intercept_m": -0.007788227753461678,
+        "correlation": 0.9973879192703016,
+        "target_range_m": 0.12000000104308128,
+        "actual_range_m": 0.12193335965275764,
+        "range_ratio": 1.016111321607258,
+        "mean_abs_error_m": 0.007841366113964517,
+        "rmse_m": 0.008382436580472627,
+        "error_bias_m": -0.00780366820798154,
+        "p95_abs_error_m": 0.011348824948072433,
+        "provisional_quality_passed": true,
+        "flags": []
+      }
+    },
+    "flagged_axes": []
+  },
+  "tracking_quality_status": "Provisional response thresholds met on excited axes only; not hardware/task validation"
+}

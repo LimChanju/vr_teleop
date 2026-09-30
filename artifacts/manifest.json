@@ -1,0 +1,44 @@
+{
+  "schema": "g1.release.v1",
+  "default_model": "teleop_head_precision_v6",
+  "artifacts": [
+    {
+      "file": "g1_stationary_v6_20260930.tar.gz",
+      "bytes": 25324622,
+      "sha256": "0ff37616f97c253a9a0a8355adee5546c83a00bab080bb7c8ee7d288da183861",
+      "model_directory": "models/teleop_head_precision_v6",
+      "checkpoint": "models/teleop_head_precision_v6/model.pt",
+      "policy": "models/teleop_head_precision_v6/policy.pt",
+      "policy_sha256": "6443fdab6c3af8bea57a64c9a31cdac9dbc7773494c984695acef5e1d8b43208",
+      "checkpoint_sha256": "ca8de5aa271f95a7fdea7736b936d0f04fcec19d2987239ba0d21a39273e3d70",
+      "role": "stationary sparse head-and-hands teleoperation",
+      "command_velocity_limits": [
+        0,
+        0,
+        0
+      ],
+      "body_actions": 29,
+      "actor_observation_dimensions": 126,
+      "heldout_evaluation": {
+        "environments": 64,
+        "steps": 3000,
+        "seed": 2026,
+        "head_error_m": 0.01030839180527255,
+        "hand_error_m": 0.013243202386423946,
+        "falls": 0,
+        "completed_episodes": 192,
+        "mean_completed_episode_seconds": 19.979999542236328
+      },
+      "udp_nine_axis_response_passed": true,
+      "known_limitations": [
+        "Approximately -26.22 degrees uncommanded yaw drift in a 90-second synthetic test.",
+        "Combined head Y response gain .462; single-axis provisional threshold success is not arbitrary-motion validation.",
+        "No wrist orientation, fingers, or inferred human leg pose control."
+      ],
+      "portable_fresh_environment_evaluated": true,
+      "physical_quest_verified": false,
+      "remote_server_verified": false,
+      "runtime_snapshot": "This archive is immutable and contains its tested runtime. The repository can add later experiments without modifying it."
+    }
+  ]
+}

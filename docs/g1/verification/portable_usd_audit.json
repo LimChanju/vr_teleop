@@ -1,0 +1,66 @@
+{
+  "status": "all_usd_dependencies_relative_and_resolve_within_selected_asset_directory",
+  "audited_at_utc": "2026-09-30T12:20:42.981295+00:00",
+  "asset_directory": "/home/railabchan/quest3_g1_teleop/assets/robots/g1-29dof_wholebody_dex1",
+  "method": "Standalone pxr.Sdf from installed Isaac Sim USD libraries; no Kit, simulator, SteamVR or Quest started",
+  "absolute_or_remote_dependencies": [],
+  "missing_dependencies": [],
+  "layers": [
+    {
+      "file": "configuration/g1_29dof_with_dex1_rev_1_0_base.usd",
+      "sha256": "1e036880e371911b79adc3c7cee6be79770a89cf625cde8b143108beef809bb2",
+      "sublayers": [],
+      "external_references": [
+        ""
+      ],
+      "composition_dependencies": [
+        ""
+      ],
+      "external_asset_dependencies": [],
+      "nonempty_dependencies_resolve_within_asset_directory": []
+    },
+    {
+      "file": "configuration/g1_29dof_with_dex1_rev_1_0_physics.usd",
+      "sha256": "83f27951a5b73eadacd5b47cf1413e2259a1550733ca5d0655cdb2f15b2de619",
+      "sublayers": [
+        "g1_29dof_with_dex1_rev_1_0_base.usd"
+      ],
+      "external_references": [
+        "",
+        "g1_29dof_with_dex1_rev_1_0_base.usd"
+      ],
+      "composition_dependencies": [
+        "",
+        "g1_29dof_with_dex1_rev_1_0_base.usd"
+      ],
+      "external_asset_dependencies": [],
+      "nonempty_dependencies_resolve_within_asset_directory": [
+        "configuration/g1_29dof_with_dex1_rev_1_0_base.usd"
+      ]
+    },
+    {
+      "file": "configuration/g1_29dof_with_dex1_rev_1_0_sensor.usd",
+      "sha256": "0e862c49b1c84d142e99c76a6b45a910faef6eea8903bae0317086356458344e",
+      "sublayers": [],
+      "external_references": [],
+      "composition_dependencies": [],
+      "external_asset_dependencies": [],
+      "nonempty_dependencies_resolve_within_asset_directory": []
+    },
+    {
+      "file": "g1_29dof_with_dex1_rev_1_0.usd",
+      "sha256": "4603ace0bf5c48a327b5a063ca10232bbb292f621bbb2c931d39f9ea609ca722",
+      "sublayers": [],
+      "external_references": [
+        ""
+      ],
+      "composition_dependencies": [
+        ""
+      ],
+      "external_asset_dependencies": [],
+      "nonempty_dependencies_resolve_within_asset_directory": []
+    }
+  ],
+  "physical_quest_verified": false,
+  "scope": "Authored USD layer dependencies and external asset dependencies. Root stage can be relocated together with this complete asset directory."
+}

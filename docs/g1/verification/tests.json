@@ -1,29 +1,31 @@
 {
   "date": "2026-09-30",
   "scope": "same development host; simulator integration recorded separately",
-  "unique_tests_passed_across_environments": 121,
+  "unique_tests_passed_across_environments": 162,
   "main_python_suite": {
     "command": "PYTHONNOUSERSITE=1 $G1_PYTHON -m unittest discover -s tests/g1 -p 'test_*.py' -q",
-    "run": 121,
-    "passed": 104,
+    "run": 162,
+    "passed": 145,
     "skipped": 17,
     "skipped_reason": "9 OpenVR API tests need the separate input venv; 8 XR math tests need USD library paths",
-    "log": "/tmp/g1_tests_precision_and_failures.log"
+    "log": "docs/g1/verification/cpu_pure_axes_tests.txt"
   },
   "input_venv_suite": {
     "command": ".venv-alvr/bin/python -m unittest discover -s tests/g1 -p 'test_vr*.py' -q",
-    "run": 26,
-    "passed": 26,
+    "run": 32,
+    "passed": 32,
     "skipped": 0,
-    "scope": "Includes real OpenVR ctypes with mocked runtime APIs; not a headset connection test",
-    "log": "/tmp/g1_vr_tests_precision_and_failures.log"
+    "scope": "Includes real OpenVR ctypes with mocked runtime APIs and an actual synthetic UDP sender subprocess; not a headset connection test",
+    "log": "docs/g1/verification/vr_final_tests.txt"
   },
   "usd_math_suite": {
     "run": 8,
     "passed": 8,
     "skipped": 0,
-    "scope": "Actual pxr/Gf bindings, mocked compositor and robot state; Kit and SteamVR not launched"
+    "scope": "Actual pxr/Gf bindings, mocked compositor and robot state; Kit and SteamVR not launched",
+    "log": "docs/g1/verification/xr_final_tests.txt"
   },
   "physical_quest_verified": false,
-  "remote_server_verified": false
+  "remote_server_verified": false,
+  "note": "The 32 input tests and 8 USD tests overlap the main suite; 162 is the unique test count, not the sum of all runs. The immutable stationary v6 archive was validated at the earlier153-test snapshot; later9 tests cover the optional velocity command curriculum."
 }

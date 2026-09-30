@@ -65,6 +65,7 @@ class G1WholeBodyEnvCfg(DirectRLEnvCfg):
     reference_height = 0.76792282
     tracking_reward_weight = 4.0
     tracking_error_variance = 0.04
+    head_tracking_weight = 1.0
     height_reward_weight = 1.0
     height_error_variance = 0.01
     fall_cost = 2.0
@@ -79,6 +80,8 @@ class G1WholeBodyEnv(DirectRLEnv):
     cfg: G1WholeBodyEnvCfg
 
     def __init__(self, cfg: G1WholeBodyEnvCfg, render_mode=None, **kwargs):
+        if not math.isfinite(cfg.head_tracking_weight) or not 0 < cfg.head_tracking_weight <= 10:
+            raise ValueError("head_tracking_weight must be finite and in (0,10]")
         for name in ("tracking_reward_weight", "height_reward_weight", "fall_cost"):
             value = getattr(cfg, name)
             if not math.isfinite(value) or value < 0:
@@ -362,10 +365,16 @@ class G1WholeBodyEnv(DirectRLEnv):
         qerr = (data.joint_pos[:, self.body_joint_ids] - self.reference_q).square().mean(-1)
         foot_contact = torch.linalg.vector_norm(self.contact_sensor.data.net_forces_w[:, self.foot_contact_ids], dim=-1) > 5.
         slide = (data.body_lin_vel_w[:, self.foot_body_ids, :2].square().sum(-1) * foot_contact).sum(-1)
+        point_tracking = torch.exp(-point_error.square() / self.cfg.tracking_error_variance)
+        tracking = point_tracking.mean(-1)
+        head_weight = getattr(self.cfg, "head_tracking_weight", 1.0)
+        if head_weight != 1.0:
+            # Preserve each hand's coefficient. At the default, retain the
+            # original reduction exactly rather than reweighting all markers.
+            tracking = tracking + (head_weight - 1.0) * point_tracking[:, 0] / 3.0
         terms = {
             "alive": torch.ones_like(height),
-            "sparse_tracking": self.cfg.tracking_reward_weight * torch.exp(
-                -point_error.square() / self.cfg.tracking_error_variance).mean(-1),
+            "sparse_tracking": self.cfg.tracking_reward_weight * tracking,
             "linear_velocity": 2. * torch.exp(-velocity_error / 0.25),
             "yaw_velocity": torch.exp(-yaw_error / 0.25),
             "height": self.cfg.height_reward_weight * torch.exp(
@@ -444,6 +453,12 @@ class G1WholeBodyEnv(DirectRLEnv):
         self.robot.reset(env_ids)
         self._sample_reference(env_ids)
         self._update_reference()
+        if self.external_mode:
+            # Reset clearance is an initial physics condition, not a requested
+            # extra head height. Keep the policy's target at grounded neutral.
+            self.target_positions[env_ids] = self.nominal_keypoints
+            self.command_velocity[env_ids] = 0.
+            self.reference_height[env_ids] = self.nominal_root_height
         self.reset_target_history(env_ids)
         q = self.robot.data.default_joint_pos[env_ids].clone()
         use_reference = self.cfg.reference_state_initialization and self._motion is not None and not self.external_mode
@@ -453,8 +468,8 @@ class G1WholeBodyEnv(DirectRLEnv):
             q[:, self.body_joint_ids] += (torch.rand(len(env_ids), 29, device=self.device) - 0.5) * 0.04
         dq = torch.zeros_like(q)
         root = self.robot.data.default_root_state[env_ids].clone()
-        if use_reference:
-            root[:, 2] = self.reference_height[env_ids] + 0.015
+        reset_height = self.reference_height[env_ids] if use_reference else self.nominal_root_height
+        root[:, 2] = reset_height + 0.015
         root[:, :3] += self.scene.env_origins[env_ids]
         self.robot.write_root_pose_to_sim(root[:, :7], env_ids)
         self.robot.write_root_velocity_to_sim(root[:, 7:], env_ids)
@@ -492,9 +507,13 @@ class G1WholeBodyEnv(DirectRLEnv):
             "physics_dt": self.physics_dt, "control_dt": self.step_dt, "decimation": self.cfg.decimation,
             "action_scale": self.cfg.action_scale, "action_clip": [-self.cfg.action_clip, self.cfg.action_clip],
             "reference_state_initialization": self.cfg.reference_state_initialization,
+            "reset_contract": {"version": "grounded_nominal_v1", "clearance_m": 0.015,
+                "root_height": "reference height for RSI; otherwise FK nominal root height; plus clearance",
+                "external_reset_targets": "grounded nominal markers; zero commanded velocity",
+                "external_disarm_targets": "current reachable markers; zero commanded velocity"},
             "reward_contract": {name: getattr(self.cfg, name) for name in (
                 "tracking_reward_weight", "tracking_error_variance", "height_reward_weight",
-                "height_error_variance", "fall_cost")},
+                "height_error_variance", "fall_cost", "head_tracking_weight")},
             "motion_playback": "linear interpolation with reflected clip endpoints",
             "teacher": self.cfg.teacher, "actor_observations": self.cfg.observation_space,
             "critic_observations": self.cfg.state_space, "coordinate_version": "g1-yaw-floor-relative-v1",

@@ -80,7 +80,8 @@ fi
 ```bash
 RUN_DIR="outputs/g1/실제_학습_폴더"
 .venv-alvr/bin/python scripts/g1/alvr_input.py \
-  --nominal "$RUN_DIR/nominal_targets.json"
+  --nominal "$RUN_DIR/nominal_targets.json" \
+  --target-bounds config/g1/teleop_small_motion.json
 ```
 
 `--nominal`은 `[head, left, right]` 순서의 3×3 좌표 목록 또는
@@ -106,9 +107,25 @@ G1 모델의 FK로 생성한 정책과 동일한 기준 위치를 사용해야 �
 시뮬레이션이 실행되었다고 판단하지 않는다. 시뮬레이터의 수신 상태도 확인한다.
 트리거 값은 기록할 수 있지만 이 세 점 정책의 그리퍼 제어 명령으로 사용하지 않는다.
 
-초기 이동 속도 상한은 전후 0.5 m/s, 좌우 0.25 m/s, 회전 0.6 rad/s이다.
-이 수치는 입력 제한이며, 해당 속도에서 정책의 안정성이 검증되었다는 의미는 아니다.
-배포 모델의 평가 범위도 함께 확인한다.
+옵션을 생략한 입력 속도 상한은 전후 0.5 m/s, 좌우 0.25 m/s, 회전 0.6 rad/s이다.
+`--velocity-limits VX VY YAW`로 각각의 상한을 줄일 수 있다. 단위는 m/s, m/s,
+rad/s이며 모든 값은 유한한 0 이상의 수여야 하고 기존 상한을 넘길 수 없다.
+0으로 지정한 축은 스틱을 움직여도 목표 속도가 0이다. 기존 스틱 부호와 deadzone은
+유지한다.
+
+전후·좌우 이동을 실험하되 회전 명령을 비활성화하려면 다음처럼 실행한다.
+선택한 모델이 해당 이동 범위로 학습되고 별도 평가되었는지 먼저 확인한다.
+
+```bash
+.venv-alvr/bin/python scripts/g1/alvr_input.py \
+  --nominal "$RUN_DIR/nominal_targets.json" \
+  --target-bounds config/g1/teleop_small_motion.json \
+  --velocity-limits 0.15 0.08 0
+```
+
+이 수치는 명령 제한이며 보행·회전 성능이나 안정성의 증명이 아니다. 정지 기반
+정책은 수신기에서 학습 범위에 따라 이동 명령을 모두 0으로 제한한다.
+입력 프로그램의 상한 설정으로 모델의 학습 범위를 넓힐 수는 없다.
 
 학습·추론 제어 간격은 시뮬레이션 시간 0.02초(목표 50 Hz)다. `--real-time`은
 처리가 빠를 때 대기 시간을 넣지만 느린 GPU를 50 Hz로 만들지는 않는다.
@@ -138,8 +155,24 @@ G1의 +X 전방, +Y 왼쪽, +Z 위쪽 좌표로 변환한다.
 머리의 초기 수평 방향을 정면으로 정하고, 각 장치의 **초기 위치에서 변화한 값**을
 로봇 기준 위치에 더한다. 따라서 사람의 키가 그대로 G1 골반 기준 머리 높이로
 들어가지 않는다. 기본 변화량 배율은 0.65이고 `--scale`로 조절할 수 있다.
-기본 제한은 머리 각 축 ±0.12 m, 양손 각 축 ±0.30 m이다. 모델의 관측 입력은
-세 점의 **위치**이며 머리·손목 방향은 원본 기록에만 보관한다.
+별도 설정을 생략했을 때의 기존 기본 제한은 머리 각 축 ±0.12 m, 양손 각 축
+±0.30 m이다. 첫 연결에는 위 명령처럼 `--target-bounds`로 작은 조작 범위를
+명시하는 것을 권장한다.
+
+`config/g1/teleop_small_motion.json`은 보정한 중립 위치를 기준으로 머리 X/Y는
+±0.025 m, 머리 Z는 -0.04~0 m, 양손의 각 축은 ±0.05 m로 제한한다.
+사람 입력에 배율을 적용하고 로봇 좌표로 변환한 뒤 이 범위로 잘라낸다.
+이 설정은 **임시 조작 범위**이며 정책의 추종 성능·안정성·실제 Quest 연결을
+자동으로 입증하지 않는다. 선택한 모델의 별도 평가 결과를 함께 확인한다.
+
+사용자 설정 JSON은 `units: "m"`와 `delta_min`, `delta_max`를 포함해야 한다.
+각 배열의 행 순서는 `[head, left_hand, right_hand]`, 열 순서는 `[X, Y, Z]`이며
+3×3 유한 수치여야 한다. 각 축은 `delta_min <= 0 <= delta_max`와
+`delta_min < delta_max`를 만족해야 하므로 중립 위치를 포함한다.
+`--target-bounds`는 OpenVR 및 synthetic 입력의 변환에 적용된다.
+독립적인 `runtime_scenario.py --tracking-sweep`의 ±6 cm 손 목표는 바꾸지 않는다.
+
+모델의 관측 입력은 세 점의 **위치**이며 머리·손목 방향은 원본 기록에만 보관한다.
 
 Quest 3와 두 컨트롤러에는 다리 추적 정보가 없다. 사람의 실제 발 움직임을
 그대로 복원하는 기능은 제공하지 않는다. 하체는 학습한 정책이 균형·목표 추종을
@@ -157,7 +190,8 @@ Quest 3와 두 컨트롤러에는 다리 추적 정보가 없다. 사람의 실�
 ```bash
 .venv-alvr/bin/python scripts/g1/alvr_input.py \
   --backend synthetic --enable-synthetic --duration 10 \
-  --nominal "$RUN_DIR/nominal_targets.json"
+  --nominal "$RUN_DIR/nominal_targets.json" \
+  --target-bounds config/g1/teleop_small_motion.json
 ```
 
 `SYNTHETIC INPUT`은 실제 Quest가 연결되었다는 뜻이 아니다.
@@ -168,7 +202,9 @@ Quest 3와 두 컨트롤러에는 다리 추적 정보가 없다. 사람의 실�
 ```bash
 # 실제 OpenVR 입력 및 변환된 목표를 새 파일에 기록한다. 기존 파일은 덮어쓰지 않는다.
 .venv-alvr/bin/python scripts/g1/alvr_input.py \
-  --nominal "$RUN_DIR/nominal_targets.json" --record logs/g1/quest_session.jsonl
+  --nominal "$RUN_DIR/nominal_targets.json" \
+  --target-bounds config/g1/teleop_small_motion.json \
+  --record logs/g1/quest_session.jsonl
 
 # 기본 재생은 동작을 허용하지 않는다.
 .venv-alvr/bin/python scripts/g1/alvr_input.py \
@@ -181,6 +217,10 @@ Quest 3와 두 컨트롤러에는 다리 추적 정보가 없다. 사람의 실�
 
 재생은 기록 당시 보정·배율을 적용한 목표를 사용하며 새 세션 UUID와 현재 시각을
 붙인다. 새 `--nominal`/`--scale`로 원본을 다시 보정하는 기능은 아니다.
+`--target-bounds`를 replay와 함께 지정하면 오류로 종료한다. 기록된 제한 후 목표를
+그대로 재생하므로 새 범위를 조용히 무시하거나 다른 기준 위치에 다시 적용하지 않는다.
+`--velocity-limits`도 replay에는 지정할 수 없다. 재생은 기록된 최종 속도 명령을
+사용하며 새 스틱 제한값을 적용하는 경로가 아니다.
 재생 도중 Space를 누르면 그 프로세스에서는 다시 활성화되지 않는다.
 
 자동 검사:

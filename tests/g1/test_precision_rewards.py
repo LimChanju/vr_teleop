@@ -5,6 +5,8 @@ from pathlib import Path
 from types import SimpleNamespace
 import unittest
 
+from scripts.g1.run import configure_head_tracking_weight
+
 try:
     import torch
 except ImportError:
@@ -13,7 +15,7 @@ except ImportError:
 
 SOURCE = Path(__file__).resolve().parents[2] / "g1_teleop/sim/env.py"
 REWARD_FIELDS = ("tracking_reward_weight", "tracking_error_variance", "height_reward_weight",
-                 "height_error_variance", "fall_cost")
+                 "height_error_variance", "fall_cost", "head_tracking_weight")
 
 
 def reward_method(path=SOURCE):
@@ -71,7 +73,7 @@ class PrecisionRewardTests(unittest.TestCase):
 
     def test_defaults_preserve_original_configuration(self):
         self.assertEqual(vars(default_cfg()), dict(tracking_reward_weight=4., tracking_error_variance=.04,
-            height_reward_weight=1., height_error_variance=.01, fall_cost=2.))
+            height_reward_weight=1., height_error_variance=.01, fall_cost=2., head_tracking_weight=1.))
 
     def test_ideal_standing_has_known_default_and_precision_rewards(self):
         # alive(1)+tracking(4/6)+linear(2)+yaw(1)+height(1/2)+upright(1)+qref(1)
@@ -111,6 +113,52 @@ class PrecisionRewardTests(unittest.TestCase):
             self.calculate(env)
         self.assertAlmostEqual(float(env._episode_sums["sparse_tracking"][0]), 3 * .02 * 6 * math.exp(-1), places=12)
         self.assertAlmostEqual(float(env._episode_sums["height"][0]), 3 * .02 * 2 * math.exp(-1), places=12)
+
+    def test_head_default_preserves_legacy_tracking_reduction_bitwise(self):
+        generator=torch.Generator().manual_seed(935)
+        for precision in [False,True]:
+            for _ in range(16):
+                env=fixture(precision=precision)
+                positions=torch.rand((1,3,3),generator=generator,dtype=torch.float64)*.2
+                env._tracked_positions=lambda:positions
+                error=torch.linalg.vector_norm(positions-env.target_positions,dim=-1)
+                old=env.cfg.tracking_reward_weight*torch.exp(-error.square()/env.cfg.tracking_error_variance).mean(-1)*env.step_dt
+                self.calculate(env)
+                self.assertTrue(torch.equal(env._episode_sums['sparse_tracking'],old))
+
+    def test_head_weight_adds_only_head_term_without_renormalizing_hands(self):
+        delta=[]
+        for hands in [(.03,.06),(.08,.01)]:
+            rewards=[]
+            for weight in [1.,2.]:
+                env=fixture(precision=True)
+                env.cfg.head_tracking_weight=weight
+                position=torch.tensor([[[.04,0,0],[hands[0],0,0],[hands[1],0,0]]],dtype=torch.float64)
+                env._tracked_positions=lambda:position
+                rewards.append(float(self.calculate(env)[0]))
+            delta.append(rewards[1]-rewards[0])
+        expected=6./3.*math.exp(-.04**2/.01)*.02
+        self.assertAlmostEqual(delta[0],expected,places=12)
+        self.assertAlmostEqual(delta[1],expected,places=12)
+
+    def test_head_setting_restores_legacy_and_saved_precision_contract(self):
+        cfg=SimpleNamespace(tracking_reward_weight=6.,tracking_error_variance=.0025,head_tracking_weight=9.)
+        configure_head_tracking_weight(cfg,{'reward_contract':{'tracking_reward_weight':6.}},mode='evaluate')
+        self.assertEqual(cfg.head_tracking_weight,1.)
+        configure_head_tracking_weight(cfg,{'reward_contract':{'head_tracking_weight':2.}},mode='evaluate')
+        self.assertEqual(cfg.head_tracking_weight,2.)
+        self.assertEqual(cfg.tracking_reward_weight,6.)
+        self.assertEqual(cfg.tracking_error_variance,.0025)
+        configure_head_tracking_weight(cfg,{'reward_contract':{'head_tracking_weight':2.}},override=3.,mode='train')
+        self.assertEqual(cfg.head_tracking_weight,3.)
+
+    def test_head_cli_and_saved_values_are_finite_bounded_and_train_only(self):
+        for value in [0,-1,10.1,float('nan'),float('inf'),True]:
+            with self.assertRaises(ValueError):configure_head_tracking_weight(None,override=value)
+            with self.assertRaises(ValueError):configure_head_tracking_weight(None,{'reward_contract':{'head_tracking_weight':value}},mode='evaluate')
+        for mode in ['evaluate','teleop','export']:
+            with self.assertRaises(ValueError):configure_head_tracking_weight(None,override=2.,mode=mode)
+        self.assertEqual(configure_head_tracking_weight(None,override=10.),10.)
 
 
 if __name__ == "__main__":

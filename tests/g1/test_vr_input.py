@@ -24,6 +24,8 @@ from g1_teleop.vr.calibration import RawFrame, TargetMapper, valid_poses
 from g1_teleop.vr.openvr_source import SyntheticSource
 from g1_teleop.vr.protocol import TargetFrame, UDPReceiver, decode_target, encode_target
 from g1_teleop.vr.replay import ReplaySource
+from scripts.g1.alvr_input import load_target_bounds, parse_args
+from scripts.g1 import alvr_input
 
 
 def raw_frame():
@@ -36,6 +38,71 @@ def target(**kwargs):
 
 
 class MappingTests(unittest.TestCase):
+    def test_cli_velocity_limits_validate_caps_zero_axes_and_replay(self):
+        self.assertIsNone(parse_args([]).velocity_limits)
+        self.assertEqual(parse_args(["--velocity-limits", ".15", ".08", "0"]).velocity_limits, [0.15, 0.08, 0])
+        self.assertEqual(parse_args(["--velocity-limits", "0", "0", "0"]).velocity_limits, [0, 0, 0])
+        for values in [("nan", "0", "0"), ("0", "inf", "0"), ("-.1", "0", "0"),
+                       (".51", "0", "0"), ("0", ".26", "0"), ("0", "0", ".61")]:
+            with self.subTest(values=values), mock.patch("sys.stderr"), self.assertRaises(SystemExit):
+                parse_args(["--velocity-limits", *values])
+        with mock.patch("sys.stderr"), self.assertRaises(SystemExit):
+            parse_args(["--backend", "replay", "--replay-file", "input.jsonl", "--velocity-limits", ".15", ".08", "0"])
+
+    def test_asymmetric_small_bounds_apply_after_robot_transform_and_scale(self):
+        bounds = load_target_bounds(ROOT / "config/g1/teleop_small_motion.json")
+        mapper = TargetMapper(scale=0.4, **bounds)
+        raw = raw_frame()
+        mapper.update(raw)
+        neutral = raw.poses.copy()
+        raw.calibrate, raw.arm = False, True
+        displacement = np.ones((3, 3)) @ mapper.basis / mapper.scale
+        raw.poses[:, :, 3] += displacement
+        frame = mapper.update(raw)
+        self.assertTrue(frame.enabled)
+        np.testing.assert_allclose(frame.positions - mapper.nominal, bounds["delta_max"], atol=1e-10)
+        self.assertAlmostEqual(frame.positions[0, 2], mapper.nominal[0, 2])  # No head motion above neutral.
+        raw.poses = neutral.copy()
+        raw.poses[:, :, 3] -= displacement
+        frame = mapper.update(raw)
+        np.testing.assert_allclose(frame.positions - mapper.nominal, bounds["delta_min"], atol=1e-10)
+        raw.calibrate, raw.arm = True, False
+        frame = mapper.update(raw)
+        np.testing.assert_allclose(frame.positions, mapper.nominal)  # Recalibration changes the zero point.
+        self.assertFalse(frame.enabled)
+        bounds["delta_min"][:] = -1  # Caller mutations cannot silently change the live envelope.
+        self.assertAlmostEqual(mapper.delta_min[0, 2], -0.04)
+
+    def test_bounds_validate_shapes_finiteness_neutral_and_nonzero_span(self):
+        lower, upper = -np.ones((3, 3)) * 0.05, np.ones((3, 3)) * 0.05
+        for bad_lower, bad_upper in [(None, upper), (lower, None),
+                (lower[:2], upper), (np.full((3, 3), np.nan), upper),
+                (lower, np.full((3, 3), np.inf)), (np.ones((3, 3)), upper),
+                (lower, -np.ones((3, 3))), (np.zeros((3, 3)), np.zeros((3, 3))),
+                (lower.astype(str), upper), (np.zeros((3, 3), dtype=bool), upper)]:
+            with self.subTest(lower=bad_lower, upper=bad_upper), self.assertRaises(ValueError):
+                TargetMapper(delta_min=bad_lower, delta_max=bad_upper)
+        with self.assertRaisesRegex(ValueError, "not both"):
+            TargetMapper(max_delta=upper, delta_min=lower, delta_max=upper)
+        mapper = TargetMapper(max_delta=upper)
+        np.testing.assert_allclose(mapper.delta_min, lower)
+        np.testing.assert_allclose(mapper.delta_max, upper)
+
+    def test_bounds_json_units_axes_and_replay_option_are_explicit(self):
+        value = json.loads((ROOT / "config/g1/teleop_small_motion.json").read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bounds.json"
+            for key, invalid in [("units", "cm"), ("coordinate_version", "OpenVR"),
+                                 ("point_order", ["left_hand", "right_hand", "head"]),
+                                 ("delta_max", [[0, 0, 0]]), ("delta_min", None)]:
+                path.write_text(json.dumps({**value, key: invalid}))
+                with self.subTest(key=key), self.assertRaises(ValueError):
+                    load_target_bounds(path)
+        args = parse_args(["--backend", "synthetic", "--target-bounds", "bounds.json"])
+        self.assertEqual(args.target_bounds, Path("bounds.json"))
+        with mock.patch("sys.stderr"), self.assertRaises(SystemExit):
+            parse_args(["--backend", "replay", "--replay-file", "record.jsonl", "--target-bounds", "bounds.json"])
+
     def test_neutral_frame_does_not_use_human_height_as_robot_height(self):
         raw = raw_frame()
         mapper = TargetMapper()
@@ -145,6 +212,51 @@ class MappingTests(unittest.TestCase):
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_cli_velocity_limits_reach_real_mapper_and_disable_yaw(self):
+        with tempfile.TemporaryDirectory() as directory, UDPReceiver(port=0) as receiver:
+            record = Path(directory) / "velocity.jsonl"
+            args = parse_args(["--backend", "synthetic", "--enable-synthetic", "--duration", ".1",
+                "--port", str(receiver.address[1]), "--record", str(record), "--velocity-limits", ".15", ".08", "0"])
+            source = SyntheticSource(enabled=True)
+            original_sample = source.sample
+            def stick_sample():
+                raw = original_sample()
+                raw.left_stick, raw.right_stick = (1, 0.6), (-1, 0)
+                return raw
+            with mock.patch.object(source, "sample", side_effect=stick_sample), \
+                 mock.patch.object(alvr_input, "SyntheticSource", return_value=source), \
+                 mock.patch.object(alvr_input, "parse_args", return_value=args), mock.patch("sys.stdout"):
+                self.assertEqual(alvr_input.main(), 0)
+            active = [json.loads(line)["target"] for line in record.read_text().splitlines()
+                      if json.loads(line)["target"]["enabled"]]
+            self.assertGreater(len(active), 0)
+            # Forward 0.6 becomes 0.5 after the existing 0.2 deadzone; rightward
+            # left stick is negative robot Y; a full yaw stick remains disabled.
+            for frame in active:
+                np.testing.assert_allclose(frame["command_velocity"], [0.075, -0.08, 0])
+
+    def test_sender_process_applies_selected_asymmetric_bounds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            bounds_path, record = directory / "bounds.json", directory / "record.jsonl"
+            lower = np.full((3, 3), -0.001)
+            upper = np.full((3, 3), 0.001)
+            upper[0, 2] = 0
+            bounds_path.write_text(json.dumps(dict(units="m", delta_min=lower.tolist(), delta_max=upper.tolist())))
+            with UDPReceiver(port=0) as receiver:
+                command = [sys.executable, str(ROOT / "scripts/g1/alvr_input.py"),
+                    "--backend", "synthetic", "--enable-synthetic", "--duration", "0.4",
+                    "--port", str(receiver.address[1]), "--target-bounds", str(bounds_path), "--record", str(record)]
+                result = subprocess.run(command, capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("provisional target envelope", result.stdout)
+            entries = [json.loads(line) for line in record.read_text().splitlines()]
+            positions = np.asarray([entry["target"]["target_positions_m"] for entry in entries])
+            delta = positions - positions[0]
+            self.assertTrue(np.all(delta >= lower - 1e-10))
+            self.assertTrue(np.all(delta <= upper + 1e-10))
+            self.assertAlmostEqual(delta[:, 1, 2].max(), 0.001)
+
     def test_schema_values_and_wallclock_are_validated(self):
         frame = target(enabled=True)
         data = encode_target(frame)

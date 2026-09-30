@@ -7,6 +7,7 @@ observation layout, action interpretation, or physical model.
 """
 from __future__ import annotations
 
+import math
 import torch
 
 from isaaclab.utils import configclass
@@ -20,6 +21,8 @@ class G1VelocityEnvCfg(G1WholeBodyEnvCfg):
     command_max = (0.30, 0.15, 0.40)
     standing_fraction = 0.30
     command_resampling_s = 5.0
+    command_sampling = "mixed"
+    moving_xy_threshold = 0.08
     feet_air_time_reward_scale = 0.50
     both_feet_air_penalty_scale = 0.15
     moving_linear_velocity_reward_scale = 4.0
@@ -33,6 +36,15 @@ class G1VelocityEnv(G1WholeBodyEnv):
     cfg: G1VelocityEnvCfg
 
     def __init__(self, cfg: G1VelocityEnvCfg, render_mode=None, **kwargs):
+        if cfg.command_sampling not in ("mixed", "pure_axis"):
+            raise ValueError("command_sampling must be mixed or pure_axis")
+        if not math.isfinite(cfg.moving_xy_threshold) or not 0 < cfg.moving_xy_threshold <= 0.3:
+            raise ValueError("moving_xy_threshold must be finite and in (0,0.3]")
+        if len(cfg.command_max) != 3 or any(not math.isfinite(v) or v < 0 for v in cfg.command_max):
+            raise ValueError("command_max must contain three finite nonnegative limits")
+        if cfg.command_sampling == "pure_axis" and any(
+                lower > upper for lower, upper in zip((0.10, 0.08, 0.15), cfg.command_max)):
+            raise ValueError("pure_axis command maxima must be at least (0.10,0.08,0.15)")
         if not 0.0 <= cfg.standing_fraction <= 1.0:
             raise ValueError("standing_fraction must be in [0,1]")
         if cfg.command_resampling_s <= 0.0:
@@ -78,7 +90,17 @@ class G1VelocityEnv(G1WholeBodyEnv):
             self._set_evaluation_commands(ids)
             return
         limits = torch.tensor(self.cfg.command_max, device=self.device)
-        commands = (2.0 * torch.rand(len(ids), 3, device=self.device) - 1.0) * limits
+        if self.cfg.command_sampling == "mixed":
+            # Keep the legacy RNG calls and arithmetic exactly unchanged.
+            commands = (2.0 * torch.rand(len(ids), 3, device=self.device) - 1.0) * limits
+        else:
+            draw = torch.rand(len(ids), device=self.device)
+            axis = (draw >= 5.0 / 14.0).long() + (draw >= 10.0 / 14.0).long()
+            minima = torch.tensor((0.10, 0.08, 0.15), device=self.device)[axis]
+            magnitude = minima + torch.rand(len(ids), device=self.device) * (limits[axis] - minima)
+            sign = torch.where(torch.rand(len(ids), device=self.device) < 0.5, -1.0, 1.0)
+            commands = torch.zeros(len(ids), 3, device=self.device)
+            commands.scatter_(1, axis[:, None], (magnitude * sign)[:, None])
         standing = torch.rand(len(ids), device=self.device) < self.cfg.standing_fraction
         commands[standing] = 0.0
         self._velocity_commands[ids] = commands
@@ -106,7 +128,7 @@ class G1VelocityEnv(G1WholeBodyEnv):
 
     def _get_rewards(self):
         reward = super()._get_rewards()
-        moving = (torch.linalg.vector_norm(self.command_velocity[:, :2], dim=-1) > 0.08) | (
+        moving = (torch.linalg.vector_norm(self.command_velocity[:, :2], dim=-1) > self.cfg.moving_xy_threshold) | (
             self.command_velocity[:, 2].abs() > 0.10)
         actual_linear = self.robot.data.root_lin_vel_b[:, :2]
         actual_yaw = self.robot.data.root_ang_vel_b[:, 2]
@@ -173,11 +195,19 @@ class G1VelocityEnv(G1WholeBodyEnv):
             "training_velocity_limits": list(self.cfg.command_max),
             "training_standing_fraction": self.cfg.standing_fraction,
             "velocity_command_resampling_s": self.cfg.command_resampling_s,
+            "velocity_command_sampling": {"version": "velocity_command_sampling_v1",
+                "mode": self.cfg.command_sampling,
+                "pure_axis_probabilities_given_moving": [5.0 / 14.0, 5.0 / 14.0, 4.0 / 14.0],
+                "pure_axis_minimum_absolute_commands": [0.10, 0.08, 0.15],
+                "pure_axis_sign": "uniform independent positive/negative",
+                "standing_fraction": self.cfg.standing_fraction},
             "feet_air_time_reward_scale": self.cfg.feet_air_time_reward_scale,
             "both_feet_air_penalty_scale": self.cfg.both_feet_air_penalty_scale,
             "velocity_reward_contract": {
                 "version": "moving_velocity_replacement_v2",
-                "moving_condition": "norm(command_xy)>0.08 m/s OR abs(command_yaw)>0.10 rad/s",
+                "moving_condition": f"norm(command_xy)>{self.cfg.moving_xy_threshold:g} m/s OR abs(command_yaw)>0.10 rad/s",
+                "moving_thresholds": {"xy_norm_mps": self.cfg.moving_xy_threshold,
+                    "yaw_abs_radps": 0.10, "comparison": ">"},
                 "linear_velocity": {"scale": self.cfg.moving_linear_velocity_reward_scale,
                     "squared_error_denominator_m2_s2": self.cfg.moving_linear_velocity_error_variance},
                 "yaw_velocity": {"scale": self.cfg.moving_yaw_velocity_reward_scale,

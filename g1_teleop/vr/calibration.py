@@ -51,6 +51,19 @@ def _deadzone(value, threshold=0.2):
     return 0.0 if abs(value) <= threshold else math.copysign((abs(value) - threshold) / (1 - threshold), value)
 
 
+def validate_target_bounds(delta_min, delta_max):
+    """Validate independent robot-frame displacement limits, including neutral."""
+    lower, upper = np.asarray(delta_min), np.asarray(delta_max)
+    if (lower.shape != (3, 3) or upper.shape != (3, 3)
+            or lower.dtype.kind not in "iuf" or upper.dtype.kind not in "iuf"):
+        raise ValueError("delta_min and delta_max must be numeric 3x3 arrays in metres")
+    lower, upper = lower.astype(float, copy=True), upper.astype(float, copy=True)
+    if (not np.isfinite(lower).all() or not np.isfinite(upper).all()
+            or np.any(lower > 0) or np.any(upper < 0) or np.any(lower >= upper)):
+        raise ValueError("target bounds must be finite and satisfy delta_min <= 0 <= delta_max and delta_min < delta_max")
+    return lower, upper
+
+
 class TargetMapper:
     """Map neutral-relative motion onto trained robot landmarks.
 
@@ -59,7 +72,8 @@ class TargetMapper:
     Orientation is recorded in RawFrame, but this policy contract uses positions.
     """
 
-    def __init__(self, nominal=None, scale=0.65, max_delta=None, velocity_limits=(0.5, 0.25, 0.6)):
+    def __init__(self, nominal=None, scale=0.65, max_delta=None, velocity_limits=(0.5, 0.25, 0.6),
+                 delta_min=None, delta_max=None):
         self.nominal = np.asarray(DEFAULT_NOMINAL if nominal is None else nominal, dtype=float).copy()
         self.max_delta = np.asarray([[0.12] * 3, [0.30] * 3, [0.30] * 3] if max_delta is None else max_delta, dtype=float)
         self.velocity_limits = np.asarray(velocity_limits, dtype=float)
@@ -67,6 +81,15 @@ class TargetMapper:
             raise ValueError("nominal must be a finite 3x3 matrix in metres")
         if self.max_delta.shape != (3, 3) or not np.isfinite(self.max_delta).all() or np.any(self.max_delta <= 0):
             raise ValueError("max_delta must be positive finite 3x3")
+        if delta_min is not None or delta_max is not None:
+            if delta_min is None or delta_max is None:
+                raise ValueError("delta_min and delta_max must be supplied together")
+            if max_delta is not None:
+                raise ValueError("choose max_delta or asymmetric delta_min/delta_max, not both")
+            self.delta_min, self.delta_max = validate_target_bounds(delta_min, delta_max)
+            self.max_delta = np.maximum(-self.delta_min, self.delta_max)
+        else:
+            self.delta_min, self.delta_max = -self.max_delta.copy(), self.max_delta.copy()
         if self.velocity_limits.shape != (3,) or not np.isfinite(self.velocity_limits).all() or np.any(self.velocity_limits < 0):
             raise ValueError("invalid velocity limits")
         if not 0 < scale <= 2:
@@ -138,7 +161,7 @@ class TargetMapper:
         positions = self.nominal.copy()
         if valid and self.neutral is not None:
             delta = (raw.poses[:, :, 3] - self.neutral) @ self.basis.T * self.scale
-            positions += np.clip(delta, -self.max_delta, self.max_delta)
+            positions += np.clip(delta, self.delta_min, self.delta_max)
         enabled = bool(valid and self.armed and self.neutral is not None and min(raw.grips) >= 0.7)
         velocity = np.zeros(3)
         if enabled:

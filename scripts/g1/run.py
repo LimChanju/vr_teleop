@@ -6,6 +6,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import signal
@@ -42,6 +43,146 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def validate_yaw_options(mode, velocity_variant, sigma=None, weight=None):
+    """Validate optional training overrides before starting the simulator."""
+    if sigma is None and weight is None:
+        return
+    if mode != "train" or not velocity_variant:
+        raise ValueError("Yaw reward overrides require train mode and the velocity variant (--velocity-training or a velocity --checkpoint)")
+    if sigma is not None and (not math.isfinite(sigma) or not 0 < sigma <= 2 or sigma ** 2 == 0):
+        raise ValueError("--yaw-tracking-sigma must be finite and in (0,2] rad/s")
+    if weight is not None and (not math.isfinite(weight) or not 0 < weight <= 20):
+        raise ValueError("--yaw-reward-weight must be finite and in (0,20]")
+
+
+def validate_velocity_command_options(mode, velocity_variant, sampling=None, xy_threshold=None, command_max=None):
+    """Validate opt-in command curriculum without starting the simulator."""
+    if sampling is None and xy_threshold is None:
+        return
+    if mode != "train" or not velocity_variant:
+        raise ValueError("Command sampling/threshold overrides require train mode and the velocity variant")
+    if sampling is not None and sampling not in ("mixed", "pure_axis"):
+        raise ValueError("--command-sampling must be mixed or pure_axis")
+    if xy_threshold is not None and (isinstance(xy_threshold, bool) or not math.isfinite(xy_threshold)
+                                    or not 0 < xy_threshold <= 0.3):
+        raise ValueError("--moving-xy-threshold must be finite and in (0,0.3] m/s")
+    if sampling == "pure_axis":
+        limits = (0.30, 0.15, 0.40) if command_max is None else command_max
+        if (not isinstance(limits, (list, tuple)) or len(limits) != 3
+                or any(isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v)
+                       or v < lower for v, lower in zip(limits, (0.10, 0.08, 0.15)))):
+            raise ValueError("pure_axis command maxima must be finite and at least (0.10,0.08,0.15)")
+
+
+def restore_velocity_settings(cfg, metadata):
+    """Restore velocity training semantics before any explicit new overrides.
+
+    Older velocity metadata predates the moving-only replacement: its reward
+    was the base linear 2*exp(-e2/.25), yaw exp(-e2/.25). Restoring those values
+    makes the replacement delta zero, preserving that legacy behavior.
+    """
+    if not metadata or metadata.get("environment_variant") != "g1_commanded_velocity_v1":
+        return
+    changes = {}
+    def number(value, name, *, positive=False, maximum=None):
+        if isinstance(value, bool):
+            raise ValueError(f"Saved {name} must be a number")
+        try:
+            value = float(value)
+        except (ValueError, TypeError) as error:
+            raise ValueError(f"Invalid saved {name}") from error
+        if not math.isfinite(value) or value < 0 or (positive and value == 0) or (maximum is not None and value > maximum):
+            raise ValueError(f"Invalid saved {name}: {value}")
+        return value
+    if "velocity_reward_contract" not in metadata:
+        changes.update(moving_linear_velocity_reward_scale=2., moving_linear_velocity_error_variance=.25,
+                       moving_yaw_velocity_reward_scale=1., moving_yaw_velocity_error_variance=.25)
+    else:
+        contract = metadata["velocity_reward_contract"]
+        if not isinstance(contract, dict) or contract.get("version") != "moving_velocity_replacement_v2":
+            raise ValueError("Unsupported saved velocity_reward_contract version")
+        for prefix, term, variance_key in (
+            ("moving_linear_velocity", "linear_velocity", "squared_error_denominator_m2_s2"),
+            ("moving_yaw_velocity", "yaw_velocity", "squared_error_denominator_rad2_s2"),
+        ):
+            values = contract.get(term)
+            if not isinstance(values, dict) or "scale" not in values or variance_key not in values:
+                raise ValueError(f"Incomplete saved velocity reward term: {term}")
+            changes[prefix + "_reward_scale"] = number(values["scale"], term + ".scale")
+            changes[prefix + "_error_variance"] = number(values[variance_key], term + ".variance", positive=True)
+    for key, field, positive, maximum in (
+        ("training_standing_fraction", "standing_fraction", False, 1.),
+        ("velocity_command_resampling_s", "command_resampling_s", True, None),
+        ("feet_air_time_reward_scale", "feet_air_time_reward_scale", False, None),
+        ("both_feet_air_penalty_scale", "both_feet_air_penalty_scale", False, None),
+    ):
+        if key in metadata:
+            changes[field] = number(metadata[key], key, positive=positive, maximum=maximum)
+    if "training_velocity_limits" in metadata:
+        limits = metadata["training_velocity_limits"]
+        if not isinstance(limits, (list, tuple)) or len(limits) != 3:
+            raise ValueError("Saved training_velocity_limits must have three entries")
+        changes["command_max"] = tuple(number(value, "training_velocity_limits") for value in limits)
+    # Missing structured fields are legacy mixed sampling with the original
+    # .08/.10 moving mask; preserve the existing reward replacement semantics.
+    changes.update(command_sampling="mixed", moving_xy_threshold=0.08)
+    sampling = metadata.get("velocity_command_sampling")
+    if sampling is not None:
+        if not isinstance(sampling, dict) or sampling.get("version") != "velocity_command_sampling_v1":
+            raise ValueError("Unsupported saved velocity_command_sampling")
+        if sampling.get("mode") not in ("mixed", "pure_axis"):
+            raise ValueError("Unsupported saved velocity command sampling mode")
+        expected = {"pure_axis_probabilities_given_moving": [5.0 / 14.0, 5.0 / 14.0, 4.0 / 14.0],
+                    "pure_axis_minimum_absolute_commands": [0.10, 0.08, 0.15],
+                    "pure_axis_sign": "uniform independent positive/negative"}
+        if any(sampling.get(key) != value for key, value in expected.items()):
+            raise ValueError("Unsupported saved pure-axis sampling constants")
+        standing = changes.get("standing_fraction", cfg.standing_fraction)
+        if sampling.get("standing_fraction") != standing:
+            raise ValueError("Conflicting saved standing fractions")
+        changes["command_sampling"] = sampling.get("mode")
+    thresholds = metadata.get("velocity_reward_contract", {}).get("moving_thresholds")
+    if thresholds is not None:
+        if (not isinstance(thresholds, dict) or thresholds.get("yaw_abs_radps") != 0.10
+                or thresholds.get("comparison") != ">" or "xy_norm_mps" not in thresholds):
+            raise ValueError("Unsupported saved moving thresholds")
+        changes["moving_xy_threshold"] = number(thresholds["xy_norm_mps"], "moving_thresholds.xy_norm_mps", positive=True, maximum=.3)
+    validate_velocity_command_options("train", True, changes["command_sampling"],
+        changes["moving_xy_threshold"], changes.get("command_max", cfg.command_max))
+    # Reject malformed metadata before mutating any configuration fields.
+    for field, value in changes.items():
+        setattr(cfg, field, value)
+
+
+def configure_head_tracking_weight(cfg, metadata=None, *, override=None, mode="train"):
+    """Restore the optional head-only multiplier; legacy metadata means 1."""
+    if override is not None and mode != "train":
+        raise ValueError("--head-tracking-weight is a training option; evaluation restores the saved value")
+    contract = (metadata or {}).get("reward_contract") or {}
+    if not isinstance(contract, dict):
+        raise ValueError("Saved reward_contract must be a mapping")
+    value = contract.get("head_tracking_weight", 1.0) if override is None else override
+    if isinstance(value, bool):
+        raise ValueError("head_tracking_weight must be a number")
+    try:
+        value = float(value)
+    except (ValueError, TypeError) as error:
+        raise ValueError("Invalid head_tracking_weight") from error
+    if not math.isfinite(value) or not 0 < value <= 10:
+        raise ValueError("--head-tracking-weight must be finite and in (0,10]")
+    if cfg is not None:
+        cfg.head_tracking_weight = value
+    return value
+
+
+def set_teleop_hold_targets(raw, *, after_reset=False):
+    """Reset to grounded neutral; an ordinary disarm holds the reached pose."""
+    positions = (raw.nominal_keypoints.expand(raw.num_envs, -1, -1) if after_reset
+                 else raw.current_keypoints().detach())
+    raw.set_external_targets(positions, raw.command_velocity.new_zeros(raw.command_velocity.shape),
+                             reset_velocity=True)
+
+
 def main():
     from isaaclab.app import AppLauncher
 
@@ -61,12 +202,24 @@ def main():
                         help="Use tighter head/hand tracking rewards and a stronger fall penalty")
     parser.add_argument("--learning-rate", type=float,
                         help="Explicit training optimizer learning rate (saved in run configuration)")
+    parser.add_argument("--tracking-sigma", type=float,
+                        help="Training-only marker reward length scale in metres; variance=sigma**2")
+    parser.add_argument("--head-tracking-weight", type=float,
+                        help="Training-only head reward multiplier in (0,10]; hand coefficients stay unchanged")
     parser.add_argument("--motion-file", type=Path)
     parser.add_argument("--motion-split", choices=("train", "eval"), default=None)
     parser.add_argument("--velocity-training", action="store_true",
                         help="Use commanded locomotion curriculum with the same sparse policy inputs")
+    parser.add_argument("--command-sampling", choices=("mixed", "pure_axis"),
+                        help="Velocity training only: independent mixed commands or a single moving axis")
+    parser.add_argument("--moving-xy-threshold", type=float,
+                        help="Velocity training only: moving XY speed threshold in (0,0.3] m/s")
     parser.add_argument("--velocity-evaluation", action="store_true",
                         help="Evaluate deterministic held-out velocity commands with settled block metrics")
+    parser.add_argument("--yaw-tracking-sigma", type=float,
+                        help="Velocity training only: yaw reward width in rad/s, (0,2]; variance=sigma**2")
+    parser.add_argument("--yaw-reward-weight", type=float,
+                        help="Velocity training only: moving yaw reward weight in (0,20]")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--steps", type=int, default=2000,
@@ -91,6 +244,12 @@ def main():
         parser.error("--precision-training is a training option; evaluation restores the saved reward settings")
     if args.learning_rate is not None and (args.mode != "train" or not 0 < args.learning_rate <= 0.01):
         parser.error("--learning-rate requires train mode and a value in (0,0.01]")
+    if args.tracking_sigma is not None and (args.mode != "train" or not 0 < args.tracking_sigma <= 1):
+        parser.error("--tracking-sigma requires train mode and a value in (0,1] metres")
+    try:
+        configure_head_tracking_weight(None, override=args.head_tracking_weight, mode=args.mode)
+    except ValueError as error:
+        parser.error(str(error))
     if args.velocity_evaluation:
         if args.mode != "evaluate":
             parser.error("--velocity-evaluation requires evaluate mode")
@@ -136,6 +295,12 @@ def main():
             portable = ROOT / "data" / "motions" / saved_path.name
             args.motion_file = saved_path if saved_path.exists() else portable
     args.stage = args.stage or "sparse"
+    try:
+        validate_yaw_options(args.mode, args.velocity_training, args.yaw_tracking_sigma, args.yaw_reward_weight)
+        validate_velocity_command_options(args.mode, args.velocity_training, args.command_sampling,
+            args.moving_xy_threshold, (checkpoint_meta or {}).get("training_velocity_limits"))
+    except ValueError as error:
+        parser.error(str(error))
     if args.warm_start and (args.mode != "train" or args.stage != "sparse" or args.checkpoint or args.teacher_checkpoint):
         parser.error("--warm-start is for sparse training initialization, separately from resume/distillation")
     if args.warm_start_noise is not None and not args.warm_start:
@@ -220,7 +385,21 @@ def main():
         if args.precision_training:
             for key, value in zip(reward_fields, (6.0, 0.01, 2.0, 0.0025, 5.0)):
                 setattr(cfg, key, value)
+        if args.tracking_sigma is not None:
+            cfg.tracking_error_variance = args.tracking_sigma ** 2
+        configure_head_tracking_weight(cfg, checkpoint_meta, override=args.head_tracking_weight, mode=args.mode)
         if args.velocity_training:
+            restore_velocity_settings(cfg, checkpoint_meta)
+            if args.command_sampling is not None:
+                cfg.command_sampling = args.command_sampling
+            if args.moving_xy_threshold is not None:
+                cfg.moving_xy_threshold = args.moving_xy_threshold
+            validate_velocity_command_options("train", True, cfg.command_sampling,
+                cfg.moving_xy_threshold, cfg.command_max)
+            if args.yaw_tracking_sigma is not None:
+                cfg.moving_yaw_velocity_error_variance = args.yaw_tracking_sigma ** 2
+            if args.yaw_reward_weight is not None:
+                cfg.moving_yaw_velocity_reward_scale = args.yaw_reward_weight
             cfg.velocity_evaluation = args.velocity_evaluation
         cfg.motion_file = str(args.motion_file.resolve()) if args.motion_file else None
         cfg.motion_split = args.motion_split
@@ -259,6 +438,13 @@ def main():
         if args.learning_rate is not None:
             agent_cfg["algorithm"]["learning_rate"] = args.learning_rate
         metadata = raw.policy_metadata()
+        if checkpoint_meta and checkpoint_meta.get("reset_contract") != metadata["reset_contract"]:
+            # Old checkpoints remain usable: this fixes reset initialization,
+            # without changing their observation/action or physical parameters.
+            metadata["reset_contract_migration"] = {
+                "checkpoint": checkpoint_meta.get("reset_contract", "legacy_default_height_and_measured_reset_targets"),
+                "runtime": metadata["reset_contract"],
+            }
         metadata.setdefault("training_velocity_limits", [0.0, 0.0, 0.0])
         if args.mode != "train" and checkpoint_meta:
             metadata["scenario_velocity_limits"] = metadata["training_velocity_limits"]
@@ -440,7 +626,9 @@ def main():
             active = False
             schedule = time.monotonic()
             trace = {key: [] for key in ("target", "actual", "q", "action", "command", "enabled", "done",
-                                        "wall_time", "input_sequence", "input_fresh", "manual_reset")}
+                                        "wall_time", "input_sequence", "input_fresh", "manual_reset",
+                                        "root_position_w", "root_quaternion_wxyz", "root_linear_velocity_b", "root_angular_velocity_b",
+                                        "foot_contact", "foot_linear_velocity_w")}
             input_sources = set()
             xr_calibration = None
             with torch.inference_mode():
@@ -470,8 +658,7 @@ def main():
                             enabled_steps += 1
                             input_sources.add(frame.source)
                         elif active or step == 0 or (frame and frame.reset):
-                            # A disarmed robot keeps balancing at its current reachable pose.
-                            raw.set_external_targets(raw.current_keypoints().detach(), torch.zeros((1, 3), device=env.device), reset_velocity=True)
+                            set_teleop_hold_targets(raw, after_reset=step == 0 or bool(frame and frame.reset))
                         if active != now_active:
                             print(f"[G1] {'ARMED' if now_active else 'STOPPED / stale input'}", flush=True)
                         active = now_active
@@ -494,6 +681,14 @@ def main():
                         trace["input_sequence"].append(frame.seq if frame else -1)
                         trace["input_fresh"].append(bool(frame and frame.fresh))
                         trace["manual_reset"].append(bool(frame and frame.reset))
+                        robot_data = raw.robot.data
+                        trace["root_position_w"].append(robot_data.root_pos_w[0].cpu().numpy().copy())
+                        trace["root_quaternion_wxyz"].append(robot_data.root_quat_w[0].cpu().numpy().copy())
+                        trace["root_linear_velocity_b"].append(robot_data.root_lin_vel_b[0].cpu().numpy().copy())
+                        trace["root_angular_velocity_b"].append(robot_data.root_ang_vel_b[0].cpu().numpy().copy())
+                        foot_force = raw.contact_sensor.data.net_forces_w[0, raw.foot_contact_ids]
+                        trace["foot_contact"].append((torch.linalg.vector_norm(foot_force, dim=-1) > 5.).cpu().numpy().copy())
+                        trace["foot_linear_velocity_w"].append(robot_data.body_lin_vel_w[0, raw.foot_body_ids].cpu().numpy().copy())
                     if xr:
                         xr.update()
                     elapsed_steps += 1
@@ -503,7 +698,8 @@ def main():
                     fallen = raw.metrics["fallen"].bool()
                     if receiver and done_mask.any():
                         gate.trip("fall" if fallen.any() else "episode_end")
-                        raw.set_external_targets(raw.current_keypoints().detach(), torch.zeros((1, 3), device=env.device), reset_velocity=True)
+                        set_teleop_hold_targets(raw, after_reset=True)
+                        active = False  # Do not replace neutral with the airborne pose next loop.
                         print("[G1] Simulator reset; release controls and explicitly arm again.", flush=True)
                     falls += int(fallen.sum().item())
                     timeouts += int((done_mask & timeout_mask & ~fallen).sum().item())

@@ -47,9 +47,27 @@ SWEEP_AXES = {f"sweep_{point}_{axis}": (point_index, axis_index)
 SWEEP_PHASES = (("idle", 0.5, False), ("calibrate", 0.5, False), ("tracking_warmup", 2.0, True),
                 *((name, 5.0, True) for name in SWEEP_AXES),
                 ("tracking_combined", 10.0, True), ("final_stop", 1.0, False))
+WHOLE_BODY_COMMANDS = {
+    "whole_forward": (0.15, 0, 0), "whole_backward": (-0.15, 0, 0),
+    "whole_left": (0, 0.08, 0), "whole_right": (0, -0.08, 0),
+    "whole_yaw_left": (0, 0, 0.2), "whole_yaw_right": (0, 0, -0.2),
+}
+WHOLE_BODY_PHASES = (("idle", 0.5, False), ("calibrate", 0.5, False), ("whole_stand", 6.0, True),
+    ("whole_forward", 8.0, True), ("whole_neutral_after_forward", 2.0, True),
+    ("whole_backward", 8.0, True), ("whole_neutral_after_backward", 2.0, True),
+    ("whole_left", 8.0, True), ("whole_neutral_after_left", 2.0, True),
+    ("whole_right", 8.0, True), ("whole_neutral_after_right", 2.0, True),
+    ("whole_yaw_left", 8.0, True), ("whole_neutral_after_yaw_left", 2.0, True),
+    ("whole_yaw_right", 8.0, True), ("whole_return_neutral", 8.0, True), ("final_stop", 2.0, False))
+WHOLE_BODY_AMPLITUDES_M = np.array([[0.018, 0.018, 0.025], [0.04] * 3, [0.04] * 3])
+WHOLE_BODY_FREQUENCIES_HZ = np.array([[0.19, 0.23, 0.17], [0.27, 0.21, 0.31], [0.29, 0.25, 0.33]])
 
 
-def phase_plan(phase_seconds=3.0, tracking_sweep=False):
+def phase_plan(phase_seconds=3.0, tracking_sweep=False, whole_body_sweep=False):
+    if tracking_sweep and whole_body_sweep:
+        raise ValueError("choose one sweep scenario")
+    if whole_body_sweep:
+        return list(WHOLE_BODY_PHASES)
     if tracking_sweep:
         return list(SWEEP_PHASES)
     return [(name, max(0.6, multiplier * phase_seconds) if name == "producer_pause"
@@ -73,6 +91,29 @@ def make_sweep_raw(phase, fraction, scale, duration):
         wave = -0.5 * (1 - np.cos(angle)) if (point, axis) == (0, 2) else np.sin(angle)
         delta[point, axis] = amplitude * envelope * wave
     raw.poses[:, :, 3] += delta @ OPENVR_TO_ROBOT / scale
+    return raw
+
+
+def make_whole_body_raw(phase, fraction, scale, duration):
+    """Smooth raw controller sticks + pose motion, always through TargetMapper."""
+    active = phase.startswith("whole_")
+    raw = make_raw("armed_motion" if active else phase, 0.0, scale)
+    elapsed = float(np.clip(fraction, 0, 1)) * duration
+    ramp = min(1.0, max(0.0, elapsed / 0.75), max(0.0, (duration - elapsed) / 0.75))
+    envelope = np.sin(np.pi * ramp / 2) ** 2
+    if phase == "whole_stand" or phase in WHOLE_BODY_COMMANDS:
+        angle = 2 * np.pi * WHOLE_BODY_FREQUENCIES_HZ * elapsed
+        wave = np.sin(angle)
+        wave[0, 2] = -0.5 * (1 - np.cos(angle[0, 2]))
+        delta = WHOLE_BODY_AMPLITUDES_M * envelope * wave
+        raw.poses[:, :, 3] += delta @ OPENVR_TO_ROBOT / scale
+    command = np.asarray(WHOLE_BODY_COMMANDS.get(phase, (0, 0, 0)), dtype=float)
+    # Invert the mapper's 0.2 deadzone at the plateau. Ramp actual raw axes
+    # through their deadzone, rather than injecting a post-mapping command.
+    peak = np.sign(command) * (0.2 + 0.8 * np.abs(command) / [0.5, 0.25, 0.6])
+    sticks = envelope * peak
+    raw.left_stick = (-float(sticks[1]), float(sticks[0]))
+    raw.right_stick = (-float(sticks[2]), 0.0)
     return raw
 
 
@@ -134,6 +175,101 @@ def load_nominal(path):
     return value
 
 
+def velocity_tracking_analysis(trace, begins, ends, valid, min_gain=0.5, min_correlation=0.6):
+    """Settled body-frame velocity response; contact diagnostics do not certify gait."""
+    n = len(trace["wall_time"])
+    required = ("command", "root_linear_velocity_b", "root_angular_velocity_b")
+    missing = [key for key in required if key not in trace]
+    report = dict(available=not missing, missing_fields=missing, provisional=True, quality_passed=False,
+                  settle_seconds=2.0, trailing_guard_seconds=1.0,
+                  actual_velocity_source="root_linear_velocity_b XY + root_angular_velocity_b Z",
+                  units=["m/s", "m/s", "rad/s"], phases={}, axes={})
+    if missing:
+        report["status"] = "unavailable optional velocity trace; no inferred success"
+        return report
+    if any(trace[key].shape != (n, 3) for key in required):
+        report.update(available=False, status="invalid optional velocity trace shape; expected [T,3]")
+        return report
+    command = np.asarray(trace["command"], dtype=float)
+    actual = np.column_stack((trace["root_linear_velocity_b"][:, :2], trace["root_angular_velocity_b"][:, 2]))
+    finite = np.isfinite(command).all(-1) & np.isfinite(actual).all(-1)
+    report["nonfinite_rows"] = int((~finite).sum())
+    valid = valid & finite
+    settled = np.zeros(n, dtype=bool)
+    for name, wanted in WHOLE_BODY_COMMANDS.items():
+        if name not in begins or name not in ends:
+            report["phases"][name] = dict(quality_passed=False, reason="missing directional phase")
+            continue
+        wanted = np.asarray(begins[name].get("command_plateau", wanted), dtype=float)
+        if wanted.shape != (3,) or not np.isfinite(wanted).all() or np.count_nonzero(wanted) != 1:
+            report["phases"][name] = dict(quality_passed=False, reason="invalid recorded command plateau")
+            continue
+        lower, upper = begins[name]["timestamp_unix_ns"] / 1e9 + 2, ends[name]["timestamp_unix_ns"] / 1e9 - 1
+        mask = valid & (trace["wall_time"] >= lower) & (trace["wall_time"] < upper)
+        settled |= mask
+        axis = int(np.flatnonzero(wanted)[0])
+        count = int(mask.sum())
+        item = dict(samples=count, analyzed_wall_interval=[lower, upper], command_axis=("vx", "vy", "yaw")[axis],
+                    expected_plateau=wanted.tolist(), quality_passed=False)
+        if count >= 3:
+            applied, measured = command[mask], actual[mask]
+            applied_mean, actual_mean = applied.mean(0), measured.mean(0)
+            gain = float(actual_mean[axis] / applied_mean[axis]) if abs(applied_mean[axis]) > 1e-6 else None
+            plateau_matches = bool(np.max(np.abs(applied - wanted)) < 5e-5)
+            item.update(mean_command=applied_mean.tolist(), mean_actual=actual_mean.tolist(),
+                settled_gain=gain, mean_abs_error=np.abs(measured - applied).mean(0).tolist(),
+                rmse=np.sqrt(np.mean((measured - applied) ** 2, axis=0)).tolist(),
+                applied_matches_requested_plateau=plateau_matches,
+                quality_passed=plateau_matches and gain is not None and gain >= min_gain)
+        report["phases"][name] = item
+    for axis, name in enumerate(("vx", "vy", "yaw")):
+        mask = settled & (np.abs(command[:, axis]) > 1e-6)
+        wanted, measured = command[mask, axis], actual[mask, axis]
+        item = dict(samples=int(mask.sum()), quality_passed=False)
+        if len(wanted) >= 3 and np.ptp(wanted) > 1e-5:
+            x, y = wanted - wanted.mean(), measured - measured.mean()
+            cross, xx, yy = float(x @ y), float(x @ x), float(y @ y)
+            gain = cross / xx
+            correlation = float(np.clip(cross / np.sqrt(xx * yy), -1, 1)) if yy > 1e-20 else 0.0
+            item.update(ls_gain=gain, ls_intercept=float(measured.mean() - gain * wanted.mean()),
+                correlation=correlation, mean_abs_error=float(np.abs(measured - wanted).mean()),
+                rmse=float(np.sqrt(np.mean((measured - wanted) ** 2))),
+                quality_passed=gain >= min_gain and correlation >= min_correlation)
+        report["axes"][name] = item
+    report["quality_passed"] = bool(not report["nonfinite_rows"] and
+        all(item["quality_passed"] for item in report["phases"].values()) and
+        all(item["quality_passed"] for item in report["axes"].values()))
+    report.update(status="measured provisional velocity response; not gait certification",
+                  min_gain=min_gain, min_correlation=min_correlation)
+    return report
+
+
+def contact_diagnostics(trace, valid):
+    report = dict(available=False, gait_success_certified=False,
+                  interpretation="Contact occupancy and speed only; no proof of stepping, stability, or absence of sliding")
+    contacts = trace.get("foot_contact")
+    if contacts is None or contacts.shape != (len(valid), 2) or not np.isfinite(contacts).all():
+        report["reason"] = "missing or invalid optional foot_contact [T,2] trace"
+        return report
+    if not valid.any():
+        report["reason"] = "no valid active rows"
+        return report
+    contacts = contacts.astype(bool)[valid]
+    count = contacts.sum(-1)
+    report.update(available=True, samples=len(contacts), foot_order=["left", "right"],
+        contact_fraction_by_foot=contacts.mean(0).tolist(),
+        double_support_fraction=float(np.mean(count == 2)), single_support_fraction=float(np.mean(count == 1)),
+        no_contact_fraction=float(np.mean(count == 0)))
+    velocity = trace.get("foot_linear_velocity_w")
+    if velocity is not None and velocity.shape == (len(valid), 2, 3):
+        speed = np.linalg.norm(velocity[valid, :, :2], axis=-1)
+        moving_contact = speed[contacts & np.isfinite(speed)]
+        if len(moving_contact):
+            report.update(contact_horizontal_speed_mean_mps=float(moving_contact.mean()),
+                          contact_horizontal_speed_p95_mps=float(np.percentile(moving_contact, 95)))
+    return report
+
+
 def analyze_scenario(events_path, run_dir, grace_seconds=0.15, min_gain=0.5, min_correlation=0.6):
     """Check actual simulator trace against transmitted phases; no synthetic verdicts."""
     records = [json.loads(line) for line in Path(events_path).read_text().splitlines() if line.strip()]
@@ -167,9 +303,13 @@ def analyze_scenario(events_path, run_dir, grace_seconds=0.15, min_gain=0.5, min
         if missing:
             raise ValueError(f"Trace lacks required evidence: {sorted(missing)}")
         trace = {key: np.asarray(data[key]) for key in required}
+        for key in ("command", "root_linear_velocity_b", "root_angular_velocity_b", "foot_contact",
+                    "foot_linear_velocity_w"):
+            if key in data.files:
+                trace[key] = np.asarray(data[key])
     wall = trace["wall_time"].astype(float)
     n = len(wall)
-    if n == 0 or any(len(value) != n for value in trace.values()):
+    if n == 0 or any(len(trace[key]) != n for key in required):
         raise ValueError("Empty or inconsistent simulator trace")
     if not np.isfinite(wall).all() or np.any(np.diff(wall) <= 0):
         raise ValueError("Trace wall_time must be finite and increasing")
@@ -262,6 +402,19 @@ def analyze_scenario(events_path, run_dir, grace_seconds=0.15, min_gain=0.5, min
           active_steps=len(active), unknown_sequence_rows=unmatched[:20],
           invalid_phase_rows=wrong_phase[:20], target_mismatch_rows=target_mismatch[:20],
           max_abs_target_error_m=max(errors) if errors else None)
+    if scenario_mode == "whole_body_sweep":
+        command_mismatch = []
+        command_shape_ok = "command" in trace and trace["command"].shape == (n, 3)
+        if command_shape_ok:
+            for index in active:
+                packet = sent.get(int(trace["input_sequence"][index]), {})
+                requested = np.asarray(packet.get("target", {}).get("command_velocity", []), dtype=float)
+                if (requested.shape != (3,) or not np.isfinite(requested).all()
+                        or not np.isfinite(trace["command"][index]).all()
+                        or np.max(np.abs(trace["command"][index] - requested)) > 5e-5):
+                    command_mismatch.append(int(index))
+        check("active_commands_match_sent", command_shape_ok and len(active) > 0 and not command_mismatch,
+              shape_valid=command_shape_ok, mismatch_rows=command_mismatch[:20])
     # Separate control-state correctness from provisional tracking response.
     response = {}
     valid_active = active[valid_metrics[active] & trace["input_fresh"][active].astype(bool)]
@@ -283,11 +436,19 @@ def analyze_scenario(events_path, run_dir, grace_seconds=0.15, min_gain=0.5, min
                                                flags=["missing_independent_axis_evidence"])
     quality_passed = bool(quality_items) and all(item["provisional_quality_passed"] for item in quality_items.values())
     control_passed = all(item["passed"] for item in checks.values())
+    valid_active_mask = np.zeros(n, dtype=bool)
+    valid_active_mask[valid_active] = True
+    velocity_report = (velocity_tracking_analysis(trace, begins, ends, valid_active_mask, min_gain, min_correlation)
+                       if scenario_mode == "whole_body_sweep" else None)
     return dict(schema="g1.runtime.scenario.analysis.v1", events=str(events_path), run=str(run_dir),
                 grace_seconds=grace_seconds, receiver_timeout_assumed_s=0.25,
                 scenario_mode=scenario_mode, simulator_checks_passed=control_passed,
                 control_state_passed=control_passed, tracking_quality_passed=quality_passed,
                 control_and_tracking_passed=control_passed and quality_passed,
+                whole_body_checks_passed=(control_passed and quality_passed and velocity_report["quality_passed"]
+                                          if velocity_report is not None else None),
+                velocity_tracking=velocity_report,
+                contact_diagnostics=contact_diagnostics(trace, valid_active_mask) if velocity_report is not None else None,
                 physical_quest_verified=False, checks=checks, phases=phases, response=response,
                 metric_reset_guard_frames=1, axis_tracking=axis_tracking,
                 tracking_quality=dict(provisional=True, min_ls_gain=min_gain, min_correlation=min_correlation,
@@ -308,8 +469,11 @@ def parse_args(argv=None):
                         help="default scenario about 28.5 seconds; producer pause at least 0.6s")
     parser.add_argument("--hz", type=float, default=60.0)
     parser.add_argument("--scale", type=float, default=0.65)
-    parser.add_argument("--tracking-sweep", action="store_true",
+    sweep_modes = parser.add_mutually_exclusive_group()
+    sweep_modes.add_argument("--tracking-sweep", action="store_true",
                         help="59s independent head/hand XYZ tracking scenario instead of state-transition scenario")
+    sweep_modes.add_argument("--whole-body-sweep", action="store_true",
+                            help="75s combined pose and raw-stick XY/yaw command scenario")
     parser.add_argument("--analyze-run", type=Path, help="analysis only: compare --output event JSONL with this simulator run")
     parser.add_argument("--analysis-output", type=Path, help="new report JSON (default RUN/scenario_analysis.json)")
     parser.add_argument("--grace-seconds", type=float, default=0.15,
@@ -357,10 +521,12 @@ def main(argv=None):
         print(json.dumps(report, indent=2, allow_nan=False))
         passed = report["simulator_checks_passed"] and (
             not args.require_tracking_quality or report.get("tracking_quality_passed", False))
+        if args.require_tracking_quality and report.get("scenario_mode") == "whole_body_sweep":
+            passed = passed and bool(report.get("whole_body_checks_passed"))
         return 0 if passed else 1
     mapper = TargetMapper(nominal=load_nominal(args.nominal), scale=args.scale)
     destination = (socket.gethostbyname(args.host), args.port)
-    plan = phase_plan(args.phase_seconds, args.tracking_sweep)
+    plan = phase_plan(args.phase_seconds, args.tracking_sweep, args.whole_body_sweep)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     # Open exclusively before creating a sender or installing signal handlers.
     with args.output.open("x", encoding="utf-8") as record, socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
@@ -398,13 +564,17 @@ def main(argv=None):
               "sender has no simulator acknowledgement", flush=True)
         try:
             log("start", schema="g1.runtime.scenario.v1", session=mapper.session,
-                scenario_mode="tracking_sweep" if args.tracking_sweep else "control_state",
+                scenario_mode=("whole_body_sweep" if args.whole_body_sweep else
+                               "tracking_sweep" if args.tracking_sweep else "control_state"),
                 phase_plan=[dict(phase=name, duration_s=duration, expected_enabled=enabled)
                             for name, duration, enabled in plan],
                 destination=list(destination), phase_seconds=args.phase_seconds, hz=args.hz,
-                scale=args.scale, robot_hand_amplitude_m=0.06,
+                scale=args.scale, robot_hand_amplitude_m=0.04 if args.whole_body_sweep else 0.06,
                 sweep_frequencies_hz=SWEEP_FREQUENCIES_HZ.tolist() if args.tracking_sweep else None,
                 sweep_amplitudes_m=SWEEP_AMPLITUDES_M.tolist() if args.tracking_sweep else None,
+                whole_body_commands=WHOLE_BODY_COMMANDS if args.whole_body_sweep else None,
+                whole_body_amplitudes_m=WHOLE_BODY_AMPLITUDES_M.tolist() if args.whole_body_sweep else None,
+                whole_body_frequencies_hz=WHOLE_BODY_FREQUENCIES_HZ.tolist() if args.whole_body_sweep else None,
                 nominal_file=str(args.nominal.resolve()),
                 nominal_sha256=hashlib.sha256(args.nominal.read_bytes()).hexdigest(),
                 physical_quest_verified=False, receiver_verified=False)
@@ -414,14 +584,16 @@ def main(argv=None):
                 phase_start = time.monotonic()
                 next_tick = phase_start
                 log("phase_begin", phase=phase, duration_s=duration, expected_enabled=expected,
-                    sends_packets=expected is not None)
+                    sends_packets=expected is not None,
+                    command_plateau=list(WHOLE_BODY_COMMANDS.get(phase, (0, 0, 0))) if args.whole_body_sweep else None)
                 print(f"[SCENARIO] {phase}: {duration:.2f}s", flush=True)
                 while not stopped and time.monotonic() - phase_start < duration:
                     now = time.monotonic()
                     if expected is not None:
                         fraction = np.clip((now - phase_start) / duration, 0.0, 1.0)
-                        raw = (make_sweep_raw(phase, fraction, args.scale, duration) if args.tracking_sweep
-                               else make_raw(phase, fraction, args.scale))
+                        raw = (make_whole_body_raw(phase, fraction, args.scale, duration) if args.whole_body_sweep else
+                               make_sweep_raw(phase, fraction, args.scale, duration) if args.tracking_sweep else
+                               make_raw(phase, fraction, args.scale))
                         send(phase, raw, expected)
                     # During the outage neither sendto nor TargetMapper.update runs.
                     next_tick = max(next_tick + 1.0 / args.hz, time.monotonic())

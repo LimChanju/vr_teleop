@@ -152,6 +152,69 @@ gain은 약 0.059, 가동 범위 비율은 약 0.072로 추종 기준을 통과�
 오른손 X는 gain 약 0.936이었다. 기존 `scenario_analysis.json`은 보존했다.
 이 결과는 두 축 상태 시나리오의 기록이며, 9축 sweep이나 실제 Quest 실행 결과가 아니다.
 
+## 머리·양손 목표와 이동·회전을 함께 입력하는 검사
+
+`--whole-body-sweep`은 약 75초의 별도 시나리오다. `--tracking-sweep`과 동시에
+지정할 수 없으며 기존 기본 상태 검사와 9축 독립 검사의 동작은 그대로 유지된다.
+
+보정 후 6초 동안 제자리에서 머리·손 목표를 움직인다. 이어서 전진/후진 각각
+±0.15 m/s, 좌/우 이동 각각 ±0.08 m/s, 좌/우 회전 각각 ±0.2 rad/s를
+각각 8초씩 입력한다. 각 방향 사이에는 2초 중립 구간을 두고, 마지막에는 8초
+중립 유지와 2초 정지를 수행한다. 이 모드는 리셋이나 의도적 송신 중단을 포함하지 않는다.
+
+머리·손은 이동·회전 구간에도 함께 움직인다. 머리 XY는 ±0.018 m, Z는
+-0.025~0 m, 양손 각 축은 ±0.04 m 이내다. 따라서 작은 조작 범위 설정 안에
+있지만, 이 범위에서 정책 성능이 확인되었다는 의미는 아니다.
+각 구간 시작·끝 0.75초에 부드러운 전환을 적용한다. 실제 RawFrame의 왼쪽·오른쪽
+스틱 축을 만들어 `TargetMapper`의 부호·deadzone·배율 처리 후 UDP로 전송한다.
+최종 속도 패킷을 직접 만들어 매핑을 우회하지 않는다.
+
+```bash
+# 첫 터미널: 평가할 통합 정책 폴더. 번들에서는 model_final.pt 대신 model.pt 사용
+export MODEL=/absolute/path/to/unified_policy_folder
+bash scripts/g1/run.sh teleop --headless --real-time --num-envs 1 \
+  --steps 5500 --checkpoint "$MODEL/model_final.pt" --use-exported-policy \
+  --record-trace --output runs/runtime_whole_body_sweep
+
+# 두 번째 터미널: Waiting for ALVR targets 출력 후 시작
+.venv-alvr/bin/python scripts/g1/runtime_scenario.py \
+  --whole-body-sweep --nominal "$MODEL/nominal_targets.json" \
+  --output runs/runtime_whole_body_sweep/scenario.jsonl
+
+# 시뮬레이터가 result.json/trace.npz를 저장한 뒤 분석
+.venv-alvr/bin/python scripts/g1/runtime_scenario.py \
+  --output runs/runtime_whole_body_sweep/scenario.jsonl \
+  --analyze-run runs/runtime_whole_body_sweep \
+  --analysis-output runs/runtime_whole_body_sweep/scenario_analysis_whole_body.json \
+  --require-tracking-quality
+```
+
+5500 step은 50 Hz에서 110초의 시뮬레이션 시간이다. 송신 시작 여유를 포함한
+길이이며 실제 처리 속도에 따라 벽시계 시간은 달라진다. 시작이 늦어 전체 구간이
+기록되지 않으면 분석을 통과하지 못한다. 이동·회전 명령이 정책의 학습 범위를
+넘어 수신기에서 잘린 경우도 적용 명령과 요청의 불일치로 기록한다.
+
+보고서에서 다음을 구분한다.
+
+- `control_state_passed`: 구간별 활성 상태, 신선도, 실제 송신 목표·속도와의 일치,
+  유한 상태, 리셋 횟수 및 낙상 없음.
+- `tracking_quality_passed`: 활성 구간의 머리·양손 위치 응답. 이 모드에서는 여러
+  위치 축을 함께 움직이므로 9축 독립 검사를 대체하지 않는다.
+- `velocity_tracking`: 각 방향의 처음 2초와 마지막 1초를 제외한 구간에서
+  목표·실제 평균 속도, gain, MAE, RMSE를 계산한다. XY는 `root_linear_velocity_b`,
+  yaw는 `root_angular_velocity_b`의 Z 성분을 직접 사용한다. 양방향 자료를 합친
+  축별 LS gain·상관도 기록하고 같은 임시 gain/상관 기준을 적용한다.
+- `contact_diagnostics`: 양발 접촉 비율, 단일/양발 지지 비율, 접촉 중 발 수평 속도를
+  기술한다. 이러한 수치만으로 발을 번갈아 내딛는 보행, 안정성 또는 미끄럼 없음을
+  판정하지 않으며 `gait_success_certified`는 항상 false다.
+- `whole_body_checks_passed`: 상태·머리/손 추종·속도 추종의 임시 기준이 모두
+  충족될 때만 참이다. 실제 Quest 연결이나 보행 성공을 의미하지 않는다.
+
+속도·접촉 trace가 없는 이전 실행도 읽을 수 있다. 새 속도 배열이 없으면
+`velocity_tracking.available=false`로 표시하며, 측정하지 않은 속도 성능을
+통과로 추정하지 않는다. 이 모드에서 `--require-tracking-quality`를 지정하면
+속도 자료 누락이나 속도 응답 실패도 종료 코드 1을 반환한다.
+
 ```bash
 # 실제 localhost UDPReceiver + TeleopGate를 이용하는 짧은 시험; GPU/SteamVR 없음
 PYTHONDONTWRITEBYTECODE=1 .venv-alvr/bin/python -m unittest discover \

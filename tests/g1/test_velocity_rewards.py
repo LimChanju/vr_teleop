@@ -127,6 +127,18 @@ class VelocityRewardsTests(unittest.TestCase):
         with_airtime = env._get_rewards()
         torch.testing.assert_close(with_airtime - base_reward, torch.tensor([.3 * .02, 0]))
 
+    def test_configured_xy_threshold_changes_small_lateral_gate_but_not_yaw_gate(self):
+        commands = [[0, .06, 0], [0, .03, 0], [0, 0, .09], [0, 0, .11]]
+        legacy = self.make_env(commands)
+        legacy._get_rewards()
+        self.assertEqual(legacy.metrics["commanded_moving"].tolist(), [False, False, False, True])
+        small_xy = self.make_env(commands)
+        small_xy.cfg.moving_xy_threshold = .04
+        small_xy._get_rewards()
+        self.assertEqual(small_xy.metrics["commanded_moving"].tolist(), [True, False, False, True])
+        expected = 4.0 * math.exp(-.06 ** 2 / .04) * .02
+        self.assertAlmostEqual(float(small_xy._episode_sums["linear_velocity"][0]), expected, places=7)
+
     def test_metadata_records_exact_replacement_contract(self):
         env = self.make_env([[0, 0, 0]])
         contract = env.policy_metadata()["velocity_reward_contract"]

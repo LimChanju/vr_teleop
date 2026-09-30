@@ -1,0 +1,14 @@
+test_cleanup_continues_if_compositor_is_failing (test_xr_view.XRViewTests) ... [G1 XR] Cleanup: mock detach failure; mock profile failure
+ok
+test_cleanup_is_idempotent (test_xr_view.XRViewTests) ... ok
+test_crouch_moves_camera_once_and_does_not_oscillate (test_xr_view.XRViewTests) ... ok
+test_first_attach_schedules_robot_head_view (test_xr_view.XRViewTests) ... ok
+test_head_translation_without_robot_motion_is_cancelled (test_xr_view.XRViewTests) ... ok
+test_missing_or_invalid_tracking_does_not_write_anchor (test_xr_view.XRViewTests) ... ok
+test_recenter_reschedules_without_restarting_profile (test_xr_view.XRViewTests) ... ok
+test_root_translation_and_yaw_move_camera_once (test_xr_view.XRViewTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.010s
+
+OK

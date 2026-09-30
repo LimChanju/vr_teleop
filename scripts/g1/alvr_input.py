@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT))
 
 import numpy as np
 
-from g1_teleop.vr.calibration import TargetMapper
+from g1_teleop.vr.calibration import TargetMapper, validate_target_bounds
 from g1_teleop.vr.openvr_source import OpenVRSource, SyntheticSource
 from g1_teleop.vr.protocol import DEFAULT_PORT, encode_target
 from g1_teleop.vr.replay import ReplaySource
@@ -50,7 +50,23 @@ class Keyboard:
             termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, self.saved)
 
 
-def parse_args():
+def load_target_bounds(path):
+    value = json.loads(Path(path).read_text())
+    if not isinstance(value, dict) or value.get("units") != "m":
+        raise ValueError("target-bounds JSON must be an object with units='m'")
+    for key, expected in (("schema", "g1.teleop.target_bounds.v1"),
+                          ("coordinate_version", "g1-yaw-floor-relative-v1"),
+                          ("point_order", ["head", "left_hand", "right_hand"]),
+                          ("axis_order", ["x", "y", "z"])):
+        if key in value and value[key] != expected:
+            raise ValueError(f"target-bounds JSON has incompatible {key}")
+    if "delta_min" not in value or "delta_max" not in value:
+        raise ValueError("target-bounds JSON needs delta_min and delta_max")
+    lower, upper = validate_target_bounds(value["delta_min"], value["delta_max"])
+    return dict(delta_min=lower, delta_max=upper)
+
+
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--backend", choices=("openvr", "synthetic", "replay"), default="openvr")
     parser.add_argument("--host", default="127.0.0.1", help="G1 receiver IPv4 host; default stays on this PC")
@@ -59,12 +75,16 @@ def parse_args():
     parser.add_argument("--duration", type=float, default=0, help="seconds; 0 runs until Ctrl+C")
     parser.add_argument("--nominal", type=Path, help="JSON 3x3 reference positions or object with nominal_targets/nominal_keypoints_root_m")
     parser.add_argument("--scale", type=float, default=0.65, help="human movement to robot displacement scale")
+    parser.add_argument("--target-bounds", type=Path,
+                        help="JSON metre delta_min/delta_max [head,left_hand,right_hand] x [X,Y,Z]; optional small-motion envelope")
+    parser.add_argument("--velocity-limits", nargs=3, type=float, metavar=("VX", "VY", "YAW"),
+                        help="command limits in m/s,m/s,rad/s; nonnegative, at most 0.5 0.25 0.6; zero disables an axis")
     parser.add_argument("--manifest", type=Path, help="custom SteamVR action manifest for other emulated controller types")
     parser.add_argument("--record", type=Path, help="new JSONL file: raw OpenVR poses/buttons plus final targets")
     parser.add_argument("--replay-file", type=Path)
     parser.add_argument("--enable-synthetic", action="store_true", help="allow synthetic targets to enable simulation control")
     parser.add_argument("--enable-replay", action="store_true", help="honor recorded enable state during replay")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if not 1 <= args.port <= 65535 or not 10 <= args.hz <= 120 or not np.isfinite(args.duration) or args.duration < 0:
         parser.error("require valid port, 10 <= hz <= 120, duration >= 0")
     if not 0 < args.scale <= 2:
@@ -75,6 +95,14 @@ def parse_args():
         parser.error("replay options require --backend replay")
     if args.enable_synthetic and args.backend != "synthetic":
         parser.error("--enable-synthetic requires --backend synthetic")
+    if args.target_bounds and args.backend == "replay":
+        parser.error("--target-bounds applies to live/synthetic mapping; replay preserves already-mapped recorded targets")
+    if args.velocity_limits is not None:
+        limits = np.asarray(args.velocity_limits)
+        if not np.isfinite(limits).all() or np.any(limits < 0) or np.any(limits > [0.5, 0.25, 0.6]):
+            parser.error("velocity-limits must be finite, nonnegative and no greater than 0.5 0.25 0.6")
+        if args.backend == "replay":
+            parser.error("--velocity-limits applies to live/synthetic mapping; replay preserves recorded velocity targets")
     return args
 
 
@@ -87,7 +115,14 @@ def main():
             nominal = nominal.get("nominal_targets", nominal.get("nominal_keypoints_root_m"))
             if nominal is None:
                 raise ValueError("nominal JSON lacks nominal_targets or nominal_keypoints_root_m")
-    mapper = TargetMapper(nominal=nominal, scale=args.scale)
+    try:
+        bounds = load_target_bounds(args.target_bounds) if args.target_bounds else {}
+        if args.velocity_limits is not None:
+            bounds["velocity_limits"] = args.velocity_limits
+        mapper = TargetMapper(nominal=nominal, scale=args.scale, **bounds)
+    except (OSError, ValueError, TypeError) as exc:
+        print(f"[VR] ERROR: {exc}", file=sys.stderr, flush=True)
+        return 1
     destination = (socket.gethostbyname(args.host), args.port)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     source = None
@@ -110,6 +145,11 @@ def main():
         else:
             source = ReplaySource(args.replay_file, enabled=args.enable_replay)
         print(f"[VR] source={args.backend} -> UDP {destination[0]}:{destination[1]}", flush=True)
+        if args.target_bounds:
+            print(f"[VR] provisional target envelope={args.target_bounds}; "
+                  f"delta_min_m={mapper.delta_min.tolist()}, delta_max_m={mapper.delta_max.tolist()}", flush=True)
+        if args.velocity_limits is not None:
+            print(f"[VR] velocity limits [m/s,m/s,rad/s]={mapper.velocity_limits.tolist()}", flush=True)
         print("[VR] X/c calibrate, A/Enter arm, B/Space stop, Y/r reset, q quit. Hold BOTH grips to move.", flush=True)
         if args.backend != "openvr":
             print(f"[VR] {source.last_error}", flush=True)

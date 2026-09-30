@@ -1,94 +1,91 @@
 # G1 구현·검증 근거와 남은 범위
 
-**확인 시점: 2026-09-30 19:36 KST.** 이 문서는 완료된 실행 기록의 스냅샷이다.
-최종 배포 모델을 선택하는 문서가 아니며, 이후 학습의 성능을 추정하지 않는다.
-최종 선택은 체크포인트별 별도 평가와 최종 결과 보고서를 따른다.
-아래 `runs/`, `logs/`는 개발 PC의 실제 기록이며 Git 기본 제외 경로다.
-서버 이전 시 선택한 모델과 해당 평가 기록도 함께 전달해야 한다.
+**확인 시점: 2026-09-30. 기본 모델은 head1100의 제자리 조작이다.**
+이동·회전 명령은 비활성화한다. 상세 수치·체크포인트·평가 조건은
+[RESULTS.md](RESULTS.md)에 있다. 개발 PC의 `runs/`, `logs/`는 Git 기본 제외
+경로이므로 서버 이전에는 선택 모델과 평가 기록을 별도로 전달해야 한다.
+이전 19:36 스냅샷은 `backups/results_docs_20260930_210715/`에 보존했다.
 
-## 구현한 범위
+## 확인한 구현과 실행
 
-`human2humanoid`의 전신 참조 동작 추종, privileged teacher, sparse student
-구조를 참고해 **G1 29개 몸체 관절·Dex1·free-base Isaac Lab 환경으로 새로
-구현**했다. 원본 H1 코드를 그대로 실행하거나 논문의 결과를 재현한 것이 아니다.
-H1 펀치는 H1 FK의 Cartesian 방향에서 G1 기구학 최적화를 거쳐 리타게팅했다.
-관절 각도를 복사하지 않는다. 출처·비상업적 연구 데이터 조건은
-[동작 문서](MOTION.md)를 따른다.
-
-학습·평가·텔레옵은 같은 로봇 USD, 관절 순서, PD, 액션 스케일과 환경을 쓴다.
-머리·양손 위치와 로봇 상태를 입력받고 29관절 위치 목표를 출력한다. Dex1 손가락은
-열린 자세를 유지한다. 사람의 발·무릎 자세나 컨트롤러 회전·손가락 자세를 직접
-복원하는 정책은 아니다. 아래 평가에 사용한 v1 관측은 actor 105/critic 138차원이다.
-
-현재 코드에는 목표 오차·목표 속도·로봇 선속도를 더한 선택형
-`sparse_tracking_v2`도 존재한다(actor 126/critic 156). **v1 평가 수치는 v2 성능을
-입증하지 않는다.** 실행 계약은 해당 모델의 `run_config.json`/`policy.json`과
-일치시켜야 한다. [학습 설정](TRAINING.md), [로봇 계약](ROBOT.md)
-
-## 실제로 확인한 실행
-
-| 항목 | 확인 결과 | 원본 기록 |
+| 항목 | 확인한 근거 | 실제 기록 |
 |---|---|---|
-| 기존 환경과 분리한 신규 설치 | 같은 PC에서 `--fresh`로 새 Conda 환경 설치, user-site 차단, `pip check` 통과 | `logs/g1/fresh_environment_verification.json` |
-| 신규 환경 GPU 학습·export | 64환경 × PPO 3업데이트, 실제 파라미터 변화 0.0113958, TorchScript 최대 오차 4.47×10⁻⁸ | `runs/g1_server_check_smoke/result.json` |
-| 로봇 FK와 실제 Isaac 상태 대조 | 평가 초기 4환경의 머리·손목 marker 최대 차이 약 1.57–2.72×10⁻⁶ m | 평가별 `run_config.json`의 `kinematics_validation` |
-| 초기 균형 정책 학습 | 2048환경 × PPO 500업데이트, 이후 별도 평가 실행 | `runs/stand_2048_v2/`, 아래 표 |
-| Teacher → Student 실행 경로 | teacher 3업데이트 → student 5업데이트 → TorchScript 50step 실행 | `runs/teacher_smoke_v1/`, `runs/student_smoke_v1/`, `runs/student_smoke_eval/` |
-| 합성 입력 → 실제 시뮬레이터 | UDP 입력, TorchScript 추론, 29관절 PD 제어, 입력 중단 후 정지 상태 확인 | `runs/teleop_synthetic_stand500/` |
-| OpenVR 등록·입력·실패 처리 | 개발 입력 venv에서 VR 테스트 21개 통과; OpenVR API는 실제 ctypes 자료형을 쓰는 모의 런타임 | `tests/g1/test_vr*.py`, [ALVR 문서](ALVR.md#7-steamvr-앱-식별과-동시-입력의-검증-범위) |
+| 기존 환경과 분리한 신규 설치 | 같은 PC에서 새 Conda 환경 설치, user-site 차단, `pip check` 통과 | `logs/g1/fresh_environment_verification.json` |
+| 신규 환경 GPU 학습·export | 64환경, PPO 3업데이트, 실제 가중치 변화, TorchScript 오차 4.47×10⁻⁸ | `runs/g1_server_check_smoke/` |
+| 기본 모델 번들 이전 검증 | 같은 PC의 새 번들 경로·독립 Isaac Lab으로 64환경×3000step 재평가; 0/192 낙상, 기존 head1100 지표와 정확히 일치 | [결과](verification/results/head1100_portable_result.json), [경로 확인](verification/results/head1100_portable_path_receipt.json) |
+| 이전 번들 렌더링 경로 | 1환경×200step·4초·낙상 0회, 완료 에피소드 0; 미리보기 이미지 생성 | [실행 기록](verification/results/head1100_portable_preview_result.json) |
+| 현재 코드 단위 검사 | 고유 153개 통과: 주 환경 136개 + 다른 의존성 환경에서 나머지 17개 확인 | [verification/tests.json](verification/tests.json) |
+| G1 모델 계약 | 같은 USD·29관절·PD·좌표·스케일·주기로 학습/평가/추론; FK 대조 | 평가별 `run_config.json`, [ROBOT.md](ROBOT.md) |
+| 실제 정책 학습 | stand500, rich2500, precision500/1500, tight800, velocity2000 완료 후 별도 평가 | [완료 결과](RESULTS.md) |
+| Teacher/Student 경로 | v1/v2 teacher 3업데이트 → student 5업데이트와 export; 50step student 평가 | `runs/teacher_smoke_v*/`, `runs/student_smoke_v*/`, `runs/student_smoke_eval/` |
+| 입력 상태 전이 → 실제 물리 | 실제 UDP, TorchScript, 29관절 PD, timeout·deadman·새 arm edge·수동 reset | `runs/runtime_scenario_rich400/` |
+| 9축 Cartesian 외부 입력 | 90초·실측 50Hz, 활성 57초, 낙상 0회; 머리 Y/Z 응답 기준 미달 | `runs/tracking_sweep_tight800/` |
+| 위치·방향 drift | 같은 90초에서 순 XY 4.80cm, yaw −27.87도; 발 들기 전환 0회 | `runs/analysis_sweep_tight800/analysis.json` |
+| head1100의 최초 조건별 차이 | 오프라인 0/192 낙상, 초기화 수정 전 외부 입력 시험 7회 낙상·활성 2.22초 | `runs/eval_head1100/`, `runs/tracking_sweep_head1100/` |
+| head1100 초기화 수정 후 | 같은 체크포인트 90초·50Hz, 활성 57.02초, 낙상 0회, 단독 9축 잠정 기준 통과 | `runs/tracking_sweep_head1100_grounded/` |
+| head1100 전체 상태 전이 | 40초·50Hz, 낙상 0회, reset 1회, timeout·새 arm edge 포함 모든 검사 통과 | `runs/runtime_state_head1100_grounded/` |
+| unified1500 이동 통합 실험 | 무작위 명령 6/192 낙상, 고정 명령열 4/75; 좌우·회전 응답 미달 | `runs/eval_unified1500/`, `runs/eval_unified_velocity1500/` |
+| unified1500 외부 입력 실패 | 110초 실행 중 2.88초에 낙상, 활성 1.72초; 이동 블록 유효 표본 0 | `runs/whole_body_unified1500/` |
+| velocity2000 외부 입력 미달 | 110초·낙상 0회이나 머리 3축·양손 Y/Z·회전 응답 부족 | `runs/whole_body_velocity2000/` |
 
-새 환경은 Python 3.10.21, Isaac Sim 4.5.0.0, PyTorch 2.5.1+cu121,
-RSL-RL 2.3.3, NumPy 1.26.4와 별도 고정 Isaac Lab 체크아웃을 사용했다.
-기존 동일 버전 Kit의 라이선스 동의 기록을 재사용했다. 새 입력 venv 설치 시점의
-14개 테스트와 이후 매니페스트 보완 후 개발 venv의 21개 테스트는 서로 다른
-시점의 기록이다. **다른 공용 서버에서 설치한 결과는 아니다.** [설치 상세](INSTALL.md)
+신규 환경은 Python 3.10.21, Isaac Sim 4.5.0.0, PyTorch 2.5.1+cu121,
+RSL-RL 2.3.3, NumPy 1.26.4, 별도 고정 Isaac Lab 체크아웃을 사용했다.
+기존 Kit 라이선스 동의 기록을 재사용했으며 다른 서버의 설치 결과는 아니다.
+신규 설치 당시 입력 테스트 14개 통과 기록과 이후 추가된 단위 검사를 같은
+시점의 수치로 합치지 않는다. [설치 상세](INSTALL.md)
 
-Teacher/Student의 짧은 실행은 설정·가중치 학습·export 연결 확인이다.
-Student 평가 50step은 환경당 1초이고 완료 에피소드가 없어 낙상률을 산출할 수 없다.
-이 모델들을 수렴한 teacher나 사전학습 완료 student로 해석하지 않는다.
-성능이 확인된 아래 500업데이트 모델은 별도 증류 없이 학습한 비대칭 PPO다.
+번들 재실행에서는 USD·모션·체크포인트·export를 모두
+`/home/railabchan/g1_portable_validation`에서 읽었다. Isaac Lab도 원래 소스와
+공유 inode·외부 symlink가 없는 별도 체크아웃을 사용했고 기존 환경의 설치
+경로는 보존했다. 머리 1.030839cm·양손 1.324320cm, timeout 192, 완료 평균
+19.97999954초로 원래 평가의 집계 값과 정확히 일치한다. 이는 같은 PC에서의
+이전 가능성 확인이며 실제 공용 서버나 헤드셋 검증은 아니다.
+[프레임워크 근거](verification/portable_framework.json),
+[결과 비교](verification/portable_result_comparison.json),
+[서버 실행 안내](RUN_SERVER.md)
 
-## v1 별도 평가 결과
+## 성능이 확인된 범위
 
-모두 64환경, 학습에 포함하지 않은 클립 분할이다. 손 오차는 양손 위치 오차의
-평균이며 전신 관절 오차가 아니다. 완료 에피소드의 시간 제한은 약 20초다.
+`human2humanoid`의 전신 참조 추종·privileged/sparse 학습 발상을 G1용
+Isaac Lab에 새로 구현했다. 원본 H1 환경이나 논문 결과의 정확한 재현은 아니다.
+실제 평가한 정책은 실행 가능한 sparse actor와 참조 정보를 보는 asymmetric
+critic을 쓰는 PPO다. **Teacher/Student는 짧은 경로 검증만 완료**했으며,
+수렴한 teacher 또는 증류된 최종 student를 제공했다고 표현하지 않는다.
 
-| 평가 기록 | 참조 데이터 / seed / 환경당 실행 | 양손 오차 | 낙상 / 완료 에피소드 | 완료 에피소드 평균 |
-|---|---|---:|---:|---:|
-| `baseline_stand_v3` — 중립 PD | stand / 42 / 30초 | 8.75 cm | 1181 / 1181 | 1.58초 |
-| `eval_stand_500` — stand500 | stand / 42 / 30초 | **1.37 cm** | **0 / 64** | 19.98초 |
-| `baseline_mixed_v3` — 중립 PD | mixed / 2026 / 60초 | 26.62 cm | 2827 / 2827 | 1.34초 |
-| `eval_mixed_stand500` — stand500 | mixed / 2026 / 60초 | **13.00 cm** | **2 / 192** | 19.79초 |
-| `eval_mixed_1200` — mixed `model_1199.pt` | mixed / 2026 / 60초 | **16.85 cm** | **23 / 192** | 18.99초 |
+v1 actor/critic은 105/138차원, 현재 v2는 126/156차원이다. v2 actor의 추가
+입력은 시뮬레이터에서 얻는 상태·목표 오차·과거 입력 차분이며 전체 참조 관절이
+아니다. 모델별 `observation_version`과 계약을 그대로 복원한다.
+[학습 설정](TRAINING.md)
 
-각 숫자의 원본은 `runs/<평가 기록>/result.json`이다. `stand500`은
-`runs/stand_2048_v2/model_final.pt`를 뜻하며 두 평가 모두 export된 TorchScript를
-사용했다. mixed `model_1199.pt` 평가는 RSL-RL 추론 경로다. 같은 이름의 학습 로그
-평균을 별도 평가 수치로 대체하지 않았다.
+같은 Cartesian heldout에서 양손 평균 오차는 preprecision1800 4.95cm,
+precision500 2.22cm, precision1500 2.48cm, tight800 1.47cm, head1100 1.32cm였다. 낙상은 각각
+0/192, 0/192, 7/192, 1/192, 0/192다. 이 비교는 같은 데이터·seed·64환경·3000step에
+한정한다. stand·mixed·비영 이동 명령 평가를 이 수치와 같은 조건으로 취급하지 않는다.
 
-500업데이트 모델은 작은 제자리 팔 동작에서 균형과 추종을 배웠다. 같은 모델을
-넓은 팔 뻗기·펀치·앉기 데이터로 평가하면 손 오차가 커진다. mixed 추가 학습의
-중간 체크포인트도 이 평가에서는 개선되지 않았다. **학습 횟수를 늘렸다는 사실만으로
-넓은 전신 텔레옵 준비가 완료됐다고 판단할 수 없다.**
+tight800은 29관절을 구동하는 제자리 전신 제어다. 머리 Y/Z축의 약한 응답과
+방향 drift가 남아 있으며 9축 추종 종합 기준을 통과하지 않았다. 별도
+velocity2000은 전후 속도를 따라갔지만 yaw 명령 gain이 0.050/−0.003으로
+회전을 거의 수행하지 못했다. 사람의 실제 다리 움직임이나 완성된 보행·회전
+텔레옵을 학습했다는 근거가 아니다. [이동 평가](LOCOMOTION.md)
 
-0/64는 관측한 완료 에피소드에서 낙상이 없었다는 뜻이며 모든 입력에서의 안정성
-보증이 아니다. 미완료 에피소드 시간도 원본에 보관했다. 전체 환경 지표는 리셋
-직전 상태를 집계한다. `trace.npz`는 환경 0만 기록하므로 분석 시 리셋 경계를 제외하고
-전체 낙상 통계와 구별한다. [평가 방법](VALIDATION_METHOD.md)
+head1100은 초기화 수정 후 단독 9축 기준을 통과했지만 복합 머리 Y gain은
+0.462이고, 90초에서 yaw −26.22도·순 XY 4.67cm의 drift가 남았다. 전체 상태
+전이 시험도 40초 동안 통과했으며, 제자리 후보의 이 결과를 이동·회전 성능으로
+해석하지 않는다. 수정 전 실패도 [RESULTS.md](RESULTS.md)에 함께 보존했다.
 
-## 가상 입력과 실제 Quest를 구별
+평가 클립을 학습 업데이트에 넣지는 않았지만 개발 중 모델 선택과 보상 조정에
+사용했다. 실제 사용자·새 동작에서의 독립적인 최종 검증은 추가로 필요하다.
 
-`teleop_synthetic_stand500`은 실제 시뮬레이션 45초·2250step을 실행했고,
-그중 **617step(12.34초)**만 유효한 합성 조작 입력이 활성 상태였다. 45초 전체를
-연속 조작 시간으로 보고하지 않는다. 낙상 0회, 전체 실행의 양손 오차 평균
-2.53 cm였으며 정지 상태의 구간도 이 평균에 포함된다. 원본에는
-`input_sources=["synthetic"]`, `physical_quest_verified=false`가 기록되어 있다.
+## 미검증과 진행 중인 항목
 
-실제 Quest 3의 추적·버튼, ALVR 전송, SteamVR Background action과 Isaac OpenXR의
-동시 활성화, 헤드셋에서의 G1 시점 영상·지연·재보정은 **아직 실제 장비로 검증하지
-않았다**. 모의 OpenVR 테스트나 합성 UDP 성공은 이를 대신하지 않는다.
+- unified1500은 별도 평가와 실제 UDP 추가 시험에서 모두 이동·회전 통합 성능이 미달했다. head1100은 90초 추종·40초 상태 전이 시험을 근거로 제한된 제자리 기본 모델로 선택했다. 걷기·회전·머리·양손 조작을 동시에 안정적으로 수행하는 정책은 준비되지 않았다.
+- 기존 37액션 보행 체크포인트는 몸체/손가락 구성과 링크 좌표·질량·effort limit이 현재 모델과 달라 직접 적용을 채택하지 않았다. 성공한 teacher 전이 근거는 없다. 별도 순수 이동축 RL 실험은 진행 중이며 완료 정책으로 취급하지 않는다.
+- OpenVR 앱 등록·버튼·추적 실패 처리는 실제 API 자료형을 사용한 모의 런타임 검사다. 실제 Quest 연결 성공이 아니다.
+- 합성 UDP 시험의 모든 기록은 `physical_quest_verified=false`다. 실제 Quest/ALVR/SteamVR와 Isaac OpenXR의 동시 작동, 영상 방향·재보정·지연은 장비에서 확인해야 한다.
+- 공용 서버 설치·GPU 성능·네트워크·실시간 50Hz 여부는 미검증이다. 여러 GPU 작업이 겹친 병렬 평가는 실시간보다 느렸으며 그 처리량을 헤드셋 루프의 성능으로 사용하지 않는다.
+- 현재 모션은 기립·팔 동작·펀치·합성 crouch 중심이다. 인간 다리 추적, 다양한 보행 모방, 손가락·bHaptics 제어, 광범위 자기충돌·지형 대응은 포함하지 않는다.
 
-현재 평가한 동작 데이터의 이동·회전 명령은 모두 0이다. 스틱 입력과 속도 명령
-코드는 있어도 이 기록으로 보행·회전 정책 학습을 입증할 수 없다. 이동 성능,
-큰 몸통 변화와 넓은 팔 작업 범위, 실제 사용자 입력에 대한 안정성은 별도 평가가
-필요하다. 최종 모델·번들·공용 서버 명령은 최종 결과 보고서에서 확정한다.
+주요 원본 결과 사본은 [검증 기록 목록](verification/results/index.json)에 있으며
+전체 trace·모델은 번들로 전달한다. 제자리 기본 모델의 서버 실행은
+[RUN_SERVER.md](RUN_SERVER.md), 환경 구성은 [ALVR.md](ALVR.md),
+[INSTALL.md](INSTALL.md)를 따른다.

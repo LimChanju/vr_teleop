@@ -1,0 +1,193 @@
+{
+  "date": "2026-09-30",
+  "scope": "Completed local simulator results, analyses, and same-PC relocated-bundle evaluation; exact JSON copies, no trace/checkpoint files",
+  "default_stationary_model": "teleop_head_precision_v6",
+  "physical_quest_verified": false,
+  "remote_server_verified": false,
+  "pending": [
+    "bounded_pure_axis_locomotion_rl_experiment_not_a_completed_policy"
+  ],
+  "files": [
+    {
+      "filename": "baseline_stand_result.json",
+      "source": "runs/baseline_stand_v3/result.json",
+      "sha256": "152bfa3bea143892248dc620a86f5e1069d97ccd9f342bd270b73b9c3f996d19",
+      "bytes": 2547
+    },
+    {
+      "filename": "stand500_result.json",
+      "source": "runs/eval_stand_500/result.json",
+      "sha256": "cb38f27d6ce627303217da6f28ddf5108e85a7b707c51af9832f33ce9c594df4",
+      "bytes": 2625
+    },
+    {
+      "filename": "rich2500_result.json",
+      "source": "runs/eval_rich_2500/result.json",
+      "sha256": "4abf1b87e3c8162687350ad44a34ae3f612c1248df2112d818435047e0b56055",
+      "bytes": 2994
+    },
+    {
+      "filename": "preprecision1800_cartesian_result.json",
+      "source": "runs/eval_teleop_preprecision1800/result.json",
+      "sha256": "4018d00441f904afa82802fd85912edea1546ee3d45ba5bcd84fa0b26ea7fc92",
+      "bytes": 2984
+    },
+    {
+      "filename": "precision500_result.json",
+      "source": "runs/eval_precision_500/result.json",
+      "sha256": "9c72064f71d20c40e55b42aa2ba899f6f7c03d14e8414707ff49222d0bb15cb1",
+      "bytes": 2964
+    },
+    {
+      "filename": "precision1500_result.json",
+      "source": "runs/eval_precision_1500/result.json",
+      "sha256": "fcfd672de2e94f9b3f4b4db2750422bde0cc9ca610ebd55f056e1fe72a7049c5",
+      "bytes": 3001
+    },
+    {
+      "filename": "tight800_result.json",
+      "source": "runs/eval_precision_tight800/result.json",
+      "sha256": "79cd44622faa4d8fab3123492b53e525888d9ff8dd8f9c28faa0d7edd8be21c4",
+      "bytes": 3034
+    },
+    {
+      "filename": "tight800_sweep_result.json",
+      "source": "runs/tracking_sweep_tight800/result.json",
+      "sha256": "5b2de546815aee3a18cb5dc8eaf2a06328d67163a2d23138646e2d6d04310c26",
+      "bytes": 1297
+    },
+    {
+      "filename": "tight800_sweep_analysis.json",
+      "source": "runs/tracking_sweep_tight800/scenario_analysis.json",
+      "sha256": "21c2abfa1a7e66cc3614fc88e6043d2e8e1b299fad17ad1beec6fef9eca2eb4f",
+      "bytes": 32393
+    },
+    {
+      "filename": "tight800_root_foot_analysis.json",
+      "source": "runs/analysis_sweep_tight800/analysis.json",
+      "sha256": "a979a63eb9c4843a0e34a511abb0a39df95892aee35ada2f14d6c03a74585ab3",
+      "bytes": 13929
+    },
+    {
+      "filename": "head1100_result.json",
+      "source": "runs/eval_head1100/result.json",
+      "sha256": "6bf2efd3c33f5135902745a03f89034bfccf1e3cebdbad80473da6d1449efbf8",
+      "bytes": 2955
+    },
+    {
+      "filename": "head1100_failed_initialization_result.json",
+      "source": "runs/tracking_sweep_head1100/result.json",
+      "sha256": "b69b362847f02a531c478b1955eab31fdf1b0d630c3f4b90a6329a21d8760bdd",
+      "bytes": 1347
+    },
+    {
+      "filename": "head1100_failed_initialization_analysis.json",
+      "source": "runs/tracking_sweep_head1100/scenario_analysis.json",
+      "sha256": "400aaa1417c9fa93f7a1f263d0661fdb5e16f53e4347a31b4d5670ecbe30ffb9",
+      "bytes": 12288
+    },
+    {
+      "filename": "head1100_grounded_sweep_result.json",
+      "source": "runs/tracking_sweep_head1100_grounded/result.json",
+      "sha256": "b50743e25555148ca4908e5dde21e24089eace2f0e5de1fc0bf8cca68be106d5",
+      "bytes": 1318
+    },
+    {
+      "filename": "head1100_grounded_sweep_analysis.json",
+      "source": "runs/tracking_sweep_head1100_grounded/scenario_analysis.json",
+      "sha256": "df35c27c91113115068ec926f257d3886fff8369e7c241520c4a9e1ff5257d00",
+      "bytes": 31943
+    },
+    {
+      "filename": "head1100_grounded_root_foot_analysis.json",
+      "source": "runs/tracking_sweep_head1100_grounded/analysis/analysis.json",
+      "sha256": "3480ea07b401764c7bb9e6089894a7cde0a5b2062c9ec4dd948d53e671da0177",
+      "bytes": 13935
+    },
+    {
+      "filename": "head1100_grounded_state_result.json",
+      "source": "runs/runtime_state_head1100_grounded/result.json",
+      "sha256": "751548e0eedda9d9376fb1500fac94916580c2ec34ddcc8c92e675bb6209ec82",
+      "bytes": 1328
+    },
+    {
+      "filename": "head1100_grounded_state_analysis.json",
+      "source": "runs/runtime_state_head1100_grounded/scenario_analysis.json",
+      "sha256": "5b401226d44b427bbfa325c8c3846c1ce6e9953d2d10c98c345526a6fdce19d9",
+      "bytes": 16518
+    },
+    {
+      "filename": "velocity2000_blocks_result.json",
+      "source": "runs/eval_velocity_2000/result.json",
+      "sha256": "88dd62ac356eba2b3f09030db73c34fd8bb653340e87012992912ee037b93934",
+      "bytes": 17865
+    },
+    {
+      "filename": "unified1500_random_commands_result.json",
+      "source": "runs/eval_unified1500/result.json",
+      "sha256": "386cecfe30a0cf87171c621104a93b2fcd64e110701f51c12df3897e406ee867",
+      "bytes": 3474
+    },
+    {
+      "filename": "unified1500_blocks_result.json",
+      "source": "runs/eval_unified_velocity1500/result.json",
+      "sha256": "769045ef3f6943d6237bc7dab41641996f37bae91d28085fd028d10ab0a228e0",
+      "bytes": 17876
+    },
+    {
+      "filename": "unified1500_whole_body_result.json",
+      "source": "runs/whole_body_unified1500/result.json",
+      "sha256": "bd840e31967d035943f431c0196e53f29236f5e67180a39d64caa0eb340aa6db",
+      "bytes": 1798
+    },
+    {
+      "filename": "unified1500_whole_body_analysis.json",
+      "source": "runs/whole_body_unified1500/scenario_analysis.json",
+      "sha256": "965c04bee9abbdd311be4ddd014f15b3b028ce8c39b806e1f32275f6e799655b",
+      "bytes": 32414
+    },
+    {
+      "filename": "velocity2000_whole_body_result.json",
+      "source": "runs/whole_body_velocity2000/result.json",
+      "sha256": "efb9e1495fee2208fdcf8f2c50b281a80a5040e0cd286571f3a4dc7ac4a8a7aa",
+      "bytes": 1828
+    },
+    {
+      "filename": "velocity2000_whole_body_analysis.json",
+      "source": "runs/whole_body_velocity2000/scenario_analysis.json",
+      "sha256": "8000ed8f2c6dd5eacc1af0544ada6f96f50933473d979bd7edb639fb24fd351d",
+      "bytes": 73959
+    },
+    {
+      "filename": "head1100_portable_result.json",
+      "source": "/home/railabchan/g1_portable_validation/runs/portable_export_check/result.json",
+      "sha256": "031b8fb72cde2c91e610ef6417470353960ea8b06768f06f0f214846d59d0a1b",
+      "bytes": 3000
+    },
+    {
+      "filename": "head1100_portable_config.json",
+      "source": "/home/railabchan/g1_portable_validation/runs/portable_export_check/run_config.json",
+      "sha256": "a8bdd3d106e471be89b7990020afbaab46286392e9456a51e85d5cfdad81851b",
+      "bytes": 11976
+    },
+    {
+      "filename": "head1100_portable_path_receipt.json",
+      "source": "/home/railabchan/g1_portable_validation/runs/portable_export_check/portable_path_receipt.json",
+      "sha256": "e7d61d0d6709eed162fb38353e750e755b533579811fecdfc04a30cedd4440c0",
+      "bytes": 1414
+    },
+    {
+      "filename": "head1100_portable_preview_result.json",
+      "source": "/home/railabchan/g1_portable_validation/runs/portable_preview/result.json",
+      "sha256": "9a2be54f57e6d56a31c7d455e83c168098aa8408ad9fdb87e62a66d37fa1de57",
+      "bytes": 1464
+    },
+    {
+      "filename": "head1100_portable_preview_config.json",
+      "source": "/home/railabchan/g1_portable_validation/runs/portable_preview/run_config.json",
+      "sha256": "ee4f2a91a7c1e19d923e46102bccc6bda79c4c03159fa6287189230e2276a7f9",
+      "bytes": 11975
+    }
+  ],
+  "portable_default_model_verified_on_same_pc": true
+}

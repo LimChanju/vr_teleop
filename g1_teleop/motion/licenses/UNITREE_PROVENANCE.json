@@ -1,0 +1,35 @@
+{
+  "verified_at_utc": "2026-09-30T12:22:35.862470+00:00",
+  "unitree_repository": "https://github.com/unitreerobotics/unitree_sim_isaaclab",
+  "unitree_commit": "e30c25b1dffdf92ada1d6c8c1fe9a47bdde0fecc",
+  "upstream_license_url": "https://raw.githubusercontent.com/unitreerobotics/unitree_sim_isaaclab/e30c25b1dffdf92ada1d6c8c1fe9a47bdde0fecc/LICENSE",
+  "preserved_upstream_notice": "UNITREE_APACHE_2_0.txt",
+  "upstream_notice_sha256": "c9294c93c8aa7bd5fb18bf0f3db3f8dc3fd4972be79f4227de3fa7e416201d68",
+  "upstream_notice_matches_committed_and_local_files": true,
+  "full_apache_license": {
+    "file": "APACHE_LICENSE_2_0.txt",
+    "source_url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  "usd_dataset": {
+    "repository": "https://huggingface.co/datasets/unitreerobotics/unitree_sim_isaaclab_usds",
+    "revision": "394cf2448f8a9ed815c77c701a761f3d1ff1c8fb",
+    "declared_license": "apache-2.0",
+    "card_source_url": "https://huggingface.co/datasets/unitreerobotics/unitree_sim_isaaclab_usds/raw/394cf2448f8a9ed815c77c701a761f3d1ff1c8fb/README.md",
+    "saved_card": "UNITREE_DATASET_CARD.md",
+    "card_sha256": "4bcf87ecfbbb8e07a01b21415a970c8b53a5283bf6872b657040d3f45c9241f7"
+  },
+  "unitree_repository_notice_files": [],
+  "dataset_notice_or_license_files": [],
+  "bundled_asset_directory": "assets/robots/g1-29dof_wholebody_dex1",
+  "local_unitree_asset_file_hashes_verified_unchanged": [
+    ".asset_hash",
+    "config.yaml",
+    "configuration/g1_29dof_with_dex1_rev_1_0_base.usd",
+    "configuration/g1_29dof_with_dex1_rev_1_0_physics.usd",
+    "configuration/g1_29dof_with_dex1_rev_1_0_sensor.usd",
+    "g1_29dof_with_dex1_rev_1_0.usd"
+  ],
+  "modifications": "Bundled USD asset bytes match the local Unitree source asset files. The simulator applies a runtime-only boundingCube collision approximation to both hip-yaw collision prims; it does not rewrite these USD files. G1 FK numeric data and control configuration are adapted in this project; see source headers and ROBOT.md.",
+  "scope": "Accurate copies and source attribution; no new license grant or relicensing of third-party materials."
+}

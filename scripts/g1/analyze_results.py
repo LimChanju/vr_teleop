@@ -67,6 +67,81 @@ def response_metrics(target, actual, valid, dt, done, max_lag_seconds=.5):
     return result
 
 
+def locomotion_diagnostics(trace, valid, done, dt):
+    """Optional env0 root/foot evidence; never bridge resets or invalid rows."""
+    shapes={'root_position_w':(3,), 'root_quaternion_wxyz':(4,), 'root_linear_velocity_b':(3,),
+            'foot_contact':(2,), 'foot_linear_velocity_w':(2,3)}
+    present={key:np.asarray(trace[key]) for key in shapes if key in trace}
+    if not present:return None
+    n=len(valid); usable=valid.copy();invalid={};nonfinite={}
+    for key,value in present.items():
+        if value.shape!=(n,)+shapes[key]:raise ValueError(f'{key} must be [T,{shapes[key]}]')
+        finite=np.isfinite(value).reshape(n,-1).all(-1)
+        accepted=finite.copy()
+        if key=='foot_contact':accepted &= np.isin(value,(0,1)).all(-1)
+        if key=='root_quaternion_wxyz':
+            norm=np.linalg.norm(value,axis=-1)
+            accepted &= np.abs(norm-1.)<=1e-3
+        nonfinite[key]=int((~finite).sum());invalid[key]=int((~accepted).sum());usable &= accepted
+    pair=usable[:-1]&usable[1:]&~done[:-1]&~done[1:]
+    result=dict(available_fields=list(present),missing_fields=[key for key in shapes if key not in present],
+                valid_rows=int(usable.sum()),valid_adjacent_pairs=int(pair.sum()),
+                data_valid=bool(n and all(count==0 for count in invalid.values())),
+                invalid_rows=invalid,nonfinite_rows=nonfinite,
+                note='Environment zero only. Reset guards and invalid rows split segments. No gait success threshold is implied.')
+    velocity=present.get('root_linear_velocity_b')
+    if velocity is not None:
+        result['root_body_xy_speed_mps']=stats(np.linalg.norm(velocity[usable,:2],axis=-1))
+        result['root_speed_mps']=stats(np.linalg.norm(velocity[usable],axis=-1))
+    position=present.get('root_position_w');quaternion=present.get('root_quaternion_wxyz')
+    if position is not None or quaternion is not None:
+        yaw=None
+        if quaternion is not None:
+            normalized=quaternion.astype(float)/np.maximum(np.linalg.norm(quaternion,axis=-1,keepdims=True),1e-12)
+            w,x,y,z=normalized.T
+            yaw=np.arctan2(2*(w*z+x*y),1-2*(y*y+z*z))
+        indices=np.flatnonzero(usable)
+        segments=[]
+        for ids in np.split(indices,np.flatnonzero(np.diff(indices)>1)+1) if len(indices) else []:
+            item=dict(start_frame=int(ids[0]),end_frame=int(ids[-1]),samples=len(ids),
+                      duration_seconds=float((len(ids)-1)*dt))
+            if velocity is not None:
+                item['root_body_xy_speed_mps']=stats(np.linalg.norm(velocity[ids,:2],axis=-1))
+                item['root_speed_mps']=stats(np.linalg.norm(velocity[ids],axis=-1))
+            if position is not None:
+                xy=position[ids,:2];displacement=xy[-1]-xy[0]
+                item.update(planar_displacement_xy_m=displacement.tolist(),
+                            planar_net_displacement_m=float(np.linalg.norm(displacement)),
+                            planar_path_length_m=float(np.linalg.norm(np.diff(xy,axis=0),axis=-1).sum()))
+            if yaw is not None:
+                angles=np.unwrap(yaw[ids])
+                item['yaw_drift_rad']=float(angles[-1]-angles[0])
+                item['yaw_path_rad']=float(np.abs(np.diff(angles)).sum())
+            segments.append(item)
+        result['root_motion_segments']=segments
+        if position is not None:
+            result['root_planar_path_length_m']=float(sum(item['planar_path_length_m'] for item in segments))
+            result['root_planar_speed_from_position_mps']=stats(np.linalg.norm(np.diff(position[:,:2],axis=0)[pair],axis=-1)/dt)
+    contact=present.get('foot_contact');foot_velocity=present.get('foot_linear_velocity_w')
+    if contact is not None:
+        # Invalid values are masked before counting; never turn NaN into True.
+        contact=contact==1
+        feet={}
+        for side,index in [('left',0),('right',1)]:
+            state=contact[:,index]
+            item=dict(valid_samples=int(usable.sum()),contact_samples=int((usable&state).sum()),
+                      contact_fraction=float(state[usable].mean()) if usable.any() else None,
+                      liftoff_count=int((pair&state[:-1]&~state[1:]).sum()),
+                      touchdown_count=int((pair&~state[:-1]&state[1:]).sum()))
+            if foot_velocity is not None:
+                item['foot_link_horizontal_velocity_during_contact_mps']=stats(
+                    np.linalg.norm(foot_velocity[usable&state,index,:2],axis=-1))
+            feet[side]=item
+        result['feet']=feet
+        result['foot_velocity_interpretation']='Horizontal world velocity of the tracked foot-link origin during contact; not exact contact-point slip. Link rotation can move this origin while a contact point remains fixed.'
+    return result
+
+
 def analyze_trace(trace, reset_guard=1):
     target=np.asarray(trace['target'],dtype=float);actual=np.asarray(trace['actual'],dtype=float)
     q=np.asarray(trace['q'],dtype=float);action=np.asarray(trace['action'],dtype=float)
@@ -102,6 +177,8 @@ def analyze_trace(trace, reset_guard=1):
                 response=response_metrics(target,actual,valid,dt,done),
                 note='Boundary exclusion affects trace tracking/speeds only. Population fall count remains unchanged. Raw actions precede wrapper clipping.')
     if 'enabled' in trace:result['enabled_rows']=int(np.asarray(trace['enabled'],dtype=bool).sum())
+    locomotion=locomotion_diagnostics(trace,valid,done,dt)
+    if locomotion is not None:result['locomotion']=locomotion
     return result,valid
 
 
@@ -133,6 +210,8 @@ def analyze_run(path,reset_guard=1):
         with np.load(path/'trace.npz',allow_pickle=False) as source:data={key:source[key] for key in source.files}
         summary['trace'],valid=analyze_trace(data,reset_guard)
         if not all(summary['trace']['finite'].values()):summary['warnings'].append('Nonfinite trace values detected; inspect nonfinite_rows')
+        if 'locomotion' in summary['trace'] and not summary['trace']['locomotion']['data_valid']:
+            summary['warnings'].append('Invalid root/foot diagnostic values detected; inspect locomotion.invalid_rows')
     else:summary['warnings'].append('No trace.npz; response and joint/action finiteness were not independently checked')
     return summary,data,valid
 

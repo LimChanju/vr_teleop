@@ -7,6 +7,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 import numpy as np
 
@@ -17,10 +18,91 @@ from g1_teleop.runtime import TeleopGate
 from g1_teleop.vr.protocol import DEFAULT_NOMINAL, UDPReceiver
 from g1_teleop.vr.calibration import TargetMapper
 from scripts.g1.runtime_scenario import (SWEEP_AXES, SWEEP_PHASES, analyze_scenario,
-                                         axis_tracking_metrics, make_sweep_raw, phase_plan)
+    WHOLE_BODY_COMMANDS, WHOLE_BODY_PHASES, axis_tracking_metrics, make_sweep_raw,
+    make_whole_body_raw, phase_plan, parse_args)
 
 
 class RuntimeScenarioTests(unittest.TestCase):
+    def test_whole_body_raw_sticks_pose_bounds_and_neutral_endpoints(self):
+        self.assertEqual(sum(item[1] for item in phase_plan(whole_body_sweep=True)), 75)
+        with mock.patch("sys.stderr"), self.assertRaises(SystemExit):
+            parse_args(["--output", "none.jsonl", "--tracking-sweep", "--whole-body-sweep"])
+        mapper = TargetMapper(nominal=DEFAULT_NOMINAL)
+        mapper.update(make_whole_body_raw("calibrate", 0, .65, .5))
+        for phase, duration, expected in WHOLE_BODY_PHASES[2:]:
+            targets, velocities = [], []
+            for fraction in np.linspace(0, 1, 81):
+                raw = make_whole_body_raw(phase, fraction, .65, duration)
+                frame = mapper.update(raw)
+                self.assertEqual(frame.enabled, expected)
+                self.assertLessEqual(max(abs(v) for v in (*raw.left_stick, *raw.right_stick)), 1)
+                targets.append(frame.positions - DEFAULT_NOMINAL)
+                velocities.append(frame.velocity)
+            targets, velocities = np.asarray(targets), np.asarray(velocities)
+            np.testing.assert_allclose(targets[[0, -1]], 0, atol=1e-12)
+            np.testing.assert_allclose(velocities[[0, -1]], 0, atol=1e-12)
+            self.assertLessEqual(np.abs(targets[:, 1:]).max(), .05)
+            self.assertLessEqual(np.abs(targets[:, 0, :2]).max(), .025)
+            self.assertGreaterEqual(targets[:, 0, 2].min(), -.04)
+            self.assertLessEqual(targets[:, 0, 2].max(), 1e-12)
+            wanted = WHOLE_BODY_COMMANDS.get(phase, (0, 0, 0))
+            np.testing.assert_allclose(velocities[40], wanted, atol=1e-12)
+
+    def test_whole_body_analysis_velocity_and_contact_are_separate(self):
+        # A generated mathematical trace, not physical/simulator validation.
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            rows = [dict(kind="start", scenario_mode="whole_body_sweep", phase_plan=[
+                dict(phase=name, duration_s=duration, expected_enabled=enabled)
+                for name, duration, enabled in WHOLE_BODY_PHASES])]
+            mapper = TargetMapper(nominal=DEFAULT_NOMINAL)
+            wall, targets, enabled, commands = [], [], [], []
+            start = 10.0
+            for phase, duration, expected in WHOLE_BODY_PHASES:
+                rows.append(dict(kind="phase_begin", phase=phase, expected_enabled=expected,
+                                 timestamp_unix_ns=round(start * 1e9)))
+                for offset in np.arange(round(duration * 20)) / 20:
+                    frame = mapper.update(make_whole_body_raw(phase, offset / duration, .65, duration))
+                    rows.append(dict(kind="frame", phase=phase, target=dict(seq=len(wall),
+                        enabled=frame.enabled, target_positions_m=frame.positions.tolist(),
+                        command_velocity=frame.velocity.tolist())))
+                    wall.append(start + offset); targets.append(frame.positions)
+                    enabled.append(frame.enabled); commands.append(frame.velocity)
+                start += duration
+                rows.append(dict(kind="phase_end", phase=phase, timestamp_unix_ns=round(start * 1e9)))
+            rows.append(dict(kind="summary", producer_completed=True))
+            events = directory / "scenario.jsonl"
+            events.write_text("\n".join(json.dumps(row) for row in rows))
+            (directory / "result.json").write_text(json.dumps(dict(mode="teleop", status="teleop_stopped",
+                input_sources=["synthetic"], falls=0, manual_resets=0, physical_quest_verified=False)))
+            n = len(wall)
+            linear, angular = np.asarray(commands).copy(), np.zeros((n, 3))
+            linear[:, :2] *= .8; linear[:, 2] = 0
+            angular[:, 2] = np.asarray(commands)[:, 2] * .02
+            trace = dict(wall_time=wall, input_sequence=np.arange(n), input_fresh=np.ones(n, dtype=bool),
+                manual_reset=np.zeros(n, dtype=bool), enabled=enabled, done=np.zeros(n, dtype=bool),
+                q=np.zeros((n, 29)), action=np.zeros((n, 29)), target=targets, actual=targets, command=commands,
+                root_linear_velocity_b=linear, root_angular_velocity_b=angular,
+                foot_contact=np.ones((n, 2), dtype=bool), foot_linear_velocity_w=np.zeros((n, 2, 3)))
+            np.savez(directory / "trace.npz", **trace)
+            report = analyze_scenario(events, directory)
+            self.assertTrue(report["control_state_passed"], report["checks"])
+            self.assertTrue(report["tracking_quality_passed"])
+            self.assertFalse(report["whole_body_checks_passed"])
+            axes = report["velocity_tracking"]["axes"]
+            self.assertAlmostEqual(axes["vx"]["ls_gain"], .8)
+            self.assertAlmostEqual(axes["vy"]["ls_gain"], .8)
+            self.assertAlmostEqual(axes["yaw"]["ls_gain"], .02)
+            self.assertFalse(axes["yaw"]["quality_passed"])
+            self.assertEqual(report["contact_diagnostics"]["double_support_fraction"], 1)
+            self.assertFalse(report["contact_diagnostics"]["gait_success_certified"])
+            json.dumps(report, allow_nan=False)
+            trace.pop("root_angular_velocity_b")
+            np.savez(directory / "trace.npz", **trace)
+            unavailable = analyze_scenario(events, directory)
+            self.assertFalse(unavailable["velocity_tracking"]["available"])
+            self.assertFalse(unavailable["whole_body_checks_passed"])
+
     def test_axis_tracking_detects_small_response_despite_high_correlation(self):
         target = np.tile(DEFAULT_NOMINAL, (101, 1, 1))
         wave = 0.06 * np.sin(np.linspace(0, 2 * np.pi, 101))

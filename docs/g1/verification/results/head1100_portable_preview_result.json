@@ -1,0 +1,42 @@
+{
+  "mode": "evaluate",
+  "stage": "sparse",
+  "status": "evaluated",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/g1_portable_validation/runs/portable_preview",
+  "metadata": "/home/railabchan/g1_portable_validation/runs/portable_preview/run_config.json",
+  "preview": "/home/railabchan/g1_portable_validation/runs/portable_preview/preview.png",
+  "steps": 200,
+  "seed": 2026,
+  "motion_split": "eval",
+  "wall_loop_seconds": 2.4562505478970706,
+  "mean_control_hz": 81.42491822392908,
+  "simulation_to_wall_time_ratio": 1.6284983644785818,
+  "simulated_seconds": 4.0,
+  "completed_episodes": 0,
+  "falls": 0,
+  "timeouts": 0,
+  "fall_rate_completed_episodes": null,
+  "mean_completed_episode_seconds": null,
+  "incomplete_episode_seconds": [
+    4.0
+  ],
+  "mean_metrics": {
+    "tracking_error_m": 0.013987309653311969,
+    "head_error_m": 0.009584726402536034,
+    "hand_error_m": 0.016188600722234697,
+    "velocity_error": 0.02342041173018515,
+    "root_height": 0.7375455936789512,
+    "fallen": 0.0,
+    "episode_steps": 100.5
+  },
+  "accepted_input_steps": 0,
+  "enabled_steps": 0,
+  "manual_resets": 0,
+  "input_sources": [],
+  "policy_backend": "torchscript",
+  "checkpoint": "/home/railabchan/g1_portable_validation/models/teleop_head_precision_v6/model.pt",
+  "zero_policy": false,
+  "failure_events": "/home/railabchan/g1_portable_validation/runs/portable_preview/failure_events.json",
+  "elapsed_seconds": 10.005085458047688
+}

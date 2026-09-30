@@ -1,0 +1,26 @@
+{
+  "status": "portable_paths_and_hashes_verified",
+  "bundle_root": "/home/railabchan/g1_portable_validation",
+  "evaluation": "/home/railabchan/g1_portable_validation/runs/portable_export_check",
+  "actual_usd_path": "/home/railabchan/g1_portable_validation/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd",
+  "actual_motion_path": "/home/railabchan/g1_portable_validation/data/motions/g1_teleop_v3.npz",
+  "actual_checkpoint_path": "/home/railabchan/g1_portable_validation/models/teleop_head_precision_v6/model.pt",
+  "actual_export_path": "/home/railabchan/g1_portable_validation/models/teleop_head_precision_v6/policy.pt",
+  "export_hash": "6443fdab6c3af8bea57a64c9a31cdac9dbc7773494c984695acef5e1d8b43208",
+  "checkpoint_hash": "ca8de5aa271f95a7fdea7736b936d0f04fcec19d2987239ba0d21a39273e3d70",
+  "bundle_files_rechecked": 152,
+  "runtime_source_files_rechecked": 8,
+  "kinematics_validation": {
+    "environment_count": 4,
+    "max_marker_error_m": 1.8584941602868903e-06,
+    "mean_marker_error_m": 1.1796758665340255e-06,
+    "tolerance_m": 0.002,
+    "passed": true,
+    "marker_names": [
+      "head_link",
+      "left_wrist_yaw_link",
+      "right_wrist_yaw_link"
+    ]
+  },
+  "note": "Successful TorchScript evaluation also enforces exact actor state equality with checkpoint in run.py; this receipt is portability evidence, not a performance or physical Quest certification."
+}

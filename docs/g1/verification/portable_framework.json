@@ -1,0 +1,116 @@
+{
+  "framework_path": "/home/railabchan/g1_portable_framework/IsaacLab",
+  "commit": "91ad4944f2b7fad29d52c04a5264a082bcaad71d",
+  "origin": "https://github.com/isaac-sim/IsaacLab.git",
+  "shared_file_inodes": [],
+  "external_symlinks": [],
+  "git_alternates": false,
+  "g1_teleop_before": {
+    "isaaclab_assets": {
+      "version": "0.2.2",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_assets\"}"
+    },
+    "isaaclab_rl": {
+      "version": "0.1.4",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_rl\"}"
+    },
+    "isaaclab_mimic": {
+      "version": "1.0.7",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_mimic\"}"
+    },
+    "isaaclab_tasks": {
+      "version": "0.10.34",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_tasks\"}"
+    },
+    "isaaclab": {
+      "version": "0.40.6",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab\"}"
+    }
+  },
+  "g1_server_check_before": {
+    "isaaclab_assets": {
+      "version": "0.2.2",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/quest3_g1_teleop/vendor/IsaacLab-g1/source/isaaclab_assets\"}"
+    },
+    "isaaclab_rl": {
+      "version": "0.1.4",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/quest3_g1_teleop/vendor/IsaacLab-g1/source/isaaclab_rl\"}"
+    },
+    "isaaclab_mimic": {
+      "version": "1.0.7",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/quest3_g1_teleop/vendor/IsaacLab-g1/source/isaaclab_mimic\"}"
+    },
+    "isaaclab_tasks": {
+      "version": "0.10.34",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/quest3_g1_teleop/vendor/IsaacLab-g1/source/isaaclab_tasks\"}"
+    },
+    "isaaclab": {
+      "version": "0.40.6",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/quest3_g1_teleop/vendor/IsaacLab-g1/source/isaaclab\"}"
+    }
+  },
+  "g1_teleop_after": {
+    "isaaclab_assets": {
+      "version": "0.2.2",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_assets\"}"
+    },
+    "isaaclab_rl": {
+      "version": "0.1.4",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_rl\"}"
+    },
+    "isaaclab_mimic": {
+      "version": "1.0.7",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_mimic\"}"
+    },
+    "isaaclab_tasks": {
+      "version": "0.10.34",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab_tasks\"}"
+    },
+    "isaaclab": {
+      "version": "0.40.6",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/isaac_vr_humanoid_teleop/IsaacLab/source/isaaclab\"}"
+    }
+  },
+  "g1_server_check_after": {
+    "isaaclab_assets": {
+      "version": "0.2.2",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/g1_portable_framework/IsaacLab/source/isaaclab_assets\"}"
+    },
+    "isaaclab_rl": {
+      "version": "0.1.4",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/g1_portable_framework/IsaacLab/source/isaaclab_rl\"}"
+    },
+    "isaaclab_mimic": {
+      "version": "1.0.7",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/g1_portable_framework/IsaacLab/source/isaaclab_mimic\"}"
+    },
+    "isaaclab_tasks": {
+      "version": "0.10.34",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/g1_portable_framework/IsaacLab/source/isaaclab_tasks\"}"
+    },
+    "isaaclab": {
+      "version": "0.40.6",
+      "direct_url": "{\"dir_info\": {\"editable\": true}, \"url\": \"file:///home/railabchan/g1_portable_framework/IsaacLab/source/isaaclab\"}"
+    }
+  },
+  "original_g1_teleop_editable_metadata_unchanged": true,
+  "pip_check": {
+    "exit_code": 0,
+    "output": "No broken requirements found.\n"
+  },
+  "versions": {
+    "python": "3.10.21 (main, Aug 27 2026, 14:42:07) [GCC 14.3.0]",
+    "packages": {
+      "isaacsim": "4.5.0.0",
+      "torch": "2.5.1+cu121",
+      "numpy": "1.26.4",
+      "rsl-rl-lib": "2.3.3",
+      "isaaclab": "0.40.6",
+      "isaaclab_assets": "0.2.2",
+      "isaaclab_tasks": "0.10.34",
+      "isaaclab_rl": "0.1.4",
+      "isaaclab_mimic": "1.0.7"
+    }
+  },
+  "verified_at_utc": "2026-09-30T12:14:06.014020+00:00"
+}

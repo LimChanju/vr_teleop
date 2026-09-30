@@ -1,0 +1,42 @@
+{
+  "mode": "teleop",
+  "stage": "sparse",
+  "status": "teleop_stopped",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/quest3_g1_teleop/runs/runtime_state_head1100_grounded",
+  "metadata": "/home/railabchan/quest3_g1_teleop/runs/runtime_state_head1100_grounded/run_config.json",
+  "steps": 2000,
+  "seed": 42,
+  "motion_split": "train",
+  "wall_loop_seconds": 40.00022394582629,
+  "mean_control_hz": 49.999720069284365,
+  "simulation_to_wall_time_ratio": 0.9999944013856874,
+  "simulated_seconds": 40.0,
+  "completed_episodes": 0,
+  "falls": 0,
+  "timeouts": 0,
+  "fall_rate_completed_episodes": null,
+  "mean_completed_episode_seconds": null,
+  "incomplete_episode_seconds": [
+    17.219999313354492
+  ],
+  "mean_metrics": {
+    "tracking_error_m": 0.00795461440080544,
+    "head_error_m": 0.005633127983513986,
+    "hand_error_m": 0.00911535723839188,
+    "velocity_error": 0.021219305293583603,
+    "root_height": 0.7590059381127358,
+    "fallen": 0.0,
+    "episode_steps": 510.1605
+  },
+  "accepted_input_steps": 762,
+  "enabled_steps": 762,
+  "manual_resets": 1,
+  "input_sources": [
+    "synthetic"
+  ],
+  "policy_backend": "torchscript",
+  "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/teleop_head_precision_v6/model_final.pt",
+  "zero_policy": false,
+  "elapsed_seconds": 44.36827454669401
+}
