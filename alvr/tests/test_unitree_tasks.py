@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -21,6 +22,7 @@ if str(ALVR_ROOT) not in sys.path:
     sys.path.insert(0, str(ALVR_ROOT))
 
 import unitree_task_launcher as launcher
+import unitree_sim_entrypoint as sim_entrypoint
 import unitree_tasks as tasks
 import unitree_teleop_entrypoint as entrypoint
 from arm_safety import ArmCommandSafety
@@ -150,6 +152,11 @@ class LaunchCommandTests(unittest.TestCase):
                     ["conda", "run", "--no-capture-output", "-n", "unitree-sim", "python"],
                 )
                 self.assertEqual(option_value(command, "--task"), task.task_id)
+                self.assertEqual(
+                    option_value(command, "--upstream-script"),
+                    str((self.sim_root / "sim_main.py").resolve()),
+                )
+                self.assertIn(str((ALVR_ROOT / "unitree_sim_entrypoint.py").resolve()), command)
                 self.assertEqual(option_value(command, "--robot_type"), "g129")
                 self.assertEqual(option_value(command, "--device"), "cuda:0")
                 self.assertIn("--enable_cameras", command)
@@ -205,11 +212,21 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertEqual(wholebody_environment["ALVR_END_EFFECTOR"], "dex3")
         self.assertTrue(Path(wholebody_environment["ALVR_ACTION_MANIFEST"]).is_absolute())
 
+    def test_sim_environment_forces_utf8_for_upstream_camera_yaml(self):
+        with patch.dict(os.environ, {"PYTHONUTF8": "0", "PYTHONIOENCODING": "ascii"}):
+            environment = launcher.sim_environment(self.args)
+
+        self.assertEqual(environment["PYTHONUTF8"], "1")
+        self.assertEqual(environment["PYTHONIOENCODING"], "utf-8")
+        self.assertEqual(environment["PYTHONUNBUFFERED"], "1")
+        self.assertEqual(environment["PROJECT_ROOT"], str(self.sim_root.resolve()))
+
     def test_managed_options_cannot_be_overridden_by_extra_args(self):
         conflicts = (
             ("--sim-arg=--task=wrong", "--task"),
             ("--sim-arg=--dev", "--dev"),
             ("--sim-arg=--acti", "--acti"),
+            ("--sim-arg=--full-scene", "--full-scene"),
             ("--teleop-arg=--motion", "--motion"),
             ("--teleop-arg=--mo", "--mo"),
             ("--teleop-arg=--upst", "--upst"),
@@ -235,6 +252,151 @@ class LaunchCommandTests(unittest.TestCase):
             ["print", "pick-cylinder-dex1", "--sdk-root", str(explicit_sdk)]
         )
         self.assertEqual(args.sdk_root, explicit_sdk)
+
+    def test_startup_timeout_allows_first_run_shader_warmup(self):
+        args = launcher.build_parser().parse_args(["print", "pick-cylinder-dex1"])
+
+        self.assertEqual(args.startup_timeout, 900.0)
+        self.assertEqual(args.device, "cuda:0")
+
+    def test_full_scene_flag_is_forwarded_to_simulator_adapter(self):
+        args = launcher.build_parser().parse_args(
+            ["print", "pick-cylinder-dex1", "--full-scene"]
+        )
+
+        self.assertIn("--full-scene", launcher.build_sim_command(args, tasks.TASKS[0]))
+
+    def test_default_sim_python_uses_exec_wrapper_for_activation_hooks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            conda_root = Path(directory)
+            alvr_root = conda_root / "alvr"
+            conda_executable = conda_root / "bin" / "conda"
+            sim_python = conda_root / "envs" / "unitree_sim_env" / "bin" / "python"
+            conda_wrapper = alvr_root / "scripts" / "conda_env_exec.sh"
+            conda_executable.parent.mkdir(parents=True)
+            sim_python.parent.mkdir(parents=True)
+            conda_wrapper.parent.mkdir(parents=True)
+            conda_executable.touch()
+            sim_python.touch()
+            conda_wrapper.touch(mode=0o755)
+            with patch.dict(
+                os.environ,
+                {"CONDA_EXE": str(conda_executable)},
+                clear=True,
+            ), patch.object(launcher, "ROOT", alvr_root):
+                command = launcher._default_python("UNITREE_SIM_PYTHON")
+
+        self.assertEqual(
+            launcher._command_parts(command),
+            [
+                str(conda_wrapper),
+                "unitree_sim_env",
+                "python",
+            ],
+        )
+
+    def test_default_sim_python_fails_closed_when_exec_wrapper_is_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            conda_root = Path(directory)
+            alvr_root = conda_root / "alvr"
+            conda_executable = conda_root / "bin" / "conda"
+            sim_python = conda_root / "envs" / "unitree_sim_env" / "bin" / "python"
+            conda_executable.parent.mkdir(parents=True)
+            sim_python.parent.mkdir(parents=True)
+            conda_executable.touch()
+            sim_python.touch()
+            with patch.dict(
+                os.environ,
+                {"CONDA_EXE": str(conda_executable)},
+                clear=True,
+            ), patch.object(launcher, "ROOT", alvr_root):
+                command = launcher._default_python("UNITREE_SIM_PYTHON")
+
+        self.assertEqual(
+            launcher._command_parts(command),
+            [
+                str(alvr_root / "scripts" / "conda_env_exec.sh"),
+                "unitree_sim_env",
+                "python",
+            ],
+        )
+        self.assertIn("not executable", launcher._executable_problem(command) or "")
+
+
+class SimulatorEntrypointTests(unittest.TestCase):
+    @staticmethod
+    def config(room_path: str = "https://assets.example/warehouse.usd"):
+        return SimpleNamespace(
+            wait_for_textures=True,
+            scene=SimpleNamespace(
+                room_walls=SimpleNamespace(
+                    spawn=SimpleNamespace(usd_path=room_path)
+                ),
+                world_camera=object(),
+                robot_camera=object(),
+                front_camera=object(),
+                left_wrist_camera=object(),
+                right_wrist_camera=object(),
+                packing_table=object(),
+                object=object(),
+            ),
+        )
+
+    def test_offline_overlay_omits_only_remote_scenery_and_spectator_camera(self):
+        config = self.config()
+
+        changes = sim_entrypoint.prepare_environment_config(config, full_scene=False)
+
+        self.assertFalse(config.wait_for_textures)
+        self.assertIsNone(config.scene.room_walls)
+        self.assertIsNone(config.scene.world_camera)
+        self.assertIsNone(config.scene.robot_camera)
+        self.assertIsNotNone(config.scene.front_camera)
+        self.assertIsNotNone(config.scene.left_wrist_camera)
+        self.assertIsNotNone(config.scene.right_wrist_camera)
+        self.assertIsNotNone(config.scene.packing_table)
+        self.assertIsNotNone(config.scene.object)
+        self.assertEqual(
+            changes,
+            [
+                "bounded texture startup",
+                "remote room omitted",
+                "unused world_camera omitted",
+                "unused robot_camera omitted",
+            ],
+        )
+
+    def test_offline_overlay_keeps_local_room(self):
+        config = self.config("/local/assets/warehouse.usd")
+
+        sim_entrypoint.prepare_environment_config(config, full_scene=False)
+
+        self.assertIsNotNone(config.scene.room_walls)
+        self.assertIsNone(config.scene.world_camera)
+        self.assertIsNone(config.scene.robot_camera)
+
+    def test_full_scene_only_bounds_texture_wait(self):
+        config = self.config()
+
+        changes = sim_entrypoint.prepare_environment_config(config, full_scene=True)
+
+        self.assertFalse(config.wait_for_textures)
+        self.assertIsNotNone(config.scene.room_walls)
+        self.assertIsNotNone(config.scene.world_camera)
+        self.assertIsNotNone(config.scene.robot_camera)
+        self.assertEqual(changes, ["bounded texture startup"])
+
+    def test_only_disabled_webrtc_noise_is_suppressed(self):
+        self.assertTrue(
+            sim_entrypoint.should_suppress_image_warning(
+                "[IsaacSimCamera] Failed to encode to WebRTC for head_camera"
+            )
+        )
+        self.assertFalse(
+            sim_entrypoint.should_suppress_image_warning(
+                "[IsaacSimCamera] Failed to encode JPEG for head_camera"
+            )
+        )
 
 
 class LauncherPreflightTests(unittest.TestCase):
@@ -424,6 +586,23 @@ class FakeProcess:
 
 
 class LauncherOrchestrationTests(unittest.TestCase):
+    def test_process_group_cleanup_runs_after_group_leader_exits(self):
+        simulator = FakeProcess(poll_values=(7,), pid=23456)
+        kill_calls = []
+
+        def fake_killpg(process_group_id, sent_signal):
+            kill_calls.append((process_group_id, sent_signal))
+            if sent_signal == 0:
+                raise ProcessLookupError
+
+        with patch.object(launcher.os, "killpg", side_effect=fake_killpg):
+            launcher._stop_process_group(simulator)
+
+        self.assertEqual(
+            kill_calls,
+            [(simulator.pid, signal.SIGINT), (simulator.pid, 0)],
+        )
+
     def test_simulator_death_after_readiness_stops_teleop(self):
         simulator = FakeProcess(
             stdout=io.StringIO(launcher.READY_MARKER + "\n"),

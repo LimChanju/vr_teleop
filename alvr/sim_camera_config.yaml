@@ -1,0 +1,32 @@
+head_camera:
+  enable_zmq: true
+  zmq_port: 55555
+  enable_webrtc: false
+  webrtc_port: 60001
+  webrtc_codec: h264
+  type: isaacsim
+  image_shape: [480, 640]
+  binocular: false
+  fps: 30
+
+left_wrist_camera:
+  enable_zmq: true
+  zmq_port: 55556
+  enable_webrtc: false
+  webrtc_port: 60002
+  webrtc_codec: h264
+  type: isaacsim
+  image_shape: [480, 640]
+  binocular: false
+  fps: 30
+
+right_wrist_camera:
+  enable_zmq: true
+  zmq_port: 55557
+  enable_webrtc: false
+  webrtc_port: 60003
+  webrtc_codec: h264
+  type: isaacsim
+  image_shape: [480, 640]
+  binocular: false
+  fps: 30

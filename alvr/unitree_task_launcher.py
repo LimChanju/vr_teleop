@@ -28,6 +28,8 @@ XR_TELEOPERATE_REVISION = "817fb00c63cde15e5f24a0f8fa08e1e33ed89d3b"
 UNITREE_SIM_REVISION = "e30c25b1dffdf92ada1d6c8c1fe9a47bdde0fecc"
 UNITREE_SDK_REVISION = "814556d15970dd2ecf1c9984e845ca02ab07e206"
 RESERVED_SIM_OPTIONS = {
+    "--upstream-script",
+    "--full-scene",
     "--device",
     "--task",
     "--robot_type",
@@ -61,10 +63,27 @@ def _default_python(environment_name: str, fallback: str = "python") -> str:
     explicit = os.environ.get(environment_name)
     if explicit:
         return explicit
-    conda_prefix = Path(os.environ.get("CONDA_EXE", "/home/railab/miniconda3/bin/conda")).parent.parent
+    conda_executable = Path(
+        os.environ.get("CONDA_EXE", "/home/railab/miniconda3/bin/conda")
+    ).expanduser()
+    conda_prefix = conda_executable.parent.parent
     candidate_name = "unitree_sim_env" if environment_name == "UNITREE_SIM_PYTHON" else "tv"
     candidate = conda_prefix / "envs" / candidate_name / "bin" / "python"
-    return str(candidate) if candidate.is_file() else fallback
+    if not candidate.is_file():
+        return fallback
+    # A binary Isaac Sim installation exposes its modules through the conda
+    # environment's activation hook.  Calling env/bin/python directly skips
+    # that hook, so activate the environment before replacing the wrapper
+    # process with Python.  Keeping Python as the process-group leader also
+    # makes simulator shutdown reliable.
+    if environment_name == "UNITREE_SIM_PYTHON" and conda_executable.is_file():
+        conda_wrapper = ROOT / "scripts" / "conda_env_exec.sh"
+        # Return the wrapper path even when it is missing or non-executable so
+        # preflight fails with a concrete setup error.  Falling back to
+        # ``conda run`` would let Isaac Sim descendants escape the process
+        # group that the launcher owns and make a clean shutdown impossible.
+        return shlex.join([str(conda_wrapper), candidate_name, "python"])
+    return str(candidate)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -107,12 +126,22 @@ def build_parser() -> argparse.ArgumentParser:
         default=_default_python("XR_TELEOPERATE_PYTHON"),
         help="xr_teleoperate Python command",
     )
-    parser.add_argument("--device", default="cpu", help="Isaac Lab device")
+    parser.add_argument("--device", default="cuda:0", help="Isaac Lab device")
     parser.add_argument("--img-server-ip", default="127.0.0.1")
     parser.add_argument("--frequency", type=float, default=30.0)
-    parser.add_argument("--startup-timeout", type=float, default=300.0)
+    parser.add_argument(
+        "--startup-timeout",
+        type=float,
+        default=900.0,
+        help="seconds to allow for first-run RTX camera and shader warm-up",
+    )
     parser.add_argument("--record", action="store_true", help="enable official episode recording")
     parser.add_argument("--headless-teleop", action="store_true", help="disable xr_teleoperate rerun UI")
+    parser.add_argument(
+        "--full-scene",
+        action="store_true",
+        help="keep remote simulator scenery and unused spectator cameras",
+    )
     parser.add_argument("--dry-run", action="store_true", help="validate and print without starting processes")
     parser.add_argument(
         "--sim-arg",
@@ -167,6 +196,8 @@ def validate_extra_args(args: argparse.Namespace) -> None:
 def build_sim_command(args: argparse.Namespace, task: TaskSpec) -> list[str]:
     command = [
         *_command_parts(args.sim_python),
+        str((ROOT / "unitree_sim_entrypoint.py").resolve()),
+        "--upstream-script",
         str((args.sim_root / "sim_main.py").resolve()),
         "--device",
         args.device,
@@ -177,6 +208,8 @@ def build_sim_command(args: argparse.Namespace, task: TaskSpec) -> list[str]:
         "g129",
         task.sim_dds_flag,
     ]
+    if args.full_scene:
+        command.append("--full-scene")
     if task.wholebody:
         command.extend(
             [
@@ -245,6 +278,11 @@ def teleop_environment(task: TaskSpec) -> dict[str, str]:
 def sim_environment(args: argparse.Namespace) -> dict[str, str]:
     environment = os.environ.copy()
     environment["PYTHONUNBUFFERED"] = "1"
+    # teleimager's upstream YAML loader does not pass encoding=.  Isaac Sim
+    # can otherwise fall back to ASCII and fail on the config's Unicode
+    # comments before DDS/controller startup.
+    environment["PYTHONUTF8"] = "1"
+    environment["PYTHONIOENCODING"] = "utf-8"
     environment.setdefault("PROJECT_ROOT", str(args.sim_root.resolve()))
     return environment
 
@@ -337,14 +375,17 @@ def _teleop_import_code(task: TaskSpec) -> str:
     return (
         "from pathlib import Path; "
         "import casadi, dex_retargeting, numpy, openvr, pinocchio; "
-        "from teleimager.image_client import ImageClient; "
         "from unitree_sdk2py.core.channel import ChannelFactoryInitialize; "
         "import televuer; "
         f"assert Path(televuer.__file__).resolve() == Path({shim_file!r}); "
+        # The upstream entrypoint configures logging_mp before importing its
+        # controllers.  logging_mp 0.2 correctly rejects late configuration,
+        # so preserve that import order in the doctor check as well.
+        "import teleop.teleop_hand_and_arm; "
+        "from teleimager.image_client import ImageClient; "
         "from teleop.robot_control.robot_arm import G1_29_ArmController; "
         "from teleop.robot_control.robot_arm_ik import G1_29_ArmIK; "
         f"{controller_import}"
-        "import teleop.teleop_hand_and_arm; "
         "print('teleop imports and ALVR shim: OK')"
     )
 
@@ -379,6 +420,8 @@ def preflight(
         checks.update(
             {
                 "sim entrypoint": args.sim_root / "sim_main.py",
+                "ALVR simulator adapter": ROOT / "unitree_sim_entrypoint.py",
+                "ALVR simulator camera config": ROOT / "sim_camera_config.yaml",
                 "sim teleimager submodule": args.sim_root / "teleimager" / "pyproject.toml",
             }
         )
@@ -525,28 +568,53 @@ def _pump_output(
         events.put("closed")
 
 
-def _stop_process_group(process: subprocess.Popen[str]) -> None:
-    if process.poll() is not None:
-        return
+def _process_group_exists(process_group_id: int) -> bool:
     try:
-        os.killpg(process.pid, signal.SIGINT)
-        process.wait(timeout=15)
-        return
-    except (ProcessLookupError, subprocess.TimeoutExpired):
-        pass
+        os.killpg(process_group_id, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _wait_for_process_group_exit(
+    process: subprocess.Popen[str], timeout: float
+) -> bool:
+    deadline = time.monotonic() + timeout
+    while _process_group_exists(process.pid):
+        # Reap the direct child as soon as it exits.  Its descendants can keep
+        # the same process group alive after that point.
+        process.poll()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        time.sleep(min(0.1, remaining))
+    return True
+
+
+def _stop_process_group(process: subprocess.Popen[str]) -> None:
+    # Always target the group, even if the direct simulator process has already
+    # exited: Isaac Sim may have left Kit/renderer descendants in that group.
+    for sent_signal, timeout in (
+        (signal.SIGINT, 15.0),
+        (signal.SIGTERM, 10.0),
+        (signal.SIGKILL, 5.0),
+    ):
+        try:
+            os.killpg(process.pid, sent_signal)
+        except ProcessLookupError:
+            break
+        if _wait_for_process_group_exit(process, timeout):
+            break
+
     if process.poll() is None:
         try:
-            os.killpg(process.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        try:
-            process.wait(timeout=10)
+            process.wait(timeout=1)
         except subprocess.TimeoutExpired:
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            process.wait(timeout=5)
+            # SIGKILL was already attempted above.  Avoid masking the original
+            # launcher result if an uninterruptible kernel task remains.
+            pass
 
 
 def _stop_process(process: subprocess.Popen[object]) -> None:

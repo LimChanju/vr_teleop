@@ -80,39 +80,33 @@ bash scripts/setup_unitree_sources.sh
 중단합니다. 해당 checkout의 변경을 먼저 확인한 뒤 정확한 리비전으로 전환하거나 다른 곳으로
 옮기고 다시 실행하십시오.
 
-시뮬레이터는 Isaac Sim 4.5.0, Isaac Lab, 1 GB 이상의 별도 USD asset이 필요합니다. 업스트림
-`auto_setup_env.sh`의 Isaac Sim 4.5 분기에 주석으로 지정된 Isaac Lab commit을 먼저 고정한 뒤
-설치 스크립트를 실행합니다.
+이 워크스테이션에는 다음 구성을 완료해 두었습니다.
+
+| 구성 요소 | 설치 위치/버전 |
+| --- | --- |
+| Isaac Sim | `/home/railab/isaac-sim-4.5.0` |
+| Isaac Lab | `vendor/IsaacLab` @ `91ad4944f2b7fad29d52c04a5264a082bcaad71d` |
+| Isaac Sim 연결 | `vendor/IsaacLab/_isaac_sim` → 위 Isaac Sim 설치 |
+| Unitree USD asset | `vendor/unitree_sim_isaaclab/assets` (약 1.8 GB) |
+| 시뮬레이터 환경 | conda `unitree_sim_env`, Python 3.10/NumPy 1.26 |
+| teleop 환경 | conda `tv`, Python 3.10/Pinocchio 3.1 |
+
+Unitree asset은 공식 패키지를 staging 디렉터리에 받은 뒤 SHA-256과 ZIP CRC를 확인하고
+기존 파일을 덮어쓰지 않는 방식으로 설치했습니다. 14개 G1 태스크가 참조하는 주 USD 13개도
+모두 실제 파일인지 확인했습니다.
+
+새 PC에서 처음부터 재구성할 때만 Unitree의 `auto_setup_env.sh`를 참고하십시오. 이 스크립트는
+`sudo` 사용, Isaac Sim 중복 설치, 기존 `assets/` 교체가 포함될 수 있으므로 현재 워크스테이션에서
+다시 실행할 필요는 없습니다. Isaac Sim 4.5를 이미 보유한 경우에는 이 구성처럼 고정된 Isaac Lab을
+연결하고 별도 `unitree_sim_env`를 쓰는 편이 안전합니다.
+
+Teleop 환경을 다시 만들 때는 Python 3.10 또는 3.11을 사용합니다(`teleimager`가 Python 3.12
+이상을 지원하지 않습니다). CycloneDDS C SDK가 없으면 설치 스크립트가 self-contained 0.10.2
+wheel을 사용합니다.
 
 ```bash
-cd /home/railab/Desktop/vr_teleop/vendor
-if [[ ! -e IsaacLab ]]; then
-  git clone https://github.com/isaac-sim/IsaacLab.git IsaacLab
-fi
-git -C IsaacLab fetch origin 91ad4944f2b7fad29d52c04a5264a082bcaad71d
-git -C IsaacLab checkout --detach 91ad4944f2b7fad29d52c04a5264a082bcaad71d
-test "$(git -C IsaacLab rev-parse HEAD)" = "91ad4944f2b7fad29d52c04a5264a082bcaad71d"
-
-cd unitree_sim_isaaclab
-bash auto_setup_env.sh 4.5 unitree_sim_env
-```
-
-이 업스트림 스크립트는 `sudo`로 시스템 패키지를 설치하고, 인증서 정보를 대화형으로 물으며,
-asset 다운로드, `vendor/cyclonedds/install` 빌드, `unitree_sim_env` 생성을 한 번에 수행합니다.
-기존 `IsaacLab` checkout에 사용자 변경이 있다면 위 checkout 명령 전에 먼저 보존하십시오.
-
-이미 시뮬레이터 환경만 설치돼 있고 asset만 없다면 공식 `fetch_assets.sh`를 별도로 실행할 수
-있습니다. 이 업스트림 스크립트는 기존 `assets/`를 새 다운로드로 교체하므로 실행 전에 해당
-폴더의 사용자 변경을 확인하십시오.
-
-시뮬레이터 설치가 CycloneDDS를 만든 다음, 공식 권장 버전의 teleop 환경과 런타임 의존성을
-설치합니다. Teleop은 Python 3.10 또는 3.11만 지원합니다(`teleimager`가 Python 3.12 이상을
-지원하지 않습니다).
-
-```bash
-conda create -n tv python=3.10 pinocchio=3.1.0 numpy=1.26.4 -c conda-forge
+conda create -n tv python=3.10 pinocchio=3.1.0 casadi=3.6.7 numpy=1.26.4 -c conda-forge
 cd /home/railab/Desktop/vr_teleop/alvr
-CYCLONEDDS_HOME=/home/railab/Desktop/vr_teleop/vendor/cyclonedds/install \
 TELEOP_PYTHON=/home/railab/miniconda3/envs/tv/bin/python \
   bash scripts/setup_teleop_env.sh
 ```
@@ -121,17 +115,20 @@ TELEOP_PYTHON=/home/railab/miniconda3/envs/tv/bin/python \
 팔/손 controller, ALVR `TeleVuerWrapper` import까지 확인합니다. CycloneDDS Python 0.10.2가
 이미 정상 설치돼 있으면 `CYCLONEDDS_HOME`을 생략할 수 있습니다.
 
-기본 런처는 다음 Python을 자동 탐색합니다.
+기본 런처는 다음 conda 환경을 자동 탐색합니다.
 
 ```text
-/home/railab/miniconda3/envs/unitree_sim_env/bin/python
-/home/railab/miniconda3/envs/tv/bin/python
+unitree_sim_env  # conda activation hook을 적용한 뒤 Isaac Sim을 exec
+tv               # xr_teleoperate 실행
 ```
 
-다른 위치라면 명시합니다.
+Conda가 다른 위치에 있으면 `CONDA_EXE`를 지정합니다. 완전히 다른 실행 구성이면 Python 명령을
+직접 덮어쓸 수도 있습니다.
 
 ```bash
-export UNITREE_SIM_PYTHON=/path/to/unitree_sim_env/bin/python
+export CONDA_EXE=/path/to/miniconda3/bin/conda
+# 선택 사항:
+export UNITREE_SIM_PYTHON='/custom/command python'
 export XR_TELEOPERATE_PYTHON=/path/to/tv/bin/python
 ```
 
@@ -147,6 +144,14 @@ cd /home/railab/Desktop/vr_teleop/alvr
 ```
 
 `all`은 시뮬레이터를 먼저 시작하고 DDS controller ready 문구를 확인한 다음 teleop을 실행합니다.
+기본 실행은 학교망에서 무기한 대기할 수 있는 원격 S3 창고 배경과 사용하지 않는 spectator
+카메라들만 생략합니다. 로봇, 태스크 물체/테이블, 머리 카메라와 양쪽 손목 카메라는 유지됩니다.
+공식 배경까지 그대로 불러오려면 `--full-scene`을 추가할 수 있습니다.
+세 카메라는 로컬 ZMQ로만 전달하므로 별도 WebRTC 인증서나 학교망 접속도 필요하지 않습니다.
+
+처음 한 번은 3개 RTX 카메라의 셰이더/텍스처 cache를 만들기 때문에 수 분간 마지막 로그가
+그대로일 수 있습니다. 기본 준비 제한은 15분이며 CPU/GPU 사용률이 유지되면 그대로 기다립니다.
+이후 실행은 cache를 재사용합니다.
 공식 teleop 화면에 시작 안내가 나오면 다음 순서를 지킵니다.
 
 1. Touch 컨트롤러를 몸 앞의 편한 중립 위치에 둡니다.
@@ -216,6 +221,8 @@ stereo VR layer로 직접 합성하거나 Quest pass-through와 합성하는 com
 - `another vr_teleop probe/adapter ...`: 실행 중인 `run_probe.sh` 또는 다른 teleop을 종료합니다.
 - doctor의 `sim asset missing`: 공식 simulator 환경/asset 설치가 끝나지 않은 상태입니다.
 - `teleop Python imports failed`: `TELEOP_PYTHON=... bash scripts/setup_teleop_env.sh`를 다시 확인합니다.
+- 장면 출력 후 로그가 오래 멈춤: 첫 RTX 카메라/재질 warm-up일 수 있습니다. GPU 사용률이 유지되면
+  최대 15분 기다립니다. 필요하면 `--startup-timeout 1200`으로 늘릴 수 있습니다.
 - 학교 Wi-Fi 단말 격리: Quest↔ALVR은 USB wired connection을 유지합니다. simulator와 teleop이
   같은 호스트에서 실행되므로 기본 image server 주소는 `127.0.0.1`입니다.
 
