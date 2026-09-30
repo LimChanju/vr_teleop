@@ -1,0 +1,69 @@
+{
+  "status": "portable_paths_and_hashes_verified",
+  "archive": "g1_wholebody_v9_20260930.tar.gz",
+  "archive_sha256": "2cacd5f8c2b55c0026a41fc8918a98841ac56c651594324e3ed02973ebb7d69c",
+  "bundle_root": "/home/railabchan/g1_portable_wholebody_v9",
+  "evaluation": "/home/railabchan/g1_portable_wholebody_v9/runs/portable_v9_cartesian",
+  "actual_checkpoint": "/home/railabchan/g1_portable_wholebody_v9/models/locomotion_balance_v9/model.pt",
+  "actual_motion": "/home/railabchan/g1_portable_wholebody_v9/data/motions/g1_teleop_v3.npz",
+  "actual_usd": "/home/railabchan/g1_portable_wholebody_v9/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd",
+  "interpreter": "/home/railabchan/anaconda3/envs/g1_server_check/bin/python",
+  "framework": "/home/railabchan/g1_portable_framework/IsaacLab",
+  "files_rechecked": 237,
+  "source_files_rechecked": 8,
+  "comparison": {
+    "falls": {
+      "original": 6,
+      "portable": 6,
+      "exact_equal": true
+    },
+    "timeouts": {
+      "original": 69,
+      "portable": 69,
+      "exact_equal": true
+    },
+    "completed_episodes": {
+      "original": 75,
+      "portable": 75,
+      "exact_equal": true
+    },
+    "mean_completed_episode_seconds": {
+      "original": 19.505332883199056,
+      "portable": 19.505332883199056,
+      "exact_equal": true
+    },
+    "head_error_m": {
+      "original": 0.03480109704938936,
+      "portable": 0.03480109704938936,
+      "exact_equal": true
+    },
+    "hand_error_m": {
+      "original": 0.04434205608529809,
+      "portable": 0.04434205608529809,
+      "exact_equal": true
+    },
+    "tracking_error_m": {
+      "original": 0.04116173761899088,
+      "portable": 0.04116173761899088,
+      "exact_equal": true
+    },
+    "vx_gain": {
+      "original": 0.954261113251137,
+      "portable": 0.954261113251137,
+      "exact_equal": true
+    },
+    "vy_gain": {
+      "original": 0.901990492584509,
+      "portable": 0.901990492584509,
+      "exact_equal": true
+    },
+    "yaw_gain": {
+      "original": 0.7953353899391777,
+      "portable": 0.7953353899391777,
+      "exact_equal": true
+    }
+  },
+  "all_compared_metrics_exactly_equal": true,
+  "physical_quest_verified": false,
+  "remote_server_verified": false
+}

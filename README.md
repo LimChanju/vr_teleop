@@ -35,28 +35,25 @@ flowchart LR
 
 Ubuntu 22.04, Python 3.10, Isaac Sim 4.5.0.0, Isaac Lab commit `91ad4944f2b7fad29d52c04a5264a082bcaad71d`, PyTorch 2.5.1+cu121, RSL-RL 2.3.3을 사용한다. 개발 GPU는 RTX 4090 24GB다. 환경 기록은 `config/g1/`에 있다.
 
-기존 정상 동작 환경을 복제해서 설치하려면 다음과 같이 실행한다. 원래 환경, 시스템 CUDA, 드라이버, ALVR 설정은 유지한다. 대상 환경이 이미 존재하면 설치 스크립트는 덮어쓰지 않는다.
-
-```bash
-bash scripts/g1/setup.sh --source-env unitree_sim_env
-export G1_PYTHON="$HOME/anaconda3/envs/g1_teleop/bin/python"
-```
-
-자세한 설치 선택지와 실제 검증 범위는 설치 문서를 따른다. G1 USD 전체 폴더가 필요하며, 원래 Unitree 파일을 보유한 경우 별도 복사한다.
-
-```bash
-python3 scripts/g1/assets.py --source /path/to/unitree_sim_isaaclab
-# 원본 파일이 없으면 공식 고정 버전 ZIP에서 필요한 G1 폴더만 추출
-python3 scripts/g1/assets.py --download
-```
+공용 서버에서는 아래처럼 번들을 먼저 풀고 **그 폴더에서** 새 환경을 설치한다.
+원래 환경, 시스템 CUDA, 드라이버, ALVR 설정은 유지한다. 대상 환경이 이미
+존재하면 새 이름을 지정한다. 기존 정상 환경을 복제하는 개발용 설치와 에셋
+다운로드 선택지는 [설치 안내](docs/g1/INSTALL.md)에 있다.
 
 ## 모델 전달과 실행
 
 정책, 관절·좌표 설정, 데이터와 로봇 에셋을 담은 전달용 아카이브를 `bundle.py`로 검증하고 새 폴더에 푼다. `SHA256SUMS`와 아카이브 `.sha256`을 함께 보관한다. 모델의 SHA256 일치는 동작 성능이나 실제 Quest 연결 성공을 뜻하지 않는다.
 
 ```bash
-python3 scripts/g1/bundle.py verify /path/to/g1_teleop_bundle.tar.gz
-python3 scripts/g1/bundle.py unpack /path/to/g1_teleop_bundle.tar.gz --destination /path/to/new_g1_bundle
+# 이 저장소를 clone한 폴더에서 시작한다. 대상 폴더는 새 경로여야 한다.
+python3 scripts/g1/bundle.py verify artifacts/g1_stationary_v6_r2_20260930.tar.gz
+python3 scripts/g1/bundle.py unpack artifacts/g1_stationary_v6_r2_20260930.tar.gz \
+  --destination "$HOME/g1_teleop_run"
+cd "$HOME/g1_teleop_run"
+bash scripts/g1/setup.sh --fresh \
+  --target-prefix "$HOME/anaconda3/envs/g1_teleop_server"
+export G1_PYTHON="$HOME/anaconda3/envs/g1_teleop_server/bin/python"
+export G1_USD_PATH="$PWD/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd"
 ```
 
 설치 문서의 실제 CLI 표기를 확인한다. 모델 폴더에는 `model.pt`, `policy.pt`, `policy.json`, `run_config.json`, `nominal_targets.json`이 함께 있어야 한다. 아래에서 `G1_MODEL`은 전달받은 모델 폴더다.
@@ -67,7 +64,8 @@ export G1_MODEL="$PWD/models/teleop_head_precision_v6"
 
 # 먼저 화면 없는 평가로 관절/PD/좌표 계약과 정책을 확인
 bash scripts/g1/run.sh evaluate --headless --num-envs 64 --steps 3000 \
-  --seed 2026 --checkpoint "$G1_MODEL/model.pt" --use-exported-policy
+  --seed 2026 --checkpoint "$G1_MODEL/model.pt" --use-exported-policy \
+  --motion-file "$PWD/data/motions/g1_teleop_v3.npz"
 
 # 터미널 1: ALVR/SteamVR가 실행된 같은 서버에서 Quest 입력
 .venv-alvr/bin/python scripts/g1/alvr_input.py \
@@ -98,7 +96,7 @@ bash scripts/g1/run.sh teleop --num-envs 1 --steps 0 --device cuda:0 --xr \
 
 왼쪽 스틱은 전후·좌우 이동 속도, 오른쪽 스틱은 yaw 회전 명령 경로다. **기본 배포 모델에서는 이동 명령을 0으로 제한한다.** 이동 학습 실험의 속도 추종과 발 접촉 결과는 [이동 정책 문서](docs/g1/LOCOMOTION.md)와 결과 보고서에 별도로 남겼다.
 
-입력이 끊기면 이동 명령을 0으로 하고 현재 도달한 자세에서 균형 제어를 유지한다. 낙상·연결 끊김 뒤에는 새로 시작 조작을 해야 한다. 양손 그립을 놓거나 정지 버튼을 누르면 원격 목표 추종을 멈춘다. 상세 버튼은 ALVR 안내에 있다.
+입력이 끊기면 이동 명령을 0으로 하고 현재 도달한 자세에서 균형 제어를 유지한다. 그립은 클러치이므로 놓으면 멈추고 추적이 유지되면 다시 쥘 때 이어진다. B 정지·리셋·송신기의 추적 상실 뒤에는 새 A로 시작한다. 수신기만의 timeout·낙상에는 비활성→활성 전이가 필요하며 그립을 놓았다 다시 쥐는 조작도 해당한다. 상세 버튼과 복구 동작은 [ALVR 안내](docs/g1/ALVR.md)에 있다.
 
 ## 저장소 구조
 

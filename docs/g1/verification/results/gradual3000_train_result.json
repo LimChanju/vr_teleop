@@ -1,0 +1,16 @@
+{
+  "mode": "train",
+  "stage": "sparse",
+  "status": "training_finished_evaluation_required",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/quest3_g1_teleop/runs/gradual_wholebody_v8",
+  "metadata": "/home/railabchan/quest3_g1_teleop/runs/gradual_wholebody_v8/run_config.json",
+  "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/gradual_wholebody_v8/model_final.pt",
+  "completed_iterations": 3000,
+  "additional_iterations": 500,
+  "actor_max_parameter_change": 0.06663559377193451,
+  "policy_max_parameter_change": 0.30759739875793457,
+  "export_max_abs_error": 2.980232238769531e-07,
+  "stop_reason": null,
+  "elapsed_seconds": 282.54141309903935
+}

@@ -15,8 +15,8 @@ git clone --branch g1-whole-body-alvr-20260930 --single-branch \
   https://github.com/LimChanju/vr_teleop.git "$HOME/vr_teleop_source"
 cd "$HOME/vr_teleop_source"
 
-python3 scripts/g1/bundle.py verify artifacts/g1_stationary_v6_20260930.tar.gz
-python3 scripts/g1/bundle.py unpack artifacts/g1_stationary_v6_20260930.tar.gz \
+python3 scripts/g1/bundle.py verify artifacts/g1_stationary_v6_r2_20260930.tar.gz
+python3 scripts/g1/bundle.py unpack artifacts/g1_stationary_v6_r2_20260930.tar.gz \
   --destination "$HOME/g1_teleop_run"
 cd "$HOME/g1_teleop_run"
 ```
@@ -90,8 +90,11 @@ cd "$HOME/g1_teleop_run"
 ```
 
 정면을 보고 편한 중립 자세에서 **X 보정 → A 시작 → 양손 그립 70% 이상 유지**
-순서로 조작한다. B는 정지, Y는 시뮬레이션 리셋이다. 그립을 놓거나 입력이
-끊기면 조작 허용을 해제한다. 복귀 후 A를 새로 눌러야 한다.
+순서로 조작한다. 그립은 클러치이므로 놓으면 멈추고, 추적이 유지되면 다시
+쥘 때 이어진다. B는 시작 허용 해제, Y는 시뮬레이션 리셋이며 이후 새 A가
+필요하다. 추적·컨트롤러 입력 상실이나 송신기 갱신 중단도 시작 허용을 해제한다.
+수신기에서만 발생한 timeout·낙상은 신선한 비활성→활성 전이로 복구한다.
+송신기가 계속 시작 허용 상태라면 그립 해제→재쥐기로도 복구된다.
 
 머리 X/Y ±2.5cm·아래 4cm, 양손 각 축 ±5cm의 로봇 목표 범위로 시작한다.
 기본 사람→로봇 변화량 배율은 0.65다. 천천히 작은 동작부터 확인한다.
@@ -100,6 +103,20 @@ cd "$HOME/g1_teleop_run"
 이 UDP 주소에 넣지 않는다. Quest↔서버 연결은 기존 ALVR 설정이 담당한다.
 
 ## 5. 헤드셋 없이 같은 정책을 확인
+
+새 r2 번들은 아래 한 명령으로 시뮬레이터와 합성 송신기를 실행하고 종료 후
+결과를 검사한다. 기존 결과 폴더를 덮어쓰지 않는다.
+
+```bash
+python3 scripts/g1/validate_runtime.py \
+  --checkpoint "$G1_MODEL/model.pt" --scenario tracking \
+  --output runs/server_tracking
+```
+
+`--scenario state`는 정지·클러치·끊김·리셋을 검사한다. `whole_body`는 이동
+명령도 보내므로 별도 이동 실험 정책에 사용한다. 추종 기준 미달 시 종료 코드
+1을 반환하고 `scenario_analysis.json`과 물리 실행 기록을 보존한다.
+아래는 같은 시험을 두 터미널에서 직접 실행하는 방법이다.
 
 첫 터미널의 `--xr`를 `--headless`로 바꾸고 `--steps 4500 --record-trace
 --output runs/server_sweep`를 지정한다. 준비 메시지가 나온 뒤 두 번째
@@ -133,6 +150,7 @@ bash scripts/g1/run.sh train --headless --device cuda:0 --num-envs 2048 \
 ```
 
 이동·회전 통합 정책의 별도 체크포인트와 이어서 학습하는 방법은
+[서버에서 이동 실험 실행](RUN_MOVING_EXPERIMENT.md), 비교 결과는
 [이동 학습](LOCOMOTION.md), 새 데이터·Teacher/Student 설정은
 [학습 안내](TRAINING.md)에 있다. 기본 제자리 모델의 스틱 제한을 해제하는
 것만으로 보행 정책이 되지는 않는다.

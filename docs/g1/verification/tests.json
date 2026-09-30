@@ -1,14 +1,14 @@
 {
   "date": "2026-09-30",
   "scope": "same development host; simulator integration recorded separately",
-  "unique_tests_passed_across_environments": 162,
+  "unique_tests_passed_across_environments": 186,
   "main_python_suite": {
     "command": "PYTHONNOUSERSITE=1 $G1_PYTHON -m unittest discover -s tests/g1 -p 'test_*.py' -q",
-    "run": 162,
-    "passed": 145,
+    "run": 186,
+    "passed": 169,
     "skipped": 17,
     "skipped_reason": "9 OpenVR API tests need the separate input venv; 8 XR math tests need USD library paths",
-    "log": "docs/g1/verification/cpu_pure_axes_tests.txt"
+    "log": "docs/g1/verification/cpu_delivery_complete_tests.txt"
   },
   "input_venv_suite": {
     "command": ".venv-alvr/bin/python -m unittest discover -s tests/g1 -p 'test_vr*.py' -q",
@@ -27,5 +27,5 @@
   },
   "physical_quest_verified": false,
   "remote_server_verified": false,
-  "note": "The 32 input tests and 8 USD tests overlap the main suite; 162 is the unique test count, not the sum of all runs. The immutable stationary v6 archive was validated at the earlier153-test snapshot; later9 tests cover the optional velocity command curriculum."
+  "note": "Input and USD suites overlap the main suite; 186 is the unique count. Their covered source files remain unchanged. Original stationary v6 archive used153 tests, r2 used180; later optional moving-linear CLI and extra-motion bundle tests are included in the186-test repository snapshot."
 }

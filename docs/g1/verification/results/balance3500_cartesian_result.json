@@ -1,0 +1,671 @@
+{
+  "mode": "evaluate",
+  "stage": "sparse",
+  "status": "evaluated",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/quest3_g1_teleop/runs/eval_balance3500_cartesian",
+  "metadata": "/home/railabchan/quest3_g1_teleop/runs/eval_balance3500_cartesian/run_config.json",
+  "steps": 4500,
+  "seed": 2027,
+  "motion_split": "eval",
+  "wall_loop_seconds": 63.87503734091297,
+  "mean_control_hz": 70.45005666270944,
+  "simulation_to_wall_time_ratio": 1.4090011332541887,
+  "simulated_seconds": 1620.0,
+  "completed_episodes": 75,
+  "falls": 6,
+  "timeouts": 69,
+  "fall_rate_completed_episodes": 0.08,
+  "mean_completed_episode_seconds": 19.505332883199056,
+  "incomplete_episode_seconds": [
+    10.079999923706055,
+    10.079999923706055,
+    10.079999923706055,
+    10.079999923706055,
+    0.9799999594688416,
+    0.9599999785423279,
+    11.34000015258789,
+    11.239999771118164,
+    10.079999923706055,
+    0.6200000047683716,
+    10.079999923706055,
+    10.079999923706055,
+    10.079999923706055,
+    10.079999923706055,
+    10.079999923706055,
+    10.079999923706055,
+    11.0,
+    10.079999923706055
+  ],
+  "mean_metrics": {
+    "tracking_error_m": 0.04116173761899088,
+    "head_error_m": 0.03480109704938936,
+    "hand_error_m": 0.04434205608529809,
+    "velocity_error": 0.02783941567863947,
+    "root_height": 0.7645338316905645,
+    "fallen": 7.407407407407407e-05,
+    "episode_steps": 470.6496049382716,
+    "command_vx_mps": 0.0,
+    "command_vy_mps": 0.0,
+    "command_yaw_rate_radps": 0.0,
+    "actual_vx_mps": 0.003582588199014419,
+    "actual_vy_mps": -0.003310046662093589,
+    "actual_yaw_rate_radps": 0.002126986056635225,
+    "vx_absolute_error_mps": 0.017705363147420647,
+    "vy_absolute_error_mps": 0.01712197809224879,
+    "linear_velocity_error_mps": 0.02783941567863947,
+    "yaw_rate_error_radps": 0.09488136660169671,
+    "commanded_moving": 0.8888888888888888,
+    "velocity_evaluation_block_id": 4.0,
+    "velocity_evaluation_block_elapsed_s": 2.4899999996092586,
+    "velocity_evaluation_settled": 0.8
+  },
+  "accepted_input_steps": 0,
+  "enabled_steps": 0,
+  "manual_resets": 0,
+  "input_sources": [],
+  "policy_backend": "torchscript",
+  "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/locomotion_balance_v9/model_final.pt",
+  "zero_policy": false,
+  "velocity_evaluation": {
+    "schedule": {
+      "version": "heldout_velocity_blocks_v1",
+      "step_dt": 0.02,
+      "block_seconds": 5.0,
+      "settling_seconds": 1.0,
+      "cycle_seconds": 45.0,
+      "phase_rule": "block=(env_id+global_control_step//block_steps)%9; resets do not rewind",
+      "falls_include_settling": true,
+      "blocks": [
+        {
+          "id": 0,
+          "name": "stand",
+          "command_vx_vy_yaw": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "id": 1,
+          "name": "forward",
+          "command_vx_vy_yaw": [
+            0.2,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "id": 2,
+          "name": "backward",
+          "command_vx_vy_yaw": [
+            -0.2,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "id": 3,
+          "name": "left",
+          "command_vx_vy_yaw": [
+            0.0,
+            0.1,
+            0.0
+          ]
+        },
+        {
+          "id": 4,
+          "name": "right",
+          "command_vx_vy_yaw": [
+            0.0,
+            -0.1,
+            0.0
+          ]
+        },
+        {
+          "id": 5,
+          "name": "yaw_left",
+          "command_vx_vy_yaw": [
+            0.0,
+            0.0,
+            0.3
+          ]
+        },
+        {
+          "id": 6,
+          "name": "yaw_right",
+          "command_vx_vy_yaw": [
+            0.0,
+            0.0,
+            -0.3
+          ]
+        },
+        {
+          "id": 7,
+          "name": "diagonal_forward_left",
+          "command_vx_vy_yaw": [
+            0.15,
+            0.08,
+            0.0
+          ]
+        },
+        {
+          "id": 8,
+          "name": "diagonal_backward_right",
+          "command_vx_vy_yaw": [
+            -0.15,
+            -0.08,
+            0.0
+          ]
+        }
+      ]
+    },
+    "axis_order": [
+      "vx_mps",
+      "vy_mps",
+      "yaw_radps"
+    ],
+    "blocks": [
+      {
+        "id": 0,
+        "name": "stand",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.00534085189087351,
+          0.008810640279890612,
+          0.01738353053995373
+        ],
+        "axis_rmse": [
+          0.006806882571841402,
+          0.011174860458355276,
+          0.024153518890747586
+        ],
+        "actual_mean": [
+          -0.0023094941329202356,
+          -0.007928480265385928,
+          0.0031036738695067673
+        ],
+        "axis_gain": [
+          null,
+          null,
+          null
+        ],
+        "axis_sign_agreement": [
+          null,
+          null,
+          null
+        ],
+        "xy_error_mean_mps": 0.011093703884356062,
+        "xy_error_p95_mps": 0.023971189327615706,
+        "yaw_error_mean_radps": 0.01738353053995373,
+        "yaw_error_p95_radps": 0.042320518940687175,
+        "actual_xy_speed_mean_mps": 0.011093703884356062,
+        "actual_abs_yaw_mean_radps": 0.01738353053995373
+      },
+      {
+        "id": 1,
+        "name": "forward",
+        "command_vx_vy_yaw": [
+          0.2,
+          0.0,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.012797696308750892,
+          0.009881798515997514,
+          0.07525278949231101
+        ],
+        "axis_rmse": [
+          0.016128180389134328,
+          0.012465431800561137,
+          0.11430352957758672
+        ],
+        "actual_mean": [
+          0.19358894647512997,
+          -0.0021182288859917108,
+          -0.021234266475688247
+        ],
+        "axis_gain": [
+          0.967944732375666,
+          null,
+          null
+        ],
+        "axis_sign_agreement": [
+          1.0,
+          null,
+          null
+        ],
+        "xy_error_mean_mps": 0.01791438765755359,
+        "xy_error_p95_mps": 0.03432658927741774,
+        "yaw_error_mean_radps": 0.07525278949231101,
+        "yaw_error_p95_radps": 0.25285936743021,
+        "actual_xy_speed_mean_mps": 0.1939905821432946,
+        "actual_abs_yaw_mean_radps": 0.07525278949231101
+      },
+      {
+        "id": 2,
+        "name": "backward",
+        "command_vx_vy_yaw": [
+          -0.2,
+          0.0,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.018988376467178873,
+          0.011069604231609497,
+          0.10305893095462251
+        ],
+        "axis_rmse": [
+          0.024942345554903256,
+          0.013978821662835234,
+          0.15658356797653425
+        ],
+        "actual_mean": [
+          -0.1907315489090979,
+          -0.004810440984492996,
+          0.023767626427549607
+        ],
+        "axis_gain": [
+          0.9536577445455051,
+          null,
+          null
+        ],
+        "axis_sign_agreement": [
+          1.0,
+          null,
+          null
+        ],
+        "xy_error_mean_mps": 0.023766612244847204,
+        "xy_error_p95_mps": 0.051996676888636253,
+        "yaw_error_mean_radps": 0.10305893095462251,
+        "yaw_error_p95_radps": 0.3488764911890026,
+        "actual_xy_speed_mean_mps": 0.1912468920468337,
+        "actual_abs_yaw_mean_radps": 0.10305893095462251
+      },
+      {
+        "id": 3,
+        "name": "left",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.1,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.01036190640235519,
+          0.015635527037046074,
+          0.08808224745065975
+        ],
+        "axis_rmse": [
+          0.012909192770221522,
+          0.019623697206991277,
+          0.12763087385728286
+        ],
+        "actual_mean": [
+          0.0026807415043504077,
+          0.09179291211776015,
+          0.017193810551348682
+        ],
+        "axis_gain": [
+          null,
+          0.9179291211776166,
+          null
+        ],
+        "axis_sign_agreement": [
+          null,
+          0.9998611111111111,
+          null
+        ],
+        "xy_error_mean_mps": 0.02049826621372197,
+        "xy_error_p95_mps": 0.04114273286083933,
+        "yaw_error_mean_radps": 0.08808224745065975,
+        "yaw_error_p95_radps": 0.27127108126878735,
+        "actual_xy_speed_mean_mps": 0.09273649955193725,
+        "actual_abs_yaw_mean_radps": 0.08808224745065975
+      },
+      {
+        "id": 4,
+        "name": "right",
+        "command_vx_vy_yaw": [
+          0.0,
+          -0.1,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 6,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.023643341939721268,
+          0.03647093642103207,
+          0.11820255932897958
+        ],
+        "axis_rmse": [
+          0.11065165526191222,
+          0.07224453394860475,
+          0.30400682114435273
+        ],
+        "actual_mean": [
+          0.014160873440498057,
+          -0.09762348988099903,
+          -0.004778179513313161
+        ],
+        "axis_gain": [
+          null,
+          0.9762348988100062,
+          null
+        ],
+        "axis_sign_agreement": [
+          null,
+          0.9995833333333334,
+          null
+        ],
+        "xy_error_mean_mps": 0.04867956275153951,
+        "xy_error_p95_mps": 0.09604967419231594,
+        "yaw_error_mean_radps": 0.11820255932897958,
+        "yaw_error_p95_radps": 0.43472654968500046,
+        "actual_xy_speed_mean_mps": 0.10641652738093746,
+        "actual_abs_yaw_mean_radps": 0.11820255932897958
+      },
+      {
+        "id": 5,
+        "name": "yaw_left",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.0,
+          0.3
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.01723514860267844,
+          0.015283230471828675,
+          0.14644527404100735
+        ],
+        "axis_rmse": [
+          0.050348664916060555,
+          0.02090966866268798,
+          0.20128530162244365
+        ],
+        "actual_mean": [
+          0.0023934616755963765,
+          -0.010515847310762688,
+          0.2136179646194796
+        ],
+        "axis_gain": [
+          null,
+          null,
+          0.712059882064916
+        ],
+        "axis_sign_agreement": [
+          null,
+          null,
+          0.8668055555555556
+        ],
+        "xy_error_mean_mps": 0.026023145002461768,
+        "xy_error_p95_mps": 0.05739030274745254,
+        "yaw_error_mean_radps": 0.14644527404101487,
+        "yaw_error_p95_radps": 0.3255694802850484,
+        "actual_xy_speed_mean_mps": 0.026023145002461768,
+        "actual_abs_yaw_mean_radps": 0.22981195064444263
+      },
+      {
+        "id": 6,
+        "name": "yaw_right",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.0,
+          -0.3
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.012016852830554146,
+          0.014603445398932106,
+          0.1115555435207765
+        ],
+        "axis_rmse": [
+          0.016956135152151955,
+          0.02014149443941344,
+          0.15049932538935842
+        ],
+        "actual_mean": [
+          -0.0025537207333127298,
+          0.006842076650672324,
+          -0.2635832693440413
+        ],
+        "axis_gain": [
+          null,
+          null,
+          0.8786108978134515
+        ],
+        "axis_sign_agreement": [
+          null,
+          null,
+          0.9741666666666666
+        ],
+        "xy_error_mean_mps": 0.020804494240757688,
+        "xy_error_p95_mps": 0.05213461201591816,
+        "yaw_error_mean_radps": 0.11155554352077889,
+        "yaw_error_p95_radps": 0.31700879149138894,
+        "actual_xy_speed_mean_mps": 0.020804494240757688,
+        "actual_abs_yaw_mean_radps": 0.26881324042750443
+      },
+      {
+        "id": 7,
+        "name": "diagonal_forward_left",
+        "command_vx_vy_yaw": [
+          0.15,
+          0.08,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.010179559262469317,
+          0.01675199059178273,
+          0.08251023797123304
+        ],
+        "axis_rmse": [
+          0.013361108616437117,
+          0.02067427405377855,
+          0.11224972720174252
+        ],
+        "actual_mean": [
+          0.14897532493186494,
+          0.06555866979198376,
+          -0.009814094036614228
+        ],
+        "axis_gain": [
+          0.9931688328790772,
+          0.8194833723997828,
+          null
+        ],
+        "axis_sign_agreement": [
+          1.0,
+          0.9995833333333334,
+          null
+        ],
+        "xy_error_mean_mps": 0.021585402606507355,
+        "xy_error_p95_mps": 0.04354870987725524,
+        "yaw_error_mean_radps": 0.08251023797123304,
+        "yaw_error_p95_radps": 0.23605119138956057,
+        "actual_xy_speed_mean_mps": 0.16340123351475055,
+        "actual_abs_yaw_mean_radps": 0.08251023797123304
+      },
+      {
+        "id": 8,
+        "name": "diagonal_backward_right",
+        "command_vx_vy_yaw": [
+          -0.15,
+          -0.08,
+          0.0
+        ],
+        "all_samples": 9000,
+        "scored_samples": 7200,
+        "nonfinite_scored_samples": 0,
+        "falls": 0,
+        "exposure_env_seconds": 180.0,
+        "valid_samples": 7200,
+        "axis_mae": [
+          0.021561901536772288,
+          0.01737412612697864,
+          0.08271821638950011
+        ],
+        "axis_rmse": [
+          0.02644475361981828,
+          0.02211727712036836,
+          0.12016433864154104
+        ],
+        "actual_mean": [
+          -0.1338149422650329,
+          -0.06748692966920013,
+          0.02557437640876338
+        ],
+        "axis_gain": [
+          0.8920996151001994,
+          0.843586620864987,
+          null
+        ],
+        "axis_sign_agreement": [
+          1.0,
+          1.0,
+          null
+        ],
+        "xy_error_mean_mps": 0.02994164807636817,
+        "xy_error_p95_mps": 0.06367476200982636,
+        "yaw_error_mean_radps": 0.08271821638950011,
+        "yaw_error_p95_radps": 0.24782982245087623,
+        "actual_xy_speed_mean_mps": 0.15078519881119967,
+        "actual_abs_yaw_mean_radps": 0.08271821638950011
+      }
+    ],
+    "moving": {
+      "valid_samples": 57600,
+      "axis_mae": [
+        0.015848097918806973,
+        0.017133832349408643,
+        0.10097822489365374
+      ],
+      "axis_rmse": [
+        0.04608825456424016,
+        0.03105368379774958,
+        0.17193704771948698
+      ],
+      "actual_mean": [
+        0.004337392014999529,
+        -0.0022951597713787917,
+        -0.002407003920314455
+      ],
+      "axis_gain": [
+        0.954261113251137,
+        0.901990492584509,
+        0.7953353899391777
+      ],
+      "axis_sign_agreement": [
+        1.0,
+        0.9997569444444444,
+        0.9204861111111111
+      ],
+      "xy_error_mean_mps": 0.026151689849219655,
+      "xy_error_p95_mps": 0.05288474189477794,
+      "yaw_error_mean_radps": 0.10097822489363747,
+      "yaw_error_p95_radps": 0.31106091976165773,
+      "actual_xy_speed_mean_mps": 0.11817557158652159,
+      "actual_abs_yaw_mean_radps": 0.13105627158240662
+    },
+    "standing": {
+      "id": 0,
+      "name": "stand",
+      "command_vx_vy_yaw": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "all_samples": 9000,
+      "scored_samples": 7200,
+      "nonfinite_scored_samples": 0,
+      "falls": 0,
+      "exposure_env_seconds": 180.0,
+      "valid_samples": 7200,
+      "axis_mae": [
+        0.00534085189087351,
+        0.008810640279890612,
+        0.01738353053995373
+      ],
+      "axis_rmse": [
+        0.006806882571841402,
+        0.011174860458355276,
+        0.024153518890747586
+      ],
+      "actual_mean": [
+        -0.0023094941329202356,
+        -0.007928480265385928,
+        0.0031036738695067673
+      ],
+      "axis_gain": [
+        null,
+        null,
+        null
+      ],
+      "axis_sign_agreement": [
+        null,
+        null,
+        null
+      ],
+      "xy_error_mean_mps": 0.011093703884356062,
+      "xy_error_p95_mps": 0.023971189327615706,
+      "yaw_error_mean_radps": 0.01738353053995373,
+      "yaw_error_p95_radps": 0.042320518940687175,
+      "actual_xy_speed_mean_mps": 0.011093703884356062,
+      "actual_abs_yaw_mean_radps": 0.01738353053995373
+    },
+    "falls_all_phases": 6,
+    "nonfinite_scored_samples": 0,
+    "total_exposure_env_seconds": 1620.0,
+    "note": "Speed scores omit block settling only. Falls include all phases. No automatic success claim."
+  },
+  "failure_events": "/home/railabchan/quest3_g1_teleop/runs/eval_balance3500_cartesian/failure_events.json",
+  "elapsed_seconds": 68.56066434597597
+}

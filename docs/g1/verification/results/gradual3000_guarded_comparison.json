@@ -1,0 +1,537 @@
+{
+  "scope": "Independent same-scenario synthetic UDP comparison. One environment each. Guarded active rows only; no physical headset verification.",
+  "physical_quest_verified": false,
+  "settling_seconds": 2.0,
+  "trailing_guard_seconds": 1.0,
+  "reset_guard_frames_each_side": 1,
+  "runs": {
+    "whole_body_pure_axes2500": {
+      "result_path": "runs/whole_body_pure_axes2500/result.json",
+      "trace_sha256": "a006c9352b047441df96b935d8b8c8e10944a811dc34790595e2c4b05ce803ce",
+      "scenario_sha256": "fc54bd8c2f5d16202d7552c40fdf364a9cddc1f561fba1895804654c9aa799ad",
+      "phases": {
+        "whole_stand": {
+          "samples": 150,
+          "command_mean": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.009772205725312233,
+            -0.009182493202388287,
+            -0.13609442114830017
+          ],
+          "actual_yaw_abs_mean_radps": 0.13609439134597778,
+          "head_error_mean_m": 0.03133230283856392,
+          "hand_error_mean_m": 0.040377404540777206,
+          "foot_contact_fraction": [
+            1.0,
+            1.0
+          ],
+          "single_support_fraction": 0.0,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.011260448954999447,
+          "contact_link_xy_speed_p95_mps": 0.018577423784881832,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            0,
+            0
+          ]
+        },
+        "whole_forward": {
+          "samples": 250,
+          "command_mean": [
+            0.15000000596046448,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.13355542719364166,
+            -0.004374431446194649,
+            -0.022146746516227722
+          ],
+          "actual_yaw_abs_mean_radps": 0.06849584728479385,
+          "head_error_mean_m": 0.03405701741576195,
+          "hand_error_mean_m": 0.04407837614417076,
+          "foot_contact_fraction": [
+            0.804,
+            0.772
+          ],
+          "single_support_fraction": 0.424,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.052138056606054306,
+          "contact_link_xy_speed_p95_mps": 0.12030981741845606,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            22,
+            21
+          ]
+        },
+        "whole_backward": {
+          "samples": 250,
+          "command_mean": [
+            -0.15000000596046448,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            -0.1195375993847847,
+            -0.005345664452761412,
+            -0.022030619904398918
+          ],
+          "actual_yaw_abs_mean_radps": 0.09852039813995361,
+          "head_error_mean_m": 0.045215461403131485,
+          "hand_error_mean_m": 0.04233931750059128,
+          "foot_contact_fraction": [
+            0.816,
+            0.708
+          ],
+          "single_support_fraction": 0.452,
+          "no_contact_fraction": 0.012,
+          "contact_link_xy_speed_mean_mps": 0.04225166141986847,
+          "contact_link_xy_speed_p95_mps": 0.1060357317328453,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            18,
+            19
+          ]
+        },
+        "whole_left": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.07999993860721588,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.018806802108883858,
+            0.05285394564270973,
+            -0.04125188663601875
+          ],
+          "actual_yaw_abs_mean_radps": 0.10438887029886246,
+          "head_error_mean_m": 0.03561992198228836,
+          "hand_error_mean_m": 0.04348612576723099,
+          "foot_contact_fraction": [
+            0.884,
+            0.788
+          ],
+          "single_support_fraction": 0.296,
+          "no_contact_fraction": 0.016,
+          "contact_link_xy_speed_mean_mps": 0.03833109140396118,
+          "contact_link_xy_speed_p95_mps": 0.14029566124081608,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            9,
+            12
+          ]
+        },
+        "whole_right": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            -0.07999993860721588,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.0015568947419524193,
+            -0.06252459436655045,
+            -0.06133183091878891
+          ],
+          "actual_yaw_abs_mean_radps": 0.10134192556142807,
+          "head_error_mean_m": 0.03002270683646202,
+          "hand_error_mean_m": 0.04274807497859001,
+          "foot_contact_fraction": [
+            0.692,
+            0.684
+          ],
+          "single_support_fraction": 0.624,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.05278231203556061,
+          "contact_link_xy_speed_p95_mps": 0.17981006130576133,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            19,
+            20
+          ]
+        },
+        "whole_yaw_left": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.0,
+            0.20000047981739044
+          ],
+          "actual_velocity_mean": [
+            0.006439095828682184,
+            -0.009947208687663078,
+            0.06336016207933426
+          ],
+          "actual_yaw_abs_mean_radps": 0.07212147116661072,
+          "head_error_mean_m": 0.034009259194135666,
+          "hand_error_mean_m": 0.04110252112150192,
+          "foot_contact_fraction": [
+            0.944,
+            0.972
+          ],
+          "single_support_fraction": 0.084,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.017955541610717773,
+          "contact_link_xy_speed_p95_mps": 0.04310915768146514,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            4,
+            2
+          ]
+        },
+        "whole_yaw_right": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.0,
+            -0.20000047981739044
+          ],
+          "actual_velocity_mean": [
+            0.003596680238842964,
+            -0.0025999012868851423,
+            -0.2673836648464203
+          ],
+          "actual_yaw_abs_mean_radps": 0.26749980449676514,
+          "head_error_mean_m": 0.028130965307354927,
+          "hand_error_mean_m": 0.043775416910648346,
+          "foot_contact_fraction": [
+            0.76,
+            0.696
+          ],
+          "single_support_fraction": 0.544,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.04968637973070145,
+          "contact_link_xy_speed_p95_mps": 0.12736214622855185,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            22,
+            20
+          ]
+        },
+        "whole_return_neutral": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            -0.004949540365487337,
+            -0.005278462544083595,
+            -0.08272793143987656
+          ],
+          "actual_yaw_abs_mean_radps": 0.08715962618589401,
+          "head_error_mean_m": 0.015897871926426888,
+          "hand_error_mean_m": 0.017775852233171463,
+          "foot_contact_fraction": [
+            0.868,
+            0.784
+          ],
+          "single_support_fraction": 0.348,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.024878019466996193,
+          "contact_link_xy_speed_p95_mps": 0.07404276132583618,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            11,
+            12
+          ]
+        }
+      },
+      "all_six_settled_moving_plateaus": {
+        "samples": 1500,
+        "command_mean": [
+          1.6689301052252858e-09,
+          1.0331471234081846e-09,
+          1.788139358804841e-10
+        ],
+        "actual_velocity_mean": [
+          0.007402877788990736,
+          -0.005322979763150215,
+          -0.05846410244703293
+        ],
+        "actual_yaw_abs_mean_radps": 0.11872805655002594,
+        "head_error_mean_m": 0.03450922295451164,
+        "hand_error_mean_m": 0.04292163997888565,
+        "foot_contact_fraction": [
+          0.8166666666666667,
+          0.77
+        ],
+        "single_support_fraction": 0.404,
+        "no_contact_fraction": 0.004666666666666667,
+        "contact_link_xy_speed_mean_mps": 0.04096905142068863,
+        "contact_link_xy_speed_p95_mps": 0.1205768931657075,
+        "liftoff_transitions_within_scored_contiguous_rows": [
+          94,
+          94
+        ]
+      }
+    },
+    "whole_body_gradual3000": {
+      "result_path": "runs/whole_body_gradual3000/result.json",
+      "trace_sha256": "6187b58c6b153c3cb8a80256ef11fa7272bc3c41236c6a6e1b979a1aa9e51d49",
+      "scenario_sha256": "9d9e65a16779c0c965efce4a4145adf99c88dd2c3dbf03d0f449c79cf57914bd",
+      "phases": {
+        "whole_stand": {
+          "samples": 150,
+          "command_mean": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            -0.0002922618587035686,
+            -0.0010516747133806348,
+            -0.0070332312025129795
+          ],
+          "actual_yaw_abs_mean_radps": 0.01925603672862053,
+          "head_error_mean_m": 0.024059414863586426,
+          "hand_error_mean_m": 0.03699330613017082,
+          "foot_contact_fraction": [
+            1.0,
+            1.0
+          ],
+          "single_support_fraction": 0.0,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.011605718173086643,
+          "contact_link_xy_speed_p95_mps": 0.014477081550285221,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            0,
+            0
+          ]
+        },
+        "whole_forward": {
+          "samples": 250,
+          "command_mean": [
+            0.15000000596046448,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.12140422314405441,
+            -0.010688199661672115,
+            0.02312324196100235
+          ],
+          "actual_yaw_abs_mean_radps": 0.0596032552421093,
+          "head_error_mean_m": 0.02581813745200634,
+          "hand_error_mean_m": 0.03890693560242653,
+          "foot_contact_fraction": [
+            0.848,
+            0.832
+          ],
+          "single_support_fraction": 0.32,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.05418175458908081,
+          "contact_link_xy_speed_p95_mps": 0.13767801150679587,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            18,
+            23
+          ]
+        },
+        "whole_backward": {
+          "samples": 250,
+          "command_mean": [
+            -0.15000000596046448,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            -0.10478293895721436,
+            -0.011228426359593868,
+            -0.008597326464951038
+          ],
+          "actual_yaw_abs_mean_radps": 0.07371662557125092,
+          "head_error_mean_m": 0.028835982084274292,
+          "hand_error_mean_m": 0.0395120345056057,
+          "foot_contact_fraction": [
+            0.764,
+            0.856
+          ],
+          "single_support_fraction": 0.372,
+          "no_contact_fraction": 0.004,
+          "contact_link_xy_speed_mean_mps": 0.05826886370778084,
+          "contact_link_xy_speed_p95_mps": 0.18386663198471012,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            23,
+            22
+          ]
+        },
+        "whole_left": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.07999993860721588,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.004096668679267168,
+            0.004838727880269289,
+            0.005896366201341152
+          ],
+          "actual_yaw_abs_mean_radps": 0.014529552310705185,
+          "head_error_mean_m": 0.021853454411029816,
+          "hand_error_mean_m": 0.038806211203336716,
+          "foot_contact_fraction": [
+            1.0,
+            1.0
+          ],
+          "single_support_fraction": 0.0,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.011908668093383312,
+          "contact_link_xy_speed_p95_mps": 0.02243912955746054,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            0,
+            0
+          ]
+        },
+        "whole_right": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            -0.07999993860721588,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.002515055239200592,
+            -0.00037097043241374195,
+            -0.01399465836584568
+          ],
+          "actual_yaw_abs_mean_radps": 0.022308193147182465,
+          "head_error_mean_m": 0.021397167816758156,
+          "hand_error_mean_m": 0.035890284925699234,
+          "foot_contact_fraction": [
+            1.0,
+            1.0
+          ],
+          "single_support_fraction": 0.0,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.005040992517024279,
+          "contact_link_xy_speed_p95_mps": 0.023354295920580588,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            0,
+            0
+          ]
+        },
+        "whole_yaw_left": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.0,
+            0.20000047981739044
+          ],
+          "actual_velocity_mean": [
+            0.007880925200879574,
+            -0.007642789743840694,
+            0.026154976338148117
+          ],
+          "actual_yaw_abs_mean_radps": 0.0373535081744194,
+          "head_error_mean_m": 0.020959045737981796,
+          "hand_error_mean_m": 0.037276946008205414,
+          "foot_contact_fraction": [
+            1.0,
+            1.0
+          ],
+          "single_support_fraction": 0.0,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.011641623452305794,
+          "contact_link_xy_speed_p95_mps": 0.036067765951156586,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            0,
+            0
+          ]
+        },
+        "whole_yaw_right": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.0,
+            -0.20000047981739044
+          ],
+          "actual_velocity_mean": [
+            0.011351571418344975,
+            0.006751058157533407,
+            -0.14868329465389252
+          ],
+          "actual_yaw_abs_mean_radps": 0.15333300828933716,
+          "head_error_mean_m": 0.019916294142603874,
+          "hand_error_mean_m": 0.04027797654271126,
+          "foot_contact_fraction": [
+            0.968,
+            0.972
+          ],
+          "single_support_fraction": 0.06,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.02193467505276203,
+          "contact_link_xy_speed_p95_mps": 0.08097281306982035,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            5,
+            4
+          ]
+        },
+        "whole_return_neutral": {
+          "samples": 250,
+          "command_mean": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actual_velocity_mean": [
+            0.00393183808773756,
+            0.0011778370244428515,
+            -4.6703604311915115e-05
+          ],
+          "actual_yaw_abs_mean_radps": 0.029663192108273506,
+          "head_error_mean_m": 0.012888653203845024,
+          "hand_error_mean_m": 0.01425313763320446,
+          "foot_contact_fraction": [
+            0.992,
+            0.996
+          ],
+          "single_support_fraction": 0.012,
+          "no_contact_fraction": 0.0,
+          "contact_link_xy_speed_mean_mps": 0.012651934288442135,
+          "contact_link_xy_speed_p95_mps": 0.028740669041872023,
+          "liftoff_transitions_within_scored_contiguous_rows": [
+            2,
+            1
+          ]
+        }
+      },
+      "all_six_settled_moving_plateaus": {
+        "samples": 1500,
+        "command_mean": [
+          1.6689301052252858e-09,
+          1.0331471234081846e-09,
+          1.788139358804841e-10
+        ],
+        "actual_velocity_mean": [
+          0.007077593356370926,
+          -0.0030567599460482597,
+          -0.01935010589659214
+        ],
+        "actual_yaw_abs_mean_radps": 0.060140691697597504,
+        "head_error_mean_m": 0.023130012676119804,
+        "hand_error_mean_m": 0.038445066660642624,
+        "foot_contact_fraction": [
+          0.93,
+          0.9433333333333334
+        ],
+        "single_support_fraction": 0.12533333333333332,
+        "no_contact_fraction": 0.0006666666666666666,
+        "contact_link_xy_speed_mean_mps": 0.02536981739103794,
+        "contact_link_xy_speed_p95_mps": 0.07614613696932768,
+        "liftoff_transitions_within_scored_contiguous_rows": [
+          46,
+          49
+        ]
+      }
+    }
+  },
+  "scenario_plan_and_nominal_matching": {
+    "phase_plan": true,
+    "hz": true,
+    "scale": true,
+    "whole_body_commands": true,
+    "whole_body_amplitudes_m": true,
+    "whole_body_frequencies_hz": true,
+    "nominal_sha256": true
+  },
+  "contact_interpretation": "Foot-link velocity and contact occupancy do not certify exact contact-point slip or successful gait. Count transitions only within contiguous scored rows; exclude gaps and resets."
+}

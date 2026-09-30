@@ -167,7 +167,36 @@ def copy_evidence(folder, destination, checkpoint_hash):
             "files": [path.relative_to(folder).as_posix() for path in files]}
 
 
-def create_bundle(run, output, checkpoint=None, policy_dir=None, assets=None, repo=ROOT, evidence=None):
+def copy_extra_motion(source, stage):
+    """Copy an explicitly selected evaluation dataset without loading NumPy."""
+    source, stage = Path(source).expanduser(), Path(stage)
+    if source.suffix != ".npz":
+        raise ValueError(f"extra motion must have the .npz extension: {source}")
+    if source.is_symlink() or not source.is_file() or not stat.S_ISREG(source.stat().st_mode):
+        raise ValueError(f"extra motion must be a regular non-symlink file: {source}")
+    relative = Path("data/motions") / source.name
+    safe_relative(relative.as_posix())
+    target = stage / relative
+    sidecar = source.with_suffix(".json")
+    sidecar_relative = relative.with_suffix(".json")
+    has_sidecar = sidecar.exists() or sidecar.is_symlink()
+    selected = [(source, relative)]
+    if has_sidecar:
+        selected.append((sidecar, sidecar_relative))
+    for _, destination in selected:
+        if (stage / destination).exists() or (stage / destination).is_symlink():
+            raise ValueError(f"motion basename collision in bundle: {destination}")
+    for original, destination in selected:
+        copy_stable(original, stage / destination)
+    entry = {"path": relative.as_posix(), "sha256": sha256(target)}
+    if has_sidecar:
+        entry["sidecar"] = {"path": sidecar_relative.as_posix(),
+                            "sha256": sha256(stage / sidecar_relative)}
+    return entry
+
+
+def create_bundle(run, output, checkpoint=None, policy_dir=None, assets=None, repo=ROOT, evidence=None,
+                  extra_motions=None):
     run, output, repo = Path(run).resolve(strict=True), Path(output).absolute(), Path(repo).resolve(strict=True)
     policy_dir = Path(policy_dir).resolve(strict=True) if policy_dir else run
     checkpoint = Path(checkpoint).resolve(strict=True) if checkpoint else run / "model_final.pt"
@@ -225,6 +254,7 @@ def create_bundle(run, output, checkpoint=None, policy_dir=None, assets=None, re
             copy_stable(motion_path, stage / "data/motions" / motion_path.name)
             if motion_path.with_suffix(".json").is_file():
                 copy_stable(motion_path.with_suffix(".json"), stage / "data/motions" / motion_path.with_suffix(".json").name)
+        extra_motion_entries = [copy_extra_motion(path, stage) for path in extra_motions or []]
         if assets:
             assets = Path(assets).resolve(strict=True)
             if not (assets / "g1_29dof_with_dex1_rev_1_0.usd").is_file():
@@ -246,6 +276,7 @@ def create_bundle(run, output, checkpoint=None, policy_dir=None, assets=None, re
             "source_checkpoint_filename": checkpoint.name, "source_run": run.name,
             "observation_version": metadata["observation_version"],
             "training_source_snapshot_files": snapshot_count, "evidence": evidence_entries,
+            "extra_motions": extra_motion_entries,
             "assets_included": bool(assets), "physical_quest_verified": False,
             "note": "Bundle integrity does not certify policy performance or physical Quest connection; read evaluation reports.",
         }
@@ -399,6 +430,8 @@ def main():
     create.add_argument("--assets", type=Path)
     create.add_argument("--evidence", type=Path, action="append", default=[],
                         help="selected evaluation/teleop directory; repeat to include comparisons, limited to64MiB each")
+    create.add_argument("--extra-motion", type=Path, action="append", default=[],
+                        help="additional evaluation .npz dataset and optional matching .json; repeat for multiple datasets")
     verify = commands.add_parser("verify")
     verify.add_argument("archive", type=Path)
     unpack = commands.add_parser("unpack")
@@ -409,7 +442,7 @@ def main():
     try:
         if args.command == "create":
             print(json.dumps(create_bundle(args.run, args.output, args.checkpoint, args.policy_dir, args.assets,
-                                           evidence=args.evidence), indent=2))
+                                           evidence=args.evidence, extra_motions=args.extra_motion), indent=2))
             print(f"Archive: {args.output}\nSHA256: {args.output}.sha256")
         elif args.command == "verify":
             print(f"Verified {verify_bundle(args.archive)} files")

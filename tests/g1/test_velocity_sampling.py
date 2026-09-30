@@ -119,7 +119,10 @@ class VelocitySamplingTests(unittest.TestCase):
                            and child.func.id=='restore_velocity_settings' for child in ast.walk(node)))
         cfg=configuration()
         args=SimpleNamespace(velocity_training=True,command_sampling='pure_axis',moving_xy_threshold=.04,
-                             yaw_tracking_sigma=None,yaw_reward_weight=None,velocity_evaluation=False)
+                             linear_tracking_sigma=None,linear_reward_weight=None,
+                             yaw_tracking_sigma=None,yaw_reward_weight=None,
+                             standing_yaw_tracking_sigma=None,standing_yaw_reward_weight=None,
+                             velocity_evaluation=False)
         namespace={'cfg':cfg,'args':args,'checkpoint_meta':metadata(),
                    'restore_velocity_settings':restore_velocity_settings,
                    'validate_velocity_command_options':validate_velocity_command_options}
@@ -128,6 +131,22 @@ class VelocitySamplingTests(unittest.TestCase):
         self.assertEqual(cfg.moving_xy_threshold,.04)
         self.assertEqual(cfg.moving_yaw_velocity_reward_scale,4.)
         self.assertEqual(cfg.command_max,(.2,.1,.3))
+        self.assertEqual(cfg.moving_linear_velocity_reward_scale,3.)
+        self.assertEqual(cfg.moving_linear_velocity_error_variance,.03)
+        args.standing_yaw_tracking_sigma=.22360679774997896
+        args.standing_yaw_reward_weight=3.
+        exec(compile(ast.Module(body=[block],type_ignores=[]),str(source),'exec'),namespace)
+        self.assertEqual(cfg.standing_yaw_velocity_reward_scale,3.)
+        self.assertAlmostEqual(cfg.standing_yaw_velocity_error_variance,.05)
+        self.assertEqual(cfg.moving_yaw_velocity_reward_scale,4.)
+        self.assertEqual(cfg.moving_yaw_velocity_error_variance,.04)
+        args.linear_tracking_sigma=.1
+        args.linear_reward_weight=6.
+        exec(compile(ast.Module(body=[block],type_ignores=[]),str(source),'exec'),namespace)
+        self.assertEqual(cfg.moving_linear_velocity_reward_scale,6.)
+        self.assertEqual(cfg.moving_linear_velocity_error_variance,.1**2)
+        self.assertEqual(cfg.moving_yaw_velocity_reward_scale,4.)
+        self.assertEqual(cfg.standing_yaw_velocity_reward_scale,3.)
 
 
 if __name__=='__main__':unittest.main()

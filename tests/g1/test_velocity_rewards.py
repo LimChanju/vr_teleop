@@ -146,6 +146,69 @@ class VelocityRewardsTests(unittest.TestCase):
         self.assertEqual(contract["linear_velocity"], {"scale": 4.0, "squared_error_denominator_m2_s2": .04})
         self.assertEqual(contract["yaw_velocity"], {"scale": 2.0, "squared_error_denominator_rad2_s2": .1})
 
+    def test_default_standing_configuration_preserves_legacy_bits_and_metadata(self):
+        env = self.make_env([[0, 0, 0], [.04, .02, .05], [.2, 0, .3]],
+                            actual=[[.01, .02], [-.03, .04], [.1, .03]], yaw=[.25, -.1, .2])
+        cmd = env.command_velocity
+        linear_error = (env.robot.data.root_lin_vel_b[:, :2] - cmd[:, :2]).square().sum(-1)
+        yaw_error = (env.robot.data.root_ang_vel_b[:, 2] - cmd[:, 2]).square()
+        base_linear = 2. * torch.exp(-linear_error / .25)
+        base_yaw = torch.exp(-yaw_error / .25)
+        moving = (torch.linalg.vector_norm(cmd[:, :2], dim=-1) > .08) | (cmd[:, 2].abs() > .1)
+        expected = (base_linear + base_yaw) * .02
+        expected += torch.where(moving, 4. * torch.exp(-linear_error / .04) - base_linear, 0.) * .02
+        expected += torch.where(moving, 2. * torch.exp(-yaw_error / .1) - base_yaw, 0.) * .02
+        self.assertTrue(torch.equal(env._get_rewards(), expected))
+        contract = env.policy_metadata()['velocity_reward_contract']
+        self.assertNotIn('standing_yaw_velocity', contract)
+        self.assertEqual(contract['standing_terms'], 'unchanged base linear 2*exp(-e2/.25), yaw exp(-e2/.25)')
+        self.assertEqual(contract['application'], 'replace base terms for moving commands; integrate every term with control dt')
+
+    def test_standing_yaw_replacement_only_changes_complement_of_moving_mask(self):
+        commands = [[0, 0, 0], [.02, 0, .05], [.03, 0, .1], [.031, 0, 0], [0, 0, .11]]
+        base = self.make_env(commands, yaw=[.2, -.1, .2, .2, .2])
+        tuned = self.make_env(commands, yaw=[.2, -.1, .2, .2, .2])
+        for env in (base, tuned):
+            env.cfg.moving_xy_threshold = .03
+            env.cfg.moving_yaw_velocity_reward_scale = 3.
+            env.contact_sensor.compute_first_contact = lambda dt: torch.ones(5, 2, dtype=torch.bool)
+            env.contact_sensor.data.last_air_time[:] = .5
+        tuned.cfg.standing_yaw_velocity_reward_scale = 3.
+        tuned.cfg.standing_yaw_velocity_error_variance = .05
+        old_reward, new_reward = base._get_rewards(), tuned._get_rewards()
+        moving = base.metrics['commanded_moving']
+        self.assertEqual(moving.tolist(), [False, False, False, True, True])
+        error = (tuned.robot.data.root_ang_vel_b[:, 2] - tuned.command_velocity[:, 2]).square()
+        expected_delta = torch.where(~moving, 3. * torch.exp(-error / .05) - torch.exp(-error / .25), 0.) * .02
+        torch.testing.assert_close(new_reward - old_reward, expected_delta)
+        torch.testing.assert_close(tuned._episode_sums['yaw_velocity'] - base._episode_sums['yaw_velocity'], expected_delta)
+        self.assertTrue(torch.equal(new_reward[moving], old_reward[moving]))
+        for name in ('linear_velocity', 'velocity_feet_airtime', 'velocity_both_feet_air'):
+            self.assertTrue(torch.equal(tuned._episode_sums[name], base._episode_sums[name]))
+        total = new_reward.clone()
+        for _ in range(6):
+            total += tuned._get_rewards()
+        torch.testing.assert_close(sum(tuned._episode_sums.values()), total)
+
+    def test_standing_yaw_metadata_roundtrip_and_invalid_direct_config(self):
+        from scripts.g1.run import restore_velocity_settings
+        env = self.make_env([[0, 0, 0]])
+        env.cfg.standing_yaw_velocity_reward_scale = 3.
+        env.cfg.standing_yaw_velocity_error_variance = .05
+        saved = env.policy_metadata()
+        self.assertEqual(saved['velocity_reward_contract']['standing_yaw_velocity'],
+                         {'scale': 3., 'squared_error_denominator_rad2_s2': .05})
+        restored = self.module.G1VelocityEnvCfg()
+        restore_velocity_settings(restored, saved)
+        self.assertEqual(restored.standing_yaw_velocity_reward_scale, 3.)
+        self.assertEqual(restored.standing_yaw_velocity_error_variance, .05)
+        for name in ('standing_yaw_velocity_reward_scale', 'standing_yaw_velocity_error_variance'):
+            for value in (True, 0., -1., float('nan'), float('inf')):
+                cfg = self.module.G1VelocityEnvCfg()
+                setattr(cfg, name, value)
+                with self.assertRaises(ValueError):
+                    self.module.G1VelocityEnv(cfg)
+
     def test_evaluation_commands_survive_reset_and_use_global_phase(self):
         env = self.make_env([[0, 0, 0]] * 9)
         env.cfg.velocity_evaluation = True

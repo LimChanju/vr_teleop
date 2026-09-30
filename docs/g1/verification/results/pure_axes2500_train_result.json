@@ -1,0 +1,16 @@
+{
+  "mode": "train",
+  "stage": "sparse",
+  "status": "training_finished_evaluation_required",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/quest3_g1_teleop/runs/velocity_pure_axes_v7",
+  "metadata": "/home/railabchan/quest3_g1_teleop/runs/velocity_pure_axes_v7/run_config.json",
+  "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/velocity_pure_axes_v7/model_final.pt",
+  "completed_iterations": 2500,
+  "additional_iterations": 500,
+  "actor_max_parameter_change": 0.05305829644203186,
+  "policy_max_parameter_change": 0.37642616033554077,
+  "export_max_abs_error": 2.980232238769531e-07,
+  "stop_reason": null,
+  "elapsed_seconds": 289.7371449293569
+}

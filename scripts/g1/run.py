@@ -43,6 +43,19 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def validate_linear_options(mode, velocity_variant, sigma=None, weight=None):
+    """Validate optional moving linear reward overrides before simulator startup."""
+    if sigma is None and weight is None:
+        return
+    if mode != "train" or not velocity_variant:
+        raise ValueError("Linear reward overrides require train mode and the velocity variant")
+    if sigma is not None and (isinstance(sigma, bool) or not math.isfinite(sigma)
+                              or not 0 < sigma <= 2 or sigma ** 2 == 0):
+        raise ValueError("--linear-tracking-sigma must be finite and in (0,2] m/s")
+    if weight is not None and (isinstance(weight, bool) or not math.isfinite(weight) or not 0 < weight <= 20):
+        raise ValueError("--linear-reward-weight must be finite and in (0,20]")
+
+
 def validate_yaw_options(mode, velocity_variant, sigma=None, weight=None):
     """Validate optional training overrides before starting the simulator."""
     if sigma is None and weight is None:
@@ -53,6 +66,19 @@ def validate_yaw_options(mode, velocity_variant, sigma=None, weight=None):
         raise ValueError("--yaw-tracking-sigma must be finite and in (0,2] rad/s")
     if weight is not None and (not math.isfinite(weight) or not 0 < weight <= 20):
         raise ValueError("--yaw-reward-weight must be finite and in (0,20]")
+
+
+def validate_standing_yaw_options(mode, velocity_variant, sigma=None, weight=None):
+    """Validate opt-in standing yaw rewards without changing inference actions."""
+    if sigma is None and weight is None:
+        return
+    if mode != "train" or not velocity_variant:
+        raise ValueError("Standing yaw reward overrides require train mode and the velocity variant")
+    if sigma is not None and (isinstance(sigma, bool) or not math.isfinite(sigma)
+                              or not 0 < sigma <= 2 or sigma ** 2 == 0):
+        raise ValueError("--standing-yaw-tracking-sigma must be finite and in (0,2] rad/s")
+    if weight is not None and (isinstance(weight, bool) or not math.isfinite(weight) or not 0 < weight <= 20):
+        raise ValueError("--standing-yaw-reward-weight must be finite and in (0,20]")
 
 
 def validate_velocity_command_options(mode, velocity_variant, sampling=None, xy_threshold=None, command_max=None):
@@ -83,7 +109,10 @@ def restore_velocity_settings(cfg, metadata):
     """
     if not metadata or metadata.get("environment_variant") != "g1_commanded_velocity_v1":
         return
-    changes = {}
+    # Absence of the optional standing term means the original base yaw reward,
+    # even if this configuration object previously held a nondefault value.
+    changes = {"standing_yaw_velocity_reward_scale": 1.0,
+               "standing_yaw_velocity_error_variance": 0.25}
     def number(value, name, *, positive=False, maximum=None):
         if isinstance(value, bool):
             raise ValueError(f"Saved {name} must be a number")
@@ -110,6 +139,15 @@ def restore_velocity_settings(cfg, metadata):
                 raise ValueError(f"Incomplete saved velocity reward term: {term}")
             changes[prefix + "_reward_scale"] = number(values["scale"], term + ".scale")
             changes[prefix + "_error_variance"] = number(values[variance_key], term + ".variance", positive=True)
+        if "standing_yaw_velocity" in contract:
+            values = contract["standing_yaw_velocity"]
+            variance_key = "squared_error_denominator_rad2_s2"
+            if not isinstance(values, dict) or "scale" not in values or variance_key not in values:
+                raise ValueError("Incomplete saved velocity reward term: standing_yaw_velocity")
+            changes["standing_yaw_velocity_reward_scale"] = number(
+                values["scale"], "standing_yaw_velocity.scale", positive=True)
+            changes["standing_yaw_velocity_error_variance"] = number(
+                values[variance_key], "standing_yaw_velocity.variance", positive=True)
     for key, field, positive, maximum in (
         ("training_standing_fraction", "standing_fraction", False, 1.),
         ("velocity_command_resampling_s", "command_resampling_s", True, None),
@@ -218,8 +256,16 @@ def main():
                         help="Evaluate deterministic held-out velocity commands with settled block metrics")
     parser.add_argument("--yaw-tracking-sigma", type=float,
                         help="Velocity training only: yaw reward width in rad/s, (0,2]; variance=sigma**2")
+    parser.add_argument("--linear-tracking-sigma", type=float,
+                        help="Velocity training only: moving XY reward width in m/s, (0,2]; variance=sigma**2")
+    parser.add_argument("--linear-reward-weight", type=float,
+                        help="Velocity training only: moving XY reward weight in (0,20]")
     parser.add_argument("--yaw-reward-weight", type=float,
                         help="Velocity training only: moving yaw reward weight in (0,20]")
+    parser.add_argument("--standing-yaw-tracking-sigma", type=float,
+                        help="Velocity training only: nonmoving yaw reward width in rad/s, (0,2]; legacy default 0.5")
+    parser.add_argument("--standing-yaw-reward-weight", type=float,
+                        help="Velocity training only: nonmoving yaw reward weight in (0,20]; legacy default 1")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--steps", type=int, default=2000,
@@ -296,7 +342,10 @@ def main():
             args.motion_file = saved_path if saved_path.exists() else portable
     args.stage = args.stage or "sparse"
     try:
+        validate_linear_options(args.mode, args.velocity_training, args.linear_tracking_sigma, args.linear_reward_weight)
         validate_yaw_options(args.mode, args.velocity_training, args.yaw_tracking_sigma, args.yaw_reward_weight)
+        validate_standing_yaw_options(args.mode, args.velocity_training,
+            args.standing_yaw_tracking_sigma, args.standing_yaw_reward_weight)
         validate_velocity_command_options(args.mode, args.velocity_training, args.command_sampling,
             args.moving_xy_threshold, (checkpoint_meta or {}).get("training_velocity_limits"))
     except ValueError as error:
@@ -396,10 +445,18 @@ def main():
                 cfg.moving_xy_threshold = args.moving_xy_threshold
             validate_velocity_command_options("train", True, cfg.command_sampling,
                 cfg.moving_xy_threshold, cfg.command_max)
+            if args.linear_tracking_sigma is not None:
+                cfg.moving_linear_velocity_error_variance = args.linear_tracking_sigma ** 2
+            if args.linear_reward_weight is not None:
+                cfg.moving_linear_velocity_reward_scale = args.linear_reward_weight
             if args.yaw_tracking_sigma is not None:
                 cfg.moving_yaw_velocity_error_variance = args.yaw_tracking_sigma ** 2
             if args.yaw_reward_weight is not None:
                 cfg.moving_yaw_velocity_reward_scale = args.yaw_reward_weight
+            if args.standing_yaw_tracking_sigma is not None:
+                cfg.standing_yaw_velocity_error_variance = args.standing_yaw_tracking_sigma ** 2
+            if args.standing_yaw_reward_weight is not None:
+                cfg.standing_yaw_velocity_reward_scale = args.standing_yaw_reward_weight
             cfg.velocity_evaluation = args.velocity_evaluation
         cfg.motion_file = str(args.motion_file.resolve()) if args.motion_file else None
         cfg.motion_split = args.motion_split

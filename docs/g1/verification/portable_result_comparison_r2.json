@@ -1,0 +1,42 @@
+{
+  "status": "matched",
+  "comparison": {
+    "falls": {
+      "original": 0,
+      "fresh": 0,
+      "exact_equal": true
+    },
+    "timeouts": {
+      "original": 192,
+      "fresh": 192,
+      "exact_equal": true
+    },
+    "completed_episodes": {
+      "original": 192,
+      "fresh": 192,
+      "exact_equal": true
+    },
+    "mean_completed_episode_seconds": {
+      "original": 19.979999542236328,
+      "fresh": 19.979999542236328,
+      "exact_equal": true
+    },
+    "head_error_m": {
+      "original": 0.01030839180527255,
+      "fresh": 0.01030839180527255,
+      "exact_equal": true
+    },
+    "hand_error_m": {
+      "original": 0.013243202386423946,
+      "fresh": 0.013243202386423946,
+      "exact_equal": true
+    },
+    "tracking_error_m": {
+      "original": 0.012264932570668559,
+      "fresh": 0.012264932570668559,
+      "exact_equal": true
+    }
+  },
+  "physical_quest_verified": false,
+  "remote_server_verified": false
+}

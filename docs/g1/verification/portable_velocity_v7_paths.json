@@ -1,0 +1,69 @@
+{
+  "status": "portable_paths_and_hashes_verified",
+  "archive": "g1_velocity_v7_20260930.tar.gz",
+  "archive_sha256": "fd922a0437b417952c365d062b9e0b52b2e83ec0d122d5106270ffbf6d60bb73",
+  "bundle_root": "/home/railabchan/g1_portable_velocity_v7",
+  "evaluation": "/home/railabchan/g1_portable_velocity_v7/runs/portable_v7_cartesian",
+  "actual_checkpoint": "/home/railabchan/g1_portable_velocity_v7/models/velocity_pure_axes_v7/model.pt",
+  "actual_motion": "/home/railabchan/g1_portable_velocity_v7/data/motions/g1_teleop_v3.npz",
+  "actual_usd": "/home/railabchan/g1_portable_velocity_v7/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd",
+  "interpreter": "/home/railabchan/anaconda3/envs/g1_server_check/bin/python",
+  "framework": "/home/railabchan/g1_portable_framework/IsaacLab",
+  "files_rechecked": 227,
+  "source_files_rechecked": 8,
+  "comparison": {
+    "falls": {
+      "original": 0,
+      "portable": 0,
+      "exact_equal": true
+    },
+    "timeouts": {
+      "original": 72,
+      "portable": 72,
+      "exact_equal": true
+    },
+    "completed_episodes": {
+      "original": 72,
+      "portable": 72,
+      "exact_equal": true
+    },
+    "mean_completed_episode_seconds": {
+      "original": 19.979999542236328,
+      "portable": 19.979999542236328,
+      "exact_equal": true
+    },
+    "head_error_m": {
+      "original": 0.043992864738275975,
+      "portable": 0.043992864738275975,
+      "exact_equal": true
+    },
+    "hand_error_m": {
+      "original": 0.04861020646603019,
+      "portable": 0.04861020646603019,
+      "exact_equal": true
+    },
+    "tracking_error_m": {
+      "original": 0.0470710939032796,
+      "portable": 0.0470710939032796,
+      "exact_equal": true
+    },
+    "vx_gain": {
+      "original": 0.8846129330312691,
+      "portable": 0.8846129330312691,
+      "exact_equal": true
+    },
+    "vy_gain": {
+      "original": 0.7237832555515019,
+      "portable": 0.7237832555515019,
+      "exact_equal": true
+    },
+    "yaw_gain": {
+      "original": 0.7917552008200495,
+      "portable": 0.7917552008200495,
+      "exact_equal": true
+    }
+  },
+  "all_compared_metrics_exactly_equal": true,
+  "physical_quest_verified": false,
+  "remote_server_verified": false
+}

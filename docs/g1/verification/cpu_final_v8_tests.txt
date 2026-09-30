@@ -1,0 +1,178 @@
+test_empty_valid_window_is_explicit_and_shape_invalid_rejected (test_analysis.AnalysisTests) ... ok
+test_foot_transitions_and_contact_velocity_exclude_reset_boundary (test_analysis.AnalysisTests) ... ok
+test_invalid_contact_values_and_wrong_shapes_cannot_appear_valid (test_analysis.AnalysisTests) ... ok
+test_invalid_optional_data_is_flagged_and_splits_segments (test_analysis.AnalysisTests) ... ok
+test_manual_reset_boundary_is_excluded (test_analysis.AnalysisTests) ... ok
+test_manual_reset_uses_same_guard_for_optional_metrics (test_analysis.AnalysisTests) ... ok
+test_nonfinite_values_flagged_not_hidden (test_analysis.AnalysisTests) ... ok
+test_old_traces_keep_existing_report_without_optional_diagnostics (test_analysis.AnalysisTests) ... ok
+test_partial_optional_velocity_data_is_supported (test_analysis.AnalysisTests) ... ok
+test_reset_jump_excluded_from_error_and_derivative (test_analysis.AnalysisTests) ... ok
+test_root_segments_do_not_bridge_reset_jumps_and_unwrap_yaw (test_analysis.AnalysisTests) ... ok
+test_tracking_gain_and_lag_diagnostic (test_analysis.AnalysisTests) ... ok
+test_contract_covers_every_runtime_key (test_bundle.BundleTests) ... ok
+test_evidence_other_checkpoint_and_symlink_rejection (test_bundle.BundleTests) ... ok
+test_legacy_default_and_physical_mismatches (test_bundle.BundleTests) ... ok
+test_missing_or_changed_source_snapshot_is_rejected (test_bundle.BundleTests) ... ok
+test_scenario_evidence_obeys_symlink_size_and_file_count_guards (test_bundle.BundleTests) ... ok
+test_selected_evidence_legacy_docs_and_source_snapshot_roundtrip (test_bundle.BundleTests) ... ok
+test_v2_requires_estimator_and_matches_velocity_limits (test_bundle.BundleTests) ... ok
+test_cap_counts_all_failures_without_unbounded_records (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_disabled_diagnostics_never_enter_recording_method (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_enabling_diagnostics_does_not_change_rewards_or_metrics (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_external_mode_has_no_stale_motion_attribution (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_no_failure_returns_before_state_access (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_nonfinite_failure_is_explicit_and_json_safe (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_only_terminated_envs_capture_exact_phase_and_local_height (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_snapshot_survives_subsequent_reset_mutation (test_failure_diagnostics.FailureDiagnosticsTests) ... ok
+test_existing_output_or_metadata_is_never_overwritten (test_mix_motions.MixMotionsTests) ... ok
+test_incompatible_fps_dtype_joints_and_invalid_layout_are_rejected (test_mix_motions.MixMotionsTests) ... ok
+test_integer_weight_preserves_every_source_value_and_split (test_mix_motions.MixMotionsTests) ... ok
+test_repeated_builds_have_identical_archive_and_metadata_bytes (test_mix_motions.MixMotionsTests) ... ok
+test_weight_validation_and_colon_in_input_filename (test_mix_motions.MixMotionsTests) ... ok
+test_broader_reaching_and_merge_preserve_heldouts (test_motion.MotionTests) ... ok
+test_dataset_split_sampling_limits_and_fk (test_motion.MotionTests) ... ok
+test_exact_usd_zero_chain_geometry (test_motion.MotionTests) ... ok
+test_numpy_torch_fk_and_gradient (test_motion.MotionTests) ... ok
+test_standing_foot_height_and_separate_velocity_curriculum (test_motion.MotionTests) ... ok
+test_defaults_preserve_original_configuration (test_precision_rewards.PrecisionRewardTests) ... ok
+test_episode_tracking_and_height_sums_follow_configured_terms (test_precision_rewards.PrecisionRewardTests) ... ok
+test_fall_cost_is_per_event_not_scaled_by_dt (test_precision_rewards.PrecisionRewardTests) ... ok
+test_head_cli_and_saved_values_are_finite_bounded_and_train_only (test_precision_rewards.PrecisionRewardTests) ... ok
+test_head_default_preserves_legacy_tracking_reduction_bitwise (test_precision_rewards.PrecisionRewardTests) ... ok
+test_head_setting_restores_legacy_and_saved_precision_contract (test_precision_rewards.PrecisionRewardTests) ... ok
+test_head_weight_adds_only_head_term_without_renormalizing_hands (test_precision_rewards.PrecisionRewardTests) ... ok
+test_ideal_standing_has_known_default_and_precision_rewards (test_precision_rewards.PrecisionRewardTests) ... ok
+test_known_point_and_height_errors_use_requested_widths (test_precision_rewards.PrecisionRewardTests) ... ok
+test_reward_variant_does_not_change_reported_tracking_metrics (test_precision_rewards.PrecisionRewardTests) ... ok
+test_automatic_reset_gate_and_runner_active_flag_stay_disarmed (test_reset_targets.GroundedResetTests) ... ok
+test_external_reset_clears_only_selected_targets_and_velocity (test_reset_targets.GroundedResetTests) ... ok
+test_ordinary_disarm_preserves_actual_reachable_pose (test_reset_targets.GroundedResetTests) ... ok
+test_reference_initialization_still_uses_reference_height_and_pose (test_reset_targets.GroundedResetTests) ... ok
+test_startup_manual_and_automatic_reset_hold_grounded_markers (test_reset_targets.GroundedResetTests) ... ok
+test_without_reference_uses_fk_nominal_plus_same_clearance (test_reset_targets.GroundedResetTests) ... ok
+test_disabled_reset_requires_next_explicit_arm (test_runtime.TeleopGateTests) ... ok
+test_expired_enabled_input_cannot_keep_running (test_runtime.TeleopGateTests) ... ok
+test_explicit_stop_takes_effect_on_same_poll (test_runtime.TeleopGateTests) ... ok
+test_first_valid_session_can_use_sender_explicit_arm (test_runtime.TeleopGateTests) ... ok
+test_fresh_release_then_arm_recovers_after_fall (test_runtime.TeleopGateTests) ... ok
+test_missing_input_after_arming_latches_stop (test_runtime.TeleopGateTests) ... ok
+test_new_session_cannot_inherit_active_arm (test_runtime.TeleopGateTests) ... ok
+test_new_session_cannot_reuse_old_session_release (test_runtime.TeleopGateTests) ... ok
+test_outage_after_release_requires_new_release (test_runtime.TeleopGateTests) ... ok
+test_release_before_fall_does_not_count_after_fall (test_runtime.TeleopGateTests) ... ok
+test_repeated_enabled_frames_do_not_bypass_any_trip (test_runtime.TeleopGateTests) ... ok
+test_reset_has_priority_over_enabled_in_same_frame (test_runtime.TeleopGateTests) ... ok
+test_second_trip_invalidates_intermediate_release (test_runtime.TeleopGateTests) ... ok
+test_stale_foreign_session_cannot_change_current_session (test_runtime.TeleopGateTests) ... ok
+test_stale_release_does_not_count_for_rearming (test_runtime.TeleopGateTests) ... ok
+test_startup_waits_for_input (test_runtime.TeleopGateTests) ... ok
+test_analysis_rejects_missing_phases_wrong_enable_and_nonfinite_trace (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_axis_tracking_detects_small_response_despite_high_correlation (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_real_udp_outage_held_arm_reset_and_stop (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_sweep_analysis_separates_control_states_from_tracking_quality (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_sweep_mapper_excites_only_declared_axis_and_returns_neutral (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_whole_body_analysis_velocity_and_contact_are_separate (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_whole_body_raw_sticks_pose_bounds_and_neutral_endpoints (test_runtime_scenario.RuntimeScenarioTests) ... ok
+test_ik_satisfies_cartesian_feet_and_soft_limits (test_teleop_motion.TeleopMotionTests) ... ok
+test_independent_bounded_reproducible_trajectories (test_teleop_motion.TeleopMotionTests) ... ok
+test_portable_dataset_split_and_no_overwrite (test_teleop_motion.TeleopMotionTests) ... ok
+test_complete_history_and_plot_and_no_overwrite (test_training_log.TrainingLogTests) ... ok
+test_completed_result_does_not_certify_newer_resumed_events (test_training_log.TrainingLogTests) ... ok
+test_mutating_event_and_symlink_output_are_rejected (test_training_log.TrainingLogTests) ... ok
+test_nonfinite_samples_and_repeated_steps_are_preserved (test_training_log.TrainingLogTests) ... ok
+test_falls_during_settling_count_but_velocity_is_not_scored (test_velocity_evaluation.VelocityAccumulatorTests) ... ok
+test_mislabeled_block_is_rejected_at_transition (test_velocity_evaluation.VelocityAccumulatorTests) ... ok
+test_nonfinite_samples_are_reported_and_summary_is_json_safe (test_velocity_evaluation.VelocityAccumulatorTests) ... ok
+test_opposite_directions_do_not_cancel_errors_or_gain (test_velocity_evaluation.VelocityAccumulatorTests) ... ok
+test_perfect_tracking_scores_one_gain_zero_error (test_velocity_evaluation.VelocityAccumulatorTests) ... ok
+test_stationary_policy_has_zero_gain_and_nonzero_error (test_velocity_evaluation.VelocityAccumulatorTests) ... ok
+test_block_and_settling_boundaries_follow_global_steps (test_velocity_evaluation.VelocityScheduleTests) ... ok
+test_commands_do_not_depend_on_episode_reset_or_random_state (test_velocity_evaluation.VelocityScheduleTests) ... ok
+test_every_environment_sees_each_command_in_one_cycle (test_velocity_evaluation.VelocityScheduleTests) ... ok
+test_invalid_timing_is_rejected (test_velocity_evaluation.VelocityScheduleTests) ... ok
+test_torch_cpu_schedule_matches_numpy (test_velocity_evaluation.VelocityScheduleTests) ... ok
+test_configured_xy_threshold_changes_small_lateral_gate_but_not_yaw_gate (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_contact_bonuses_remain_gated_by_moving_command (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_default_standing_configuration_preserves_legacy_bits_and_metadata (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_episode_sums_equal_integrated_reward_over_repeated_steps (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_evaluation_commands_survive_reset_and_use_global_phase (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_exact_moving_tracking_replaces_terms_without_double_counting (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_external_mode_disables_evaluation_command_override (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_metadata_records_exact_replacement_contract (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_reward_tags_keep_pre_step_command_at_block_boundary (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_standing_yaw_metadata_roundtrip_and_invalid_direct_config (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_standing_yaw_replacement_only_changes_complement_of_moving_mask (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_stationary_robot_with_forward_command_gets_sharper_reward (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_yaw_only_and_small_command_mask_is_per_environment (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_zero_command_keeps_original_reward_including_drift (test_velocity_rewards.VelocityRewardsTests) ... ok
+test_actual_runner_applies_explicit_overrides_after_saved_restoration (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_generated_metadata_restores_mode_threshold_and_all_old_terms (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_malformed_metadata_rejected_without_partial_mutation (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_only_requested_ids_change_and_external_mode_is_untouched (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_overrides_are_train_only_finite_bounded_and_require_valid_pure_limits (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_pure_axis_proportions_bounds_and_independent_signs (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_seeded_default_is_bitwise_identical_to_original_mixed_sampler (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_standing_extremes_and_minimum_equals_maximum (test_velocity_sampling.VelocitySamplingTests) ... ok
+test_fresh_and_nonvelocity_metadata_keep_defaults (test_velocity_settings.VelocitySettingsTests) ... ok
+test_invalid_saved_contract_is_rejected_without_partial_mutation (test_velocity_settings.VelocitySettingsTests) ... ok
+test_invalid_standing_metadata_is_transactional (test_velocity_settings.VelocitySettingsTests) ... ok
+test_legacy_without_replacement_contract_restores_original_base_terms (test_velocity_settings.VelocitySettingsTests) ... ok
+test_saved_defaults_remain_unchanged_for_existing_v2_checkpoint (test_velocity_settings.VelocitySettingsTests) ... ok
+test_saved_nested_contract_and_auxiliary_scales_restore_exactly (test_velocity_settings.VelocitySettingsTests) ... ok
+test_saved_standing_yaw_restores_and_legacy_resets_to_base (test_velocity_settings.VelocitySettingsTests) ... ok
+test_standing_overrides_are_finite_positive_training_only (test_velocity_settings.VelocitySettingsTests) ... ok
+test_yaw_options_reject_nonfinite_out_of_bounds_and_underflow (test_velocity_settings.VelocitySettingsTests) ... ok
+test_yaw_options_require_training_velocity_variant (test_velocity_settings.VelocitySettingsTests) ... ok
+test_failed_calibration_does_not_increment (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_old_packet_default_and_invalid_generation_rejection (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_receiver_preserves_monotonic_generation_per_session (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_reference_change_reset_and_calibration_have_distinct_generations (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_x_edges_increment_and_calibration_keeps_control_stopped (test_vr_calibration_id.CalibrationGenerationTests) ... ok
+test_arbitrary_neutral_yaw_is_removed (test_vr_input.MappingTests) ... ok
+test_asymmetric_small_bounds_apply_after_robot_transform_and_scale (test_vr_input.MappingTests) ... ok
+test_bad_or_stale_pose_and_bad_inputs_fail_stopped (test_vr_input.MappingTests) ... ok
+test_bounds_json_units_axes_and_replay_option_are_explicit (test_vr_input.MappingTests) ... ok
+test_bounds_validate_shapes_finiteness_neutral_and_nonzero_span (test_vr_input.MappingTests) ... ok
+test_cli_velocity_limits_validate_caps_zero_axes_and_replay (test_vr_input.MappingTests) ... ok
+test_inactive_actions_or_sender_pause_cannot_resume_with_held_arm (test_vr_input.MappingTests) ... ok
+test_neutral_frame_does_not_use_human_height_as_robot_height (test_vr_input.MappingTests) ... ok
+test_reset_stop_and_tracking_origin_change (test_vr_input.MappingTests) ... ok
+test_tracking_loss_stops_and_requires_explicit_rearm (test_vr_input.MappingTests) ... ok
+test_workspace_clamp_and_velocity_signs (test_vr_input.MappingTests) ... ok
+test_cli_velocity_limits_reach_real_mapper_and_disable_yaw (test_vr_input.ProtocolTests) ... ok
+test_invalid_tracking_stops_immediately_and_duplicates_do_not_refresh (test_vr_input.ProtocolTests) ... ok
+test_replay_has_new_identity_and_explicit_enable_requirement (test_vr_input.ProtocolTests) ... ok
+test_schema_values_and_wallclock_are_validated (test_vr_input.ProtocolTests) ... ok
+test_sender_process_applies_selected_asymmetric_bounds (test_vr_input.ProtocolTests) ... ok
+test_sender_process_reaches_receiver_then_sends_stop (test_vr_input.ProtocolTests) ... ok
+test_udp_stale_reorder_session_and_reset_deduplication (test_vr_input.ProtocolTests) ... ok
+test_cleanup_continues_when_runtime_unregister_or_shutdown_fails (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_dashboard_and_input_focus_fail_closed (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_register_identify_and_action_failures_cleanup (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_reject_duplicate_without_removing_existing_manifest (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_role_lookup_and_background_action_bindings (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_shutdown_even_if_runtime_init_fails (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_success_return_with_missing_registration_or_identity_is_rejected (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_tracking_origin_change_and_runtime_quit (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_update_failure_never_reuses_previous_input (test_vr_openvr.OpenVRTests) ... skipped 'optional openvr dependency is absent'
+test_expanded_semantic_observations_preserve_action_and_value (test_warm_start.WarmStartTests) ... ok
+test_invalid_layer_shapes_names_and_iteration_are_transactional (test_warm_start.WarmStartTests) ... ok
+test_invalid_noise_rejected_without_loading_any_parameter (test_warm_start.WarmStartTests) ... ok
+test_nan_infinite_negative_noise_and_dtype_overflow_are_rejected (test_warm_start.WarmStartTests) ... ok
+test_nonmigrating_parameters_are_copied_exactly_and_new_weights_are_zero (test_warm_start.WarmStartTests) ... ok
+test_same_dimensions_copy_and_optional_noise_override (test_warm_start.WarmStartTests) ... ok
+test_unsupported_input_sizes_do_not_mutate_destination (test_warm_start.WarmStartTests) ... ok
+test_cleanup_continues_if_compositor_is_failing (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_cleanup_is_idempotent (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_crouch_moves_camera_once_and_does_not_oscillate (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_first_attach_schedules_robot_head_view (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_head_translation_without_robot_motion_is_cancelled (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_missing_or_invalid_tracking_does_not_write_anchor (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_recenter_reschedules_without_restarting_profile (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+test_root_translation_and_yaw_move_camera_once (test_xr_view.XRViewTests) ... skipped "Native XR math tests need Isaac Sim's pxr bindings"
+
+----------------------------------------------------------------------
+Ran 173 tests in 13.049s
+
+OK (skipped=17)

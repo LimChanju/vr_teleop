@@ -1,0 +1,692 @@
+{
+  "model": "unitree_g1_29dof_dex1_freebase",
+  "usd_path": "/home/railabchan/quest3_g1_teleop/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd",
+  "body_joint_names": [
+    "left_hip_pitch_joint",
+    "left_hip_roll_joint",
+    "left_hip_yaw_joint",
+    "left_knee_joint",
+    "left_ankle_pitch_joint",
+    "left_ankle_roll_joint",
+    "right_hip_pitch_joint",
+    "right_hip_roll_joint",
+    "right_hip_yaw_joint",
+    "right_knee_joint",
+    "right_ankle_pitch_joint",
+    "right_ankle_roll_joint",
+    "waist_yaw_joint",
+    "waist_roll_joint",
+    "waist_pitch_joint",
+    "left_shoulder_pitch_joint",
+    "left_shoulder_roll_joint",
+    "left_shoulder_yaw_joint",
+    "left_elbow_joint",
+    "left_wrist_roll_joint",
+    "left_wrist_pitch_joint",
+    "left_wrist_yaw_joint",
+    "right_shoulder_pitch_joint",
+    "right_shoulder_roll_joint",
+    "right_shoulder_yaw_joint",
+    "right_elbow_joint",
+    "right_wrist_roll_joint",
+    "right_wrist_pitch_joint",
+    "right_wrist_yaw_joint"
+  ],
+  "body_joint_ids": [
+    0,
+    3,
+    6,
+    9,
+    13,
+    17,
+    1,
+    4,
+    7,
+    10,
+    14,
+    18,
+    2,
+    5,
+    8,
+    11,
+    15,
+    19,
+    21,
+    23,
+    25,
+    27,
+    12,
+    16,
+    20,
+    22,
+    24,
+    26,
+    28
+  ],
+  "hand_joint_names": [
+    "left_hand_Joint1_1",
+    "left_hand_Joint2_1",
+    "right_hand_Joint1_1",
+    "right_hand_Joint2_1"
+  ],
+  "hand_position_m": 0.024,
+  "nominal_q": [
+    -0.20000000298023224,
+    0.0,
+    0.0,
+    0.41999998688697815,
+    -0.23000000417232513,
+    0.0,
+    -0.20000000298023224,
+    0.0,
+    0.0,
+    0.41999998688697815,
+    -0.23000000417232513,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.3499999940395355,
+    0.18000000715255737,
+    0.0,
+    0.8700000047683716,
+    0.0,
+    0.0,
+    0.0,
+    0.3499999940395355,
+    -0.18000000715255737,
+    0.0,
+    0.8700000047683716,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "soft_joint_limits": [
+    [
+      -2.2601747512817383,
+      2.6092748641967773
+    ],
+    [
+      -0.34906482696533203,
+      2.792564630508423
+    ],
+    [
+      -2.481839895248413,
+      2.481839895248413
+    ],
+    [
+      0.061086416244506836,
+      2.7314465045928955
+    ],
+    [
+      -0.8028564453125,
+      0.4537864029407501
+    ],
+    [
+      -0.23561996221542358,
+      0.23561996221542358
+    ],
+    [
+      -2.2601747512817383,
+      2.6092748641967773
+    ],
+    [
+      -2.792564630508423,
+      0.34906482696533203
+    ],
+    [
+      -2.481839895248413,
+      2.481839895248413
+    ],
+    [
+      0.061086416244506836,
+      2.7314465045928955
+    ],
+    [
+      -0.8028564453125,
+      0.4537864029407501
+    ],
+    [
+      -0.23561996221542358,
+      0.23561996221542358
+    ],
+    [
+      -2.3561999797821045,
+      2.3561999797821045
+    ],
+    [
+      -0.4679999053478241,
+      0.4679999053478241
+    ],
+    [
+      -0.4679999053478241,
+      0.4679999053478241
+    ],
+    [
+      -2.8012197017669678,
+      2.3824198246002197
+    ],
+    [
+      -1.3962149620056152,
+      2.0595147609710693
+    ],
+    [
+      -2.3561999797821045,
+      2.3561999797821045
+    ],
+    [
+      -0.8901198506355286,
+      1.9373197555541992
+    ],
+    [
+      -1.7749996185302734,
+      1.7749996185302734
+    ],
+    [
+      -1.4529865980148315,
+      1.4529865980148315
+    ],
+    [
+      -1.4529865980148315,
+      1.4529865980148315
+    ],
+    [
+      -2.8012197017669678,
+      2.3824198246002197
+    ],
+    [
+      -2.0595147609710693,
+      1.3962149620056152
+    ],
+    [
+      -2.3561999797821045,
+      2.3561999797821045
+    ],
+    [
+      -0.8901198506355286,
+      1.9373197555541992
+    ],
+    [
+      -1.7749996185302734,
+      1.7749996185302734
+    ],
+    [
+      -1.4529865980148315,
+      1.4529865980148315
+    ],
+    [
+      -1.4529865980148315,
+      1.4529865980148315
+    ]
+  ],
+  "body_joint_stiffness": [
+    200.0,
+    150.0,
+    150.0,
+    200.0,
+    20.0,
+    20.0,
+    200.0,
+    150.0,
+    150.0,
+    200.0,
+    20.0,
+    20.0,
+    200.0,
+    200.0,
+    200.0,
+    100.0,
+    100.0,
+    50.0,
+    50.0,
+    40.0,
+    40.0,
+    40.0,
+    100.0,
+    100.0,
+    50.0,
+    50.0,
+    40.0,
+    40.0,
+    40.0
+  ],
+  "body_joint_damping": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    2.0,
+    2.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    2.0,
+    2.0,
+    5.0,
+    5.0,
+    5.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+  ],
+  "body_joint_armature": [
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.009999999776482582
+  ],
+  "body_joint_effort_limits": [
+    88.0,
+    139.0,
+    88.0,
+    139.0,
+    35.0,
+    35.0,
+    88.0,
+    139.0,
+    88.0,
+    139.0,
+    35.0,
+    35.0,
+    88.0,
+    35.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    5.0,
+    5.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    5.0,
+    5.0
+  ],
+  "tracked_body_names": [
+    "head_link",
+    "left_wrist_yaw_link",
+    "right_wrist_yaw_link"
+  ],
+  "tracked_body_ids": [
+    15,
+    35,
+    36
+  ],
+  "tracked_local_offsets_m": [
+    [
+      0.0,
+      0.0,
+      0.45
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "nominal_keypoints_root_m": [
+    [
+      0.0,
+      0.0,
+      0.44999998807907104
+    ],
+    [
+      0.0012043428141623735,
+      0.2140388935804367,
+      -0.056791700422763824
+    ],
+    [
+      0.0012043428141623735,
+      -0.21402889490127563,
+      -0.056791700422763824
+    ]
+  ],
+  "nominal_root_height_m": 0.7679228208039848,
+  "collision_overrides": {
+    "left_hip_yaw_link/collisions": "boundingCube",
+    "right_hip_yaw_link/collisions": "boundingCube"
+  },
+  "physics_dt": 0.005,
+  "control_dt": 0.02,
+  "decimation": 4,
+  "action_scale": 0.5,
+  "action_clip": [
+    -4.0,
+    4.0
+  ],
+  "reference_state_initialization": true,
+  "reset_contract": {
+    "version": "grounded_nominal_v1",
+    "clearance_m": 0.015,
+    "root_height": "reference height for RSI; otherwise FK nominal root height; plus clearance",
+    "external_reset_targets": "grounded nominal markers; zero commanded velocity",
+    "external_disarm_targets": "current reachable markers; zero commanded velocity"
+  },
+  "reward_contract": {
+    "tracking_reward_weight": 4.0,
+    "tracking_error_variance": 0.04,
+    "height_reward_weight": 1.0,
+    "height_error_variance": 0.01,
+    "fall_cost": 2.0,
+    "head_tracking_weight": 1.0
+  },
+  "motion_playback": "linear interpolation with reflected clip endpoints",
+  "teacher": false,
+  "actor_observations": 126,
+  "critic_observations": 156,
+  "coordinate_version": "g1-yaw-floor-relative-v1",
+  "observation_version": "sparse_tracking_v2",
+  "coordinates": "pelvis yaw frame; origin XY=root XY, origin Z=ground+nominal_root_height; +X forward +Y left +Z up; quaternion wxyz",
+  "observation_order": [
+    "root_angular_velocity*0.25",
+    "projected_gravity",
+    "q-nominal",
+    "joint_velocity*0.05",
+    "previous_action",
+    "head_leftwrist_rightwrist_target_positions",
+    "vx_vy_yawrate",
+    "root_linear_velocity",
+    "target_minus_current_keypoints",
+    "filtered_target_velocity"
+  ],
+  "privileged_order": [
+    "root_height",
+    "reference_q-nominal"
+  ],
+  "actor_observation_order": [
+    "root_angular_velocity*0.25",
+    "projected_gravity",
+    "q-nominal",
+    "joint_velocity*0.05",
+    "previous_action",
+    "head_leftwrist_rightwrist_target_positions",
+    "vx_vy_yawrate",
+    "root_linear_velocity",
+    "target_minus_current_keypoints",
+    "filtered_target_velocity"
+  ],
+  "critic_observation_order": [
+    "root_angular_velocity*0.25",
+    "projected_gravity",
+    "q-nominal",
+    "joint_velocity*0.05",
+    "previous_action",
+    "head_leftwrist_rightwrist_target_positions",
+    "vx_vy_yawrate",
+    "root_linear_velocity",
+    "target_minus_current_keypoints",
+    "filtered_target_velocity",
+    "root_height",
+    "reference_q-nominal"
+  ],
+  "target_velocity_estimator": {
+    "enabled": true,
+    "update": "once per pre_physics_step; one control-step observation lag",
+    "difference_dt_s": 0.02,
+    "clip_mps": [
+      -2.0,
+      2.0
+    ],
+    "ema_alpha": 0.5,
+    "reset": "zero; first subsequent control step establishes baseline"
+  },
+  "motion_file": "/home/railabchan/quest3_g1_teleop/data/motions/g1_teleop_v3.npz",
+  "motion_split": "eval",
+  "environment_variant": "g1_commanded_velocity_v1",
+  "training_velocity_limits": [
+    0.3,
+    0.15,
+    0.4
+  ],
+  "training_standing_fraction": 0.3,
+  "velocity_command_resampling_s": 5.0,
+  "velocity_command_sampling": {
+    "version": "velocity_command_sampling_v1",
+    "mode": "pure_axis",
+    "pure_axis_probabilities_given_moving": [
+      0.35714285714285715,
+      0.35714285714285715,
+      0.2857142857142857
+    ],
+    "pure_axis_minimum_absolute_commands": [
+      0.1,
+      0.08,
+      0.15
+    ],
+    "pure_axis_sign": "uniform independent positive/negative",
+    "standing_fraction": 0.3
+  },
+  "feet_air_time_reward_scale": 0.5,
+  "both_feet_air_penalty_scale": 0.15,
+  "velocity_reward_contract": {
+    "version": "moving_velocity_replacement_v2",
+    "moving_condition": "norm(command_xy)>0.03 m/s OR abs(command_yaw)>0.10 rad/s",
+    "moving_thresholds": {
+      "xy_norm_mps": 0.03,
+      "yaw_abs_radps": 0.1,
+      "comparison": ">"
+    },
+    "linear_velocity": {
+      "scale": 4.0,
+      "squared_error_denominator_m2_s2": 0.04
+    },
+    "yaw_velocity": {
+      "scale": 3.0,
+      "squared_error_denominator_rad2_s2": 0.1
+    },
+    "standing_terms": "unchanged base linear 2*exp(-e2/.25), yaw exp(-e2/.25)",
+    "application": "replace base terms for moving commands; integrate every term with control dt"
+  },
+  "velocity_training_note": "Commanded velocities are sampled independently; learning does not guarantee tracking performance.",
+  "velocity_evaluation_schedule": {
+    "version": "heldout_velocity_blocks_v1",
+    "step_dt": 0.02,
+    "block_seconds": 5.0,
+    "settling_seconds": 1.0,
+    "cycle_seconds": 45.0,
+    "phase_rule": "block=(env_id+global_control_step//block_steps)%9; resets do not rewind",
+    "falls_include_settling": true,
+    "blocks": [
+      {
+        "id": 0,
+        "name": "stand",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "id": 1,
+        "name": "forward",
+        "command_vx_vy_yaw": [
+          0.2,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "id": 2,
+        "name": "backward",
+        "command_vx_vy_yaw": [
+          -0.2,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "id": 3,
+        "name": "left",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.1,
+          0.0
+        ]
+      },
+      {
+        "id": 4,
+        "name": "right",
+        "command_vx_vy_yaw": [
+          0.0,
+          -0.1,
+          0.0
+        ]
+      },
+      {
+        "id": 5,
+        "name": "yaw_left",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.0,
+          0.3
+        ]
+      },
+      {
+        "id": 6,
+        "name": "yaw_right",
+        "command_vx_vy_yaw": [
+          0.0,
+          0.0,
+          -0.3
+        ]
+      },
+      {
+        "id": 7,
+        "name": "diagonal_forward_left",
+        "command_vx_vy_yaw": [
+          0.15,
+          0.08,
+          0.0
+        ]
+      },
+      {
+        "id": 8,
+        "name": "diagonal_backward_right",
+        "command_vx_vy_yaw": [
+          -0.15,
+          -0.08,
+          0.0
+        ]
+      }
+    ]
+  },
+  "scenario_velocity_limits": [
+    0.3,
+    0.15,
+    0.4
+  ],
+  "kinematics_validation": {
+    "environment_count": 4,
+    "max_marker_error_m": 6.815150305244802e-07,
+    "mean_marker_error_m": 4.228590663430254e-07,
+    "tolerance_m": 0.002,
+    "passed": true,
+    "marker_names": [
+      "head_link",
+      "left_wrist_yaw_link",
+      "right_wrist_yaw_link"
+    ]
+  },
+  "source_sha256": {
+    "scripts/g1/run.py": "b6a03fc97b51086ae6df89efcccc7d8340d9411b4fbea2fe0838eef15efa9cbf",
+    "g1_teleop/training.py": "312e36ea8476ec5030cb214011aa2ac2783c39c12fb5280ee10d39fc5f9df6f0",
+    "g1_teleop/warm_start.py": "ce968bddec3a94a20f0f553b36ab8268ae7104f5e74cc4f58781ce400e59f6b3",
+    "g1_teleop/velocity_evaluation.py": "b5444ac9b01f17e066b3c94d3c2d6ab30acb7baf4c78bdac52594c70cb6528c3",
+    "g1_teleop/motion/g1_29dof_kinematics.json": "16d3857a05a92526aff912ed60d47c740274ff054a87ce65e403884618bd3fe1",
+    "g1_teleop/sim/env.py": "9c37fd3a69b68f8e9a01b54a25008c4710e26a4bce155308f77e6286438e6dad",
+    "g1_teleop/sim/asset.py": "b6183e409f8c401ca3c85db83d8bfeaaf3ee1b81760562c85c9454337af0a7e6",
+    "g1_teleop/sim/velocity_env.py": "4912500856708e86eb61444719f4b062ceee79e31af79687666709c555af3bf4"
+  },
+  "stage": "sparse",
+  "runner": {
+    "seed": 2027,
+    "device": "cuda:0",
+    "num_steps_per_env": 24,
+    "save_interval": 100,
+    "empirical_normalization": false,
+    "logger": "tensorboard",
+    "experiment_name": "g1_wholebody",
+    "policy": {
+      "class_name": "ActorCritic",
+      "init_noise_std": 0.5,
+      "actor_hidden_dims": [
+        256,
+        256,
+        128
+      ],
+      "critic_hidden_dims": [
+        256,
+        256,
+        128
+      ],
+      "activation": "elu"
+    },
+    "algorithm": {
+      "class_name": "PPO",
+      "value_loss_coef": 1.0,
+      "use_clipped_value_loss": true,
+      "clip_param": 0.2,
+      "entropy_coef": 0.004,
+      "num_learning_epochs": 5,
+      "num_mini_batches": 4,
+      "learning_rate": 0.001,
+      "schedule": "adaptive",
+      "gamma": 0.99,
+      "lam": 0.95,
+      "desired_kl": 0.01,
+      "max_grad_norm": 1.0
+    }
+  },
+  "seed": 2027,
+  "motion_sha256": "00a55b19792d817725aa490c33e7b84b70f6eb6c2d1f676181755577dad0d675",
+  "observation_dim": 126,
+  "num_envs": 18,
+  "source_checkpoint": "/home/railabchan/quest3_g1_teleop/runs/velocity_pure_axes_v7/model_final.pt",
+  "physical_quest_verified": false
+}

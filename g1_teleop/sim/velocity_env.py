@@ -29,6 +29,8 @@ class G1VelocityEnvCfg(G1WholeBodyEnvCfg):
     moving_linear_velocity_error_variance = 0.04
     moving_yaw_velocity_reward_scale = 2.0
     moving_yaw_velocity_error_variance = 0.10
+    standing_yaw_velocity_reward_scale = 1.0
+    standing_yaw_velocity_error_variance = 0.25
     velocity_evaluation = False
 
 
@@ -55,6 +57,10 @@ class G1VelocityEnv(G1WholeBodyEnv):
         if (cfg.moving_linear_velocity_reward_scale < 0.0
                 or cfg.moving_yaw_velocity_reward_scale < 0.0):
             raise ValueError("Velocity reward scales must be nonnegative")
+        for name in ("standing_yaw_velocity_reward_scale", "standing_yaw_velocity_error_variance"):
+            value = getattr(cfg, name)
+            if isinstance(value, bool) or not math.isfinite(value) or value <= 0:
+                raise ValueError(f"{name} must be finite and positive")
         super().__init__(cfg, render_mode, **kwargs)
         self._ensure_velocity_buffers()
 
@@ -137,7 +143,7 @@ class G1VelocityEnv(G1WholeBodyEnv):
         # Replace, rather than add to, the broad base tracking terms. The base
         # class has already accumulated its contribution to the episode sums;
         # applying the same delta to both paths keeps logging and PPO aligned.
-        # Zero/small commands retain the base standing reward exactly.
+        # Zero/small commands retain the base standing reward by default.
         replacements = (
             ("linear_velocity", 2.0 * torch.exp(-linear_error_squared / 0.25),
              self.cfg.moving_linear_velocity_reward_scale * torch.exp(
@@ -150,6 +156,16 @@ class G1VelocityEnv(G1WholeBodyEnv):
             delta = torch.where(moving, replacement - previous, torch.zeros_like(previous)) * self.step_dt
             reward = reward + delta
             self._episode_sums[name].add_(delta)
+        # An explicit training setting can sharpen the standing yaw term.
+        # Skip all arithmetic at the legacy defaults, preserving old outputs.
+        if (self.cfg.standing_yaw_velocity_reward_scale != 1.0
+                or self.cfg.standing_yaw_velocity_error_variance != 0.25):
+            previous = torch.exp(-yaw_error_squared / 0.25)
+            replacement = self.cfg.standing_yaw_velocity_reward_scale * torch.exp(
+                -yaw_error_squared / self.cfg.standing_yaw_velocity_error_variance)
+            delta = torch.where(~moving, replacement - previous, torch.zeros_like(previous)) * self.step_dt
+            reward = reward + delta
+            self._episode_sums["yaw_velocity"].add_(delta)
         first_contact = self.contact_sensor.compute_first_contact(self.step_dt)[:, self.foot_contact_ids]
         last_air_time = self.contact_sensor.data.last_air_time[:, self.foot_contact_ids]
         # Reward a genuine swing only on touchdown. A dragging foot gets no
@@ -217,6 +233,16 @@ class G1VelocityEnv(G1WholeBodyEnv):
             },
             "velocity_training_note": "Commanded velocities are sampled independently; learning does not guarantee tracking performance.",
         })
+        if (self.cfg.standing_yaw_velocity_reward_scale != 1.0
+                or self.cfg.standing_yaw_velocity_error_variance != 0.25):
+            contract = metadata["velocity_reward_contract"]
+            contract["standing_yaw_velocity"] = {
+                "scale": self.cfg.standing_yaw_velocity_reward_scale,
+                "squared_error_denominator_rad2_s2": self.cfg.standing_yaw_velocity_error_variance,
+            }
+            contract["standing_terms"] = "unchanged base linear 2*exp(-e2/.25); yaw uses standing_yaw_velocity"
+            contract["application"] = ("replace base terms for moving commands and base yaw for the complementary "
+                                       "standing mask; integrate every term with control dt")
         if self.cfg.velocity_evaluation:
             metadata["velocity_evaluation_schedule"] = VelocityEvaluationSchedule(step_dt=self.step_dt).metadata()
         return metadata

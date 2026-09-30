@@ -1,11 +1,14 @@
 """Portable model bundle checks without importing Isaac Sim or allocating a GPU."""
 
 import ast
+import contextlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -150,6 +153,83 @@ class BundleTests(unittest.TestCase):
             (evidence / f"scenario_analysis_{index}.json").write_text("{}")
         with self.assertRaisesRegex(ValueError, "200 files"):
             bundle.copy_evidence(evidence, self.root / "too_many", checkpoint_hash)
+
+    def test_extra_motion_roundtrip_retains_bytes_sidecars_and_hashes(self):
+        training = self.root / "training.npz"
+        training.write_bytes(b"training dataset")
+        self.metadata.update(motion_file=str(training), motion_sha256=bundle.sha256(training))
+        self.write_metadata()
+        first, second = self.root / "stand.npz", self.root / "teleop.npz"
+        first.write_bytes(b"held-out standing frames\x00\xff")
+        first.with_suffix(".json").write_text('{"provenance": "standing source"}\n')
+        second.write_bytes(b"held-out teleop frames\x00\xff")
+        archive = self.root / "with_evaluation.tar.gz"
+        descriptor = bundle.create_bundle(self.run, archive, repo=self.repo, extra_motions=[first, second])
+        unpacked = bundle.unpack_bundle(archive, self.root / "unpacked_evaluation")
+        self.assertEqual(json.loads((unpacked / "BUNDLE.json").read_text()), descriptor)
+        self.assertEqual(len(descriptor["extra_motions"]), 2)
+        for source, entry in zip((first, second), descriptor["extra_motions"]):
+            self.assertEqual(entry["path"], f"data/motions/{source.name}")
+            self.assertEqual(entry["sha256"], bundle.sha256(source))
+            self.assertEqual((unpacked / entry["path"]).read_bytes(), source.read_bytes())
+            if source == first:
+                sidecar = source.with_suffix(".json")
+                self.assertEqual(entry["sidecar"]["sha256"], bundle.sha256(sidecar))
+                self.assertEqual((unpacked / entry["sidecar"]["path"]).read_bytes(), sidecar.read_bytes())
+            else:
+                self.assertNotIn("sidecar", entry)
+        self.assertEqual((unpacked / "data/motions/training.npz").read_bytes(), training.read_bytes())
+        sums = (unpacked / "SHA256SUMS").read_text()
+        self.assertIn(f"{bundle.sha256(first)}  data/motions/stand.npz\n", sums)
+        self.assertIn(f"{bundle.sha256(first.with_suffix('.json'))}  data/motions/stand.json\n", sums)
+
+    def test_extra_motion_rejects_duplicate_and_training_basename_collisions(self):
+        source = self.root / "stand.npz"
+        source.write_bytes(b"original")
+        other = self.root / "different_folder/stand.npz"
+        other.parent.mkdir()
+        other.write_bytes(b"different content with same basename")
+        for index, selected in enumerate(([source, source], [source, other])):
+            archive = self.root / f"duplicate_{index}.tar.gz"
+            with self.subTest(selected=selected), self.assertRaisesRegex(ValueError, "basename collision"):
+                bundle.create_bundle(self.run, archive, repo=self.repo, extra_motions=selected)
+            self.assertFalse(archive.exists())
+            self.assertFalse(archive.with_name(archive.name + ".sha256").exists())
+        self.metadata.update(motion_file=str(source), motion_sha256=bundle.sha256(source))
+        self.write_metadata()
+        archive = self.root / "training_collision.tar.gz"
+        with self.assertRaisesRegex(ValueError, "basename collision"):
+            bundle.create_bundle(self.run, archive, repo=self.repo, extra_motions=[source])
+        self.assertFalse(archive.exists())
+
+    def test_extra_motion_rejects_invalid_files_and_symlink_sidecar(self):
+        source = self.root / "valid.npz"
+        source.write_bytes(b"dataset")
+        symlink = self.root / "linked.npz"
+        symlink.symlink_to(source)
+        directory = self.root / "directory.npz"
+        directory.mkdir()
+        wrong_suffix = self.root / "data.txt"
+        wrong_suffix.write_bytes(b"dataset")
+        for index, invalid in enumerate((symlink, directory, wrong_suffix, self.root / "missing.npz")):
+            archive = self.root / f"invalid_{index}.tar.gz"
+            with self.subTest(path=invalid), self.assertRaisesRegex(ValueError, "extra motion"):
+                bundle.create_bundle(self.run, archive, repo=self.repo, extra_motions=[invalid])
+            self.assertFalse(archive.exists())
+        source.with_suffix(".json").symlink_to(self.root / "missing_sidecar.json")
+        with self.assertRaisesRegex(ValueError, "non-symlink"):
+            bundle.create_bundle(self.run, self.root / "symlink_sidecar.tar.gz", repo=self.repo,
+                                 extra_motions=[source])
+
+    def test_extra_motion_cli_repeats_and_legacy_default_is_empty(self):
+        descriptor = bundle.create_bundle(self.run, self.root / "default.tar.gz", repo=self.repo)
+        self.assertEqual(descriptor["extra_motions"], [])
+        args = ["bundle.py", "create", "--run", str(self.run), "--output", str(self.root / "cli.tar.gz"),
+                "--extra-motion", "stand.npz", "--extra-motion", "teleop.npz"]
+        with patch("sys.argv", args), patch.object(bundle, "create_bundle", return_value={}) as create:
+            with contextlib.redirect_stdout(io.StringIO()):
+                bundle.main()
+        self.assertEqual(create.call_args.kwargs["extra_motions"], [Path("stand.npz"), Path("teleop.npz")])
 
 
 if __name__ == "__main__":

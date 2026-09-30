@@ -1,0 +1,53 @@
+{
+  "mode": "teleop",
+  "stage": "sparse",
+  "status": "teleop_stopped",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/quest3_g1_teleop/runs/whole_body_gradual3000",
+  "metadata": "/home/railabchan/quest3_g1_teleop/runs/whole_body_gradual3000/run_config.json",
+  "steps": 5500,
+  "seed": 42,
+  "motion_split": "train",
+  "wall_loop_seconds": 110.0001404020004,
+  "mean_control_hz": 49.99993618099037,
+  "simulation_to_wall_time_ratio": 0.9999987236198074,
+  "simulated_seconds": 110.0,
+  "completed_episodes": 0,
+  "falls": 0,
+  "timeouts": 0,
+  "fall_rate_completed_episodes": null,
+  "mean_completed_episode_seconds": null,
+  "incomplete_episode_seconds": [
+    110.0
+  ],
+  "mean_metrics": {
+    "tracking_error_m": 0.020360102340377953,
+    "head_error_m": 0.01341763560196242,
+    "hand_error_m": 0.023831334767281078,
+    "velocity_error": 0.022125890068159522,
+    "root_height": 0.7630291140079498,
+    "fallen": 0.0,
+    "episode_steps": 2750.5,
+    "command_vx_mps": -5.052424967288971e-09,
+    "command_vy_mps": -4.2464044368402526e-07,
+    "command_yaw_rate_radps": 1.151813194155693e-07,
+    "actual_vx_mps": 0.0024019614004970537,
+    "actual_vy_mps": -0.0012825168139800718,
+    "actual_yaw_rate_radps": -0.00612526062546319,
+    "vx_absolute_error_mps": 0.011386429808726957,
+    "vy_absolute_error_mps": 0.01547811115278918,
+    "linear_velocity_error_mps": 0.022125890068159522,
+    "yaw_rate_error_radps": 0.03519031228269292,
+    "commanded_moving": 0.38836363636363636
+  },
+  "accepted_input_steps": 3600,
+  "enabled_steps": 3600,
+  "manual_resets": 0,
+  "input_sources": [
+    "synthetic"
+  ],
+  "policy_backend": "torchscript",
+  "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/gradual_wholebody_v8/model_final.pt",
+  "zero_policy": false,
+  "elapsed_seconds": 114.46335003338754
+}

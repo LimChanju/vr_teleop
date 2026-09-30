@@ -1,6 +1,12 @@
 # G1 학습·통합 검증 결과
 
 **기본 모델: `teleop_head_precision_v6`(head1100), 제자리 조작에 한정.**
+전달 기본 파일은 `g1_stationary_v6_r2_20260930.tar.gz`다. v7과 v9는 서로
+다른 장단점을 가진 **별도 실험용**으로 보관한다. 마지막 v9는 평행 이동 응답을
+되찾았지만 오프라인 낙상이 늘고 실제 UDP의 회전·7개 위치 축 기준에 미달했다.
+이번 전달을 위한 추가 학습과 평가는 종료했으며 안정적인 보행·회전·머리·양손
+동시 텔레옵을 완성했다고 보고하지 않는다. [실험용 실행·재개](RUN_MOVING_EXPERIMENT.md)
+
 2026-09-30의 완료된 로컬 평가 JSON을 기준으로 정리했다. 이동·회전 명령은
 기본 모델에서 비활성화한다. `unified_2048_v5`는 평가를 완료했지만 이동·회전
 통합 성능이 부족한 실험용 체크포인트이며 추가 외부 입력 시험도 실패했다.
@@ -111,7 +117,7 @@ head1100은 tight800에서 머리 보상 가중치를 2로 정해 300업데이�
 ## 실제 UDP → 정책 → 시뮬레이터 시험
 
 `runtime_scenario_rich400`은 실제 제어 루프 40초·2000step에서 시작/정지,
-deadman 해제, 송신 중단, 입력 복귀 시 arm 버튼을 계속 눌러도 자동 재시작하지
+deadman 해제, UDP·송신기 매퍼 갱신 중단, 입력 복귀 시 arm 버튼을 계속 눌러도 자동 재시작하지
 않음, 버튼 해제 후 새 시작, 수동 reset 1회를 확인했다. 낙상 0회이고 활성 입력은
 762step(15.24초)이다. 이 시험은 상태 전이와 입력 연결의 근거다.
 
@@ -164,7 +170,7 @@ deadman 해제, 송신 중단, 입력 복귀 시 arm 버튼을 계속 눌러도 
 
 `tracking_sweep_head1100`은 90초·4500step에서 **낙상 7회, timeout 0회**였고
 완료 에피소드 평균은 3.29초다. 활성 입력은 111step(2.22초)에 그쳤으며
-첫 낙상 후 새 arm edge가 없어 이후 대부분 구간이 비활성 상태였다.
+첫 낙상 후 신선한 disabled→enabled 전이가 없어 이후 대부분 구간이 비활성 상태였다.
 상태·추종 종합 검사는 모두 미달이다. 이 상태에서 나온 전체 평균 오차나
 비활성 구간을 정상 9축 추종 점수로 해석하지 않는다.
 
@@ -219,12 +225,18 @@ yaw 순변화는 **−26.22도**다. 초기화 수정 뒤에도 방향 drift는 
 
 `runtime_state_head1100_grounded`는 40초·2000step, 실측 49.9997Hz로 완료했다.
 낙상 0회, 수동 reset 1회, 활성 입력 762step(15.24초)다. deadman 해제,
-0.25초 이상 입력 단절, 복귀 후 arm 버튼 유지 시 비활성 유지, 버튼 해제 후
+0.25초 이상 UDP·송신기 매퍼 갱신 단절, 복귀 후 arm 버튼 유지 시 비활성 유지, 버튼 해제 후
 새 arm edge, 수동 reset 후 재시작, 최종 정지의 검사와 실제 입력 sequence/목표
 대조가 모두 통과했다. 완료 에피소드가 없어 완료 에피소드 낙상률은 `null`이다.
 이 상태 시험에서 움직인 축의 응답 기준도 통과했으며, 전체 9축의 별도 근거는
 위 90초 sweep이다. 원본은 같은 이름의 실행 폴더의 `result.json`과
 `scenario_analysis.json`이다.
+
+그립 해제는 송신기 시작 허용을 유지하는 클러치다. 추적 상실 없이 다시 쥐면
+새 A 없이 재개한다. 수신기만의 timeout·낙상 latch도 신선한 disabled→enabled
+전이를 요구하며, 송신기가 계속 armed라면 그립 동작으로 풀 수 있다. 위 시험의
+새 arm 요구는 매퍼 갱신까지 중단한 조건이며 모든 통신 장애의 버튼 규칙을
+대신하지 않는다. [정확한 조작 구분](ALVR.md)
 
 ## 별도 이동 정책 velocity2000
 
@@ -326,7 +338,7 @@ vy 0.032, yaw 0.181이다. 전후 평균 속도가 명령에 가까워도 순간
 
 `whole_body_unified1500`은 110초·5500step·실측 49.9999Hz로 끝났지만
 **2.88초에 낙상 1회**가 발생했다. 활성 입력은 86step(1.72초)였고 이후에는
-새 arm edge가 없어 gate가 비활성으로 유지됐다. 완료 에피소드 1개 중 낙상
+신선한 disabled→enabled 전이가 없어 gate가 비활성으로 유지됐다. 완료 에피소드 1개 중 낙상
 1개, timeout 0개이며 마지막 미완료 에피소드는 107.12초다.
 
 이동 블록마다 시작 2초와 마지막 1초를 제외한 속도 점수화 구간에서
@@ -335,7 +347,167 @@ vy 0.032, yaw 0.181이다. 전후 평균 속도가 명령에 가까워도 순간
 전체 실행의 양손 평균 8.82mm나 XY 속도 오차 0.0365m/s는 대부분 비활성인
 상태의 값이며, 걷기 추종 성능으로 사용하지 않는다. 실패 기록을 그대로 보존했다.
 
+## 순수 이동축 추가 학습 실험
+
+`velocity_pure_axes_v7`은 velocity2000에서 500업데이트를 더한
+pure_axes2500이다. optimizer·std를 이어 사용하고 초기 재개 learning rate를
+0.0001로 정했다. stand 데이터와 다른 보상을 유지하며 단일 축 명령 샘플링,
+이동 XY 조건 0.03m/s, yaw 보상 가중치 3·오차 분모 0.10을 사용했다.
+새 머리·양손 Cartesian 모션은 추가하지 않았다. 설정을 함께 바꾼 실험이므로
+각 변경의 독립적인 효과로 해석하지 않는다. [설정·명령 분포](LOCOMOTION.md)
+
+`eval_pure_axes2500`은 velocity2000의 오프라인 평가와 같은 stand 데이터,
+18환경×4500step, seed 2027, 첫 1초를 제외한 블록당 7200샘플로 끝났다.
+낙상은 기존과 같은 1/72, timeout 71, 완료 평균 19.939초다. 회전 ±0.30rad/s
+명령의 gain은 0.050/−0.003에서 **0.585/0.788**로 개선됐고 MAE는
+0.2887/0.3053에서 0.1499/0.1415rad/s로 줄었다. 전후 gain은
+0.966/0.945에서 0.863/0.861로 낮아졌고 좌우는 0.740/0.665였다.
+정지 중 signed yaw 편향은 −0.06134rad/s로 남았다.
+[원본 결과](verification/results/pure_axes2500_blocks_result.json)
+
+외부 UDP의 `whole_body_pure_axes2500`도 완료했다. 기존 velocity2000과
+같은 phase 계획·머리/손 진폭·주파수·중립 해시·이동 명령이며, 양쪽 모두
+110초·5500step·50Hz, 활성 72초, 낙상 0회, 완료 에피소드 0회다. 상태 검사는
+통과했지만 위치·전신 종합 판정은 미달이다. 각 이동 phase의 시작 2초와
+끝 1초를 제외한 250샘플씩에서 새 gain은 vx +/− 0.890/0.797,
+vy +/− 0.661/0.782, yaw +/− **0.317/1.337**였다. 합친 yaw gain 0.827에는
+−0.1020rad/s의 절편이 있어 양의 회전 부족과 음의 회전 과다를 숨길 수 있다.
+머리 3축과 양손 Y/Z도 미달했고 양손 X만 통과했다.
+
+영명령 구간에 같은 guard를 적용하면 초기 기립 150샘플의 signed yaw가
+velocity2000의 +0.00880에서 −0.13609rad/s로, 마지막 중립 복귀 250샘플은
++0.00999에서 −0.08273rad/s로 바뀌었다. 회전 명령 응답과 함께 이 편향 악화를
+기록한다. 6개 이동 plateau의 유효 1500샘플에서 접촉 중 발 링크의 평균
+평면 속도도 0.0283에서 0.0410m/s로 커졌다. 이는 발 접촉 진단이며 정확한
+접촉점 미끄러짐이나 보행 성공 판정이 아니다.
+[실행 기록](verification/results/pure_axes2500_whole_body_result.json),
+[시나리오 판정](verification/results/pure_axes2500_whole_body_analysis.json),
+[guard 적용 비교](verification/results/pure_axes2500_guarded_comparison.json)
+
+현재 수치를 보행과 상체 조작이 통합된 최종 모델의 근거로 쓰지 않는다.
+추가한 v8·v9의 결과는 아래에 따로 기록하며 기본 선택은 제자리 head1100으로 유지한다.
+
+### 후속 후보 비교용 Cartesian 기준 평가
+
+같은 pure_axes2500 가중치를 `g1_teleop_v3.npz`의 평가 5클립으로 바꿔
+`eval_pure_axes2500_cartesian`을 별도 실행했다. 18환경×4500step, seed 2027,
+동일한 고정 속도 명령열이며 낙상 0/72·timeout 72·완료 평균 19.98초다.
+머리 평균 오차 4.3993cm, 양손 4.8610cm였다. 정착 후 yaw ±0.30rad/s
+gain은 0.579/1.005, 영명령 signed yaw 평균은 −0.08234rad/s다.
+이 기준점은 **stand 평가와 다른 데이터**이며, 후속 gradual 후보를 같은
+Cartesian 조건에서 비교하기 위해 보관한다. v8의 완료 결과는 다음 절에 구분한다.
+[기준 결과](verification/results/pure_axes2500_cartesian_baseline_result.json),
+[조건·데이터 해시](verification/results/pure_axes2500_cartesian_baseline_config.json)
+
+### gradual v8: 정지 회전 편향 개선, 좌우 이동 미달
+
+`gradual_wholebody_v8`은 v7에서 500업데이트를 추가해 누적 3000으로
+완료했다. stand×4와 Cartesian×1 클립을 정확히 복사한 데이터, 위치 보상
+6/분산0.01·머리 가중치2·높이2/분산0.0025·낙상비용5를 사용했다.
+정지 yaw 보상3/분산0.05를 추가했고 이동 yaw3/분산0.10과 pure-axis/0.03
+조건은 유지했다. 재개 learning rate는 0.0001이며 optimizer·std도 이어 썼다.
+실제 학습 시간 282.54초, actor 최대 변화0.06664, export 오차2.98×10⁻⁷다.
+데이터의 초기 train 클립 선택 비율은 약67.8% stand/32.2% Cartesian이다.
+[전체 설정](verification/results/gradual3000_train_config.json), [학습 기록](verification/results/gradual3000_train_result.json)
+
+별도 평가는 모두18환경×4500step·seed2027·고정 속도 명령열이다. stand는
+v7의 stand와, Cartesian은 위 v7 Cartesian 기준과 데이터 해시·물리·관측·평가
+조건이 같은 것을 확인했다. **두 데이터의 수치는 서로 같은 조건으로 비교하지 않는다.**
+
+| 조건 | v7 낙상/완료·timeout | v8 낙상/완료·timeout | v8 완료 평균 | 머리/손 오차 v7 → v8 |
+|---|---|---|---:|---|
+| stand | 1/72·71 | 1/73·72 | 19.766s | 3.087/2.706 → 1.628/1.623cm |
+| Cartesian | 0/72·72 | 0/72·72 | 19.980s | 4.399/4.861 → 3.338/4.388cm |
+
+Cartesian의 정착 후 좌우 gain은0.705/0.754 → **0.247/0.052**로 낮아졌고,
+회전 gain은0.579/1.005 →0.678/0.828이었다. 영명령 signed yaw는
+−0.08234 →−0.00679rad/s로 줄었다. stand에서도 좌우 gain은0.208/0.045에
+그쳤고 우회전 블록에서 낙상1회가 있었다. 위치 오차 감소와 이동 손실을 함께 기록한다.
+[stand 결과](verification/results/gradual3000_stand_result.json), [Cartesian 결과](verification/results/gradual3000_cartesian_result.json)
+
+같은 외부 UDP 시나리오의 `whole_body_gradual3000`은110초·50Hz·낙상0회,
+활성72초, 완료 에피소드0회였다. 상태 검사는 통과했으나 위치·전신 검사는
+미달이다. 시작2초·끝1초를 제외한250샘플/방향의 gain은 vx0.809/0.699,
+vy**0.060/0.005**, yaw0.131/0.743으로 좌우 명령을 거의 수행하지 못했다.
+머리3축·양손Y/Z도 여전히 미달했다.
+
+같은 guard를 쓴 영명령 초기 기립150샘플의 signed yaw는 v7−0.13609에서
+v8−0.00703rad/s, 중립 복귀250샘플은−0.08273에서−0.00005rad/s로 줄었다.
+절대 yaw 평균은 각각0.01926·0.02966rad/s로 흔들림은 남아 있다.
+정착 후 이동1500샘플의 머리/손 오차는2.313/3.845cm이고 한 발 접촉 비율은
+12.5%였다. 발 움직임 감소와 좌우 명령 무시는 함께 해석해야 한다.
+[실행](verification/results/gradual3000_whole_body_result.json), [판정](verification/results/gradual3000_whole_body_analysis.json),
+[동일 구간 비교](verification/results/gradual3000_guarded_comparison.json)
+
+v8은 통합 성능에 미달한 실험이며 기본 모델로 선택하지 않았다. 이동 XY 보상을
+강화한 v9의 완료 결과는 다음 절에 따로 기록한다.
+
+### 최종 이동 실험 v9: 평행 이동 회복, 낙상 증가와 회전 미달
+
+`locomotion_balance_v9`는 v8에서 optimizer·std를 이어 2048환경으로
+500업데이트를 추가해 누적 3500으로 완료했다. 학습 데이터 해시와 위치·높이·
+낙상·머리·정지/이동 yaw 보상, 명령 분포는 v8과 같음을 확인했다. 이동 XY
+보상만 가중치 6·분산 0.01로 바꾸고 재개 learning rate를 0.00005로 정했다.
+실행 기록 시간은 285.87초, actor 최대 변화 0.05390, export 오차 4.17×10⁻⁷다.
+추가 학습과 두 XY 보상 수치를 함께 바꾼 실험이며 한 값의 독립 효과는 아니다.
+[학습 기록](verification/results/balance3500_train_result.json), [설정](verification/results/balance3500_train_config.json)
+
+아래는 각각 v8과 **같은 데이터·18환경×4500step·seed 2027·고정 명령열**이다.
+속도 점수는 첫 1초를 제외한 블록당 7200샘플이며 낙상은 전 구간에서 센다.
+
+| 데이터 | v8 낙상/완료·timeout | v9 낙상/완료·timeout | v9 낙상률 | v9 완료 평균 | v9 머리/손 오차 |
+|---|---|---|---:|---:|---:|
+| stand | 1/73·72 | 11/76·65 | 14.47% | 19.031s | 1.754/1.821cm |
+| Cartesian | 0/72·72 | 6/75·69 | 8.00% | 19.505s | 3.480/4.434cm |
+
+Cartesian의 좌우 gain은 0.247/0.052 → **0.918/0.976**, 전후는
+0.853/0.775 → 0.968/0.954로 회복됐다. 그러나 Cartesian 낙상 6회는 모두
+우측 이동 블록, stand 낙상 11회는 우측 이동 10회·우회전 1회였다. 평균 속도가
+명령과 가까워졌다는 이유로 낙상 증가를 제외하지 않는다.
+[stand 평가](verification/results/balance3500_stand_result.json), [Cartesian 평가](verification/results/balance3500_cartesian_result.json)
+
+같은 실제 UDP 시나리오 `whole_body_balance3500`은 110초·5500step·50Hz,
+활성 72초, 낙상 0회·완료 에피소드 0회다. 시작 2초·끝 1초를 제외한
+250샘플/방향에서 전후 gain **0.964/0.920**, 좌우 **1.064/0.948**로 네 방향
+평행 이동의 잠정 기준은 통과했다. 회전 +0.20/−0.20rad/s에서는 실제
+−0.00383/−0.08004rad/s, gain **−0.019/0.400**으로 양방향 모두 미달했다.
+v8의 회전 gain 0.131/0.743보다 낮으며 양의 회전은 평균 부호도 반대다.
+상태 검사는 통과했지만 머리 3축·양손 Y/Z도 여전히 미달해 전신 종합 판정은 실패다.
+[실행 기록](verification/results/balance3500_whole_body_result.json), [판정](verification/results/balance3500_whole_body_analysis.json)
+
+영명령에 같은 guard를 적용하면 초기 기립 150샘플 signed yaw는 v8−0.00703 →
+v9−0.01123rad/s, 중립 복귀 250샘플은 −0.00005 → **+0.04855rad/s**다.
+후자의 절대 yaw도 0.02966 → 0.06038rad/s로 늘었다. 이동 plateau 1500샘플에서
+머리/손 오차는 2.413/3.754cm, 접촉 중 발 링크 평면 속도는 0.0343m/s다.
+같은 v8 값 0.0254m/s보다 크며 발 접촉 진단을 보행 성공 근거로 바꾸어 쓰지 않는다.
+[동일 구간 비교 원본](verification/results/balance3500_guarded_comparison.json)
+
+한 로봇·작은 입력의 UDP에서 낙상 0회였어도 더 큰 고정 명령과 여러 환경의
+평가에서는 위 낙상이 있었다. v9는 실험용으로만 전달하며 수동 입력 예시는
+`--velocity-limits 0.15 0.08 0`으로 회전 스틱을 끈다. 이는 남은 낙상·상체
+추종 문제를 해결하거나 실제 Quest 성능을 보증하는 설정은 아니다.
+v7도 별도 비교 실험용으로 보존한다. 기본 선택은 제자리 head1100 r2다.
+
 ## 기본 모델 번들을 새 경로에서 재실행한 결과
+
+현재 기본 전달 파일은 `artifacts/g1_stationary_v6_r2_20260930.tar.gz`다.
+크기 24,834,732바이트, SHA-256은
+`a3789f470318f872859a60b0b9b8e604baba1c6cb8c863df8d6dfff925ffbb37`이다.
+최초 v6와 **모델·TorchScript 가중치는 같고**, 클러치 조작 안내와 실행 검증
+도구 등의 갱신을 포함한다. 최초 파일은 덮어쓰지 않고 보존했다.
+
+r2를 `/home/railabchan/g1_portable_validation_r2`에 풀어 별도 Conda 환경·
+독립 Isaac Lab에서 64환경×3000step·seed2026으로 다시 평가했다. 낙상0/192,
+timeout192, 완료 평균19.97999954초, 머리1.030839cm·양손1.324320cm이며
+원래 head1100의 7개 `mean_metrics` 값과 정확히 같다. 모델·모션·USD·export가
+모두 새 r2 경로를 사용하고 205개 번들 파일 및 8개 실행 소스의 해시를 확인했다.
+[r2 결과](verification/results/head1100_portable_r2_result.json),
+[설정](verification/results/head1100_portable_r2_config.json),
+[경로 영수증](verification/results/head1100_portable_r2_path_receipt.json),
+[기준과 비교](verification/results/head1100_portable_r2_comparison.json)
+
+이는 같은 PC에서의 이전 검증이며 공용 서버·Quest 성공으로 해석하지 않는다.
+다음 최초 v6 기록도 이전 근거와 변경 이력으로 함께 보존한다.
 
 head1100 번들을 `/home/railabchan/g1_portable_validation`에 풀고, 같은 PC의
 별도 Conda 환경과 `/home/railabchan/g1_portable_framework/IsaacLab`에서 다시
@@ -380,6 +552,9 @@ head1100 번들을 `/home/railabchan/g1_portable_validation`에 풀고, 같은 P
 | head1100 — 오프라인·초기화 수정 후 9축 시험 완료 | `runs/teleop_head_precision_v6/model_final.pt` |
 | velocity2000 | `runs/velocity_2048_v2/model_final.pt` |
 | unified1500 — 실험용, 이동·회전 미달 | `runs/unified_2048_v5/model_final.pt` |
+| pure_axes2500 — 회전 응답 추가 실험, 기본 모델 아님 | `runs/velocity_pure_axes_v7/model_final.pt` |
+| gradual3000 — 제자리 yaw 개선·좌우 이동 미달 | `runs/gradual_wholebody_v8/model_final.pt` |
+| balance3500 — 평행 이동 회복·낙상 증가·UDP 회전 미달 | `runs/locomotion_balance_v9/model_final.pt` |
 
 배포에는 선택한 checkpoint와 같은 디렉터리의 `policy.pt`, `policy.json`,
 `run_config.json`, `nominal_targets.json` 및 평가 기록을 함께 전달한다.
@@ -388,17 +563,34 @@ head1100 번들을 `/home/railabchan/g1_portable_validation`에 풀고, 같은 P
 [RUN_SERVER.md](RUN_SERVER.md)에 모은다. velocity2000/unified1500은 별도 실험용
 체크포인트로 구별하며 기본 모델 대신 자동으로 활성화하지 않는다.
 
+최종 전달하는 추가 실험 묶음은 `g1_velocity_v7_20260930.tar.gz`와
+`g1_wholebody_v9_20260930.tar.gz`다. v7은 회전 응답과 큰 영명령 yaw 편향,
+v9는 개선된 평행 이동과 증가한 낙상·약한 UDP 회전이라는 차이가 있다.
+공용 서버의 모델 경로·평가·재개 명령은
+[RUN_MOVING_EXPERIMENT.md](RUN_MOVING_EXPERIMENT.md)에 있다.
+
+아카이브 생성 후 v7·v9를 각각 새 경로에 풀어 신규 Conda·독립 Isaac Lab에서
+Cartesian+속도 평가(18환경×4500step, seed2027)를 반복했다. 모델·모션·USD·실행
+소스가 해당 압축 해제 폴더에서 로드됐음을 해시와 실제 설정으로 확인했다.
+두 모델 모두 원래 평가의 낙상·오차·속도 gain 등 10개 지표와 정확히 일치했다.
+v7의 0/72 낙상, v9의 6/75 낙상이라는 성능 차이도 그대로 재현됐다.
+이는 같은 PC에서의 이전 가능성 검증이며 실제 공용 서버·Quest 검증이 아니다.
+[v7 확인 기록](verification/portable_velocity_v7_paths.json),
+[v9 확인 기록](verification/portable_wholebody_v9_paths.json).
+
 같은 PC의 신규 Conda 환경에서 설치와 GPU 학습/export를 확인한 근거는
 `logs/g1/fresh_environment_verification.json`이다. 이는 다른 서버나 실제
 헤드셋의 검증이 아니다. 코드 검사는 [verification/tests.json](verification/tests.json)에
-기록된 **고유 테스트 153개**가 각 의존성 환경에서 통과했다. 주 환경은 153개 중
-136개 통과·17개 skip, 별도 OpenVR venv의 32개 검사는 그중 9개 skip을 포함하고,
-실제 pxr/Gf를 사용하는 8개 검사가 나머지 skip을 확인한다. 153+32+8로 합산하지
+기록된 **고유 테스트 186개**가 각 의존성 환경에서 통과했다. 주 환경은 186개 중
+169개 통과·17개 skip, 별도 OpenVR venv의 32개 검사는 그중 9개 skip을 포함하고,
+실제 pxr/Gf를 사용하는 8개 검사가 나머지 skip을 확인한다. 186+32+8로 합산하지
 않는다. OpenVR/compositor는 모의 런타임이므로 실제 Quest 검증이 아니다.
+최초 제자리 v6는 153개, 기본 r2는 180개 검사 시점의 고정 번들이다.
+현재 코드·실험 묶음의 186개 검사와 해당 스냅샷을 구별한다.
 아직 남은 항목은 다음과 같다.
 
 - head1100의 같은-PC 번들 이전 검증은 완료했다. 공용 서버로의 실제 전달·실행과 실험용 체크포인트의 별도 검증은 구별한다. 방향 유지·복합 동작·보행의 한계를 함께 전달한다.
-- 기존 37액션 보행 체크포인트는 23몸체+14손가락 모델용이며, 현재 29몸체 모델과 링크 좌표·질량·effort limit도 다르다. 직접 적용은 채택하지 않았고 성공한 teacher 전이로 보고하지 않는다. 별도 순수 이동축 RL 실험은 진행 중이며 아직 이 문서의 완료 모델에 포함하지 않는다.
+- 기존 37액션 보행 체크포인트는 23몸체+14손가락 모델용이며, 현재 29몸체 모델과 링크 좌표·질량·effort limit도 다르다. 직접 적용은 채택하지 않았고 성공한 teacher 전이로 보고하지 않는다. 순수 이동축 500업데이트 추가 실험은 평가했지만 영명령 회전 편향과 머리·손 응답 미달이 남아 기본 모델로 선택하지 않았다.
 - 실제 Quest의 OpenVR action과 Isaac OpenXR 영상이 같은 SteamVR runtime에서 동시에 동작하는지, 재보정·영상 방향·지연 확인.
 - 공용 서버의 GPU·드라이버·네트워크에서 설치, 실시간 50 Hz 유지, 실제 사용자 입력 검증.
 - 넓은 동작·자기충돌·지형·사람 다리 모방·손가락/글러브 제어. 현재 결과가 이 범위를 포함하지 않는다.

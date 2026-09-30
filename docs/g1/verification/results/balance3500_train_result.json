@@ -1,0 +1,16 @@
+{
+  "mode": "train",
+  "stage": "sparse",
+  "status": "training_finished_evaluation_required",
+  "physical_quest_verified": false,
+  "output": "/home/railabchan/quest3_g1_teleop/runs/locomotion_balance_v9",
+  "metadata": "/home/railabchan/quest3_g1_teleop/runs/locomotion_balance_v9/run_config.json",
+  "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/locomotion_balance_v9/model_final.pt",
+  "completed_iterations": 3500,
+  "additional_iterations": 500,
+  "actor_max_parameter_change": 0.05389953404664993,
+  "policy_max_parameter_change": 0.17613685131072998,
+  "export_max_abs_error": 4.172325134277344e-07,
+  "stop_reason": null,
+  "elapsed_seconds": 285.87173480028287
+}

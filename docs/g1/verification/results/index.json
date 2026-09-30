@@ -5,7 +5,8 @@
   "physical_quest_verified": false,
   "remote_server_verified": false,
   "pending": [
-    "bounded_pure_axis_locomotion_rl_experiment_not_a_completed_policy"
+    "physical_quest_alvr_steamvr_openxr_integration_unverified",
+    "actual_remote_server_execution_unverified"
   ],
   "files": [
     {
@@ -187,7 +188,254 @@
       "source": "/home/railabchan/g1_portable_validation/runs/portable_preview/run_config.json",
       "sha256": "ee4f2a91a7c1e19d923e46102bccc6bda79c4c03159fa6287189230e2276a7f9",
       "bytes": 11975
+    },
+    {
+      "filename": "pure_axes2500_blocks_result.json",
+      "source": "runs/eval_pure_axes2500/result.json",
+      "sha256": "091797f1ed884c2f6f2d79c74e81ff3185c0469bac4bb43e32dc7b49113568b0",
+      "bytes": 17850
+    },
+    {
+      "filename": "pure_axes2500_blocks_config.json",
+      "source": "runs/eval_pure_axes2500/run_config.json",
+      "sha256": "47ae114389d65993995118998e8212e50ccb43ce59016cba23e2007b418814a4",
+      "bytes": 14570
+    },
+    {
+      "filename": "pure_axes2500_train_result.json",
+      "source": "runs/velocity_pure_axes_v7/result.json",
+      "sha256": "dea56ff24cfe2746521b67f67f310ccb251dc94b9ed3550ddecd33b2415eb1ca",
+      "bytes": 680
+    },
+    {
+      "filename": "pure_axes2500_train_config.json",
+      "source": "runs/velocity_pure_axes_v7/run_config.json",
+      "sha256": "2e76625a3c155c905177db67e1b5ab6491f889ca25967f5a55855b27e05309e3",
+      "bytes": 13313
+    },
+    {
+      "filename": "pure_axes2500_whole_body_result.json",
+      "source": "runs/whole_body_pure_axes2500/result.json",
+      "sha256": "22c27f91ee0b1297a346e03965558e06bd5dbf2be7e7714708218ac9de850a70",
+      "bytes": 1835
+    },
+    {
+      "filename": "pure_axes2500_whole_body_analysis.json",
+      "source": "runs/whole_body_pure_axes2500/scenario_analysis.json",
+      "sha256": "8b90fe55db369f9637b738daeb29188486818a4d6243551f868442995d5339bb",
+      "bytes": 74431
+    },
+    {
+      "filename": "pure_axes2500_whole_body_config.json",
+      "source": "runs/whole_body_pure_axes2500/run_config.json",
+      "sha256": "5663607fbafb8706a5d574e0fda549b5574ab2d180ad0cd7879f7430e9e044df",
+      "bytes": 12755
+    },
+    {
+      "filename": "pure_axes2500_guarded_comparison.json",
+      "source": "runs/analysis_pure_axes2500_comparison/comparison.json",
+      "sha256": "6ff514f7baf3b7b49a079d95f835e261a83abe8bf325a386e6737438a923e2b7",
+      "bytes": 14547
+    },
+    {
+      "filename": "pure_axes2500_cartesian_baseline_result.json",
+      "source": "runs/eval_pure_axes2500_cartesian/result.json",
+      "sha256": "9ad997e45c241f4fb5f3ba89ee7a200dd83abc131883b3cad2e294fbd65d8816",
+      "bytes": 17854
+    },
+    {
+      "filename": "pure_axes2500_cartesian_baseline_config.json",
+      "source": "runs/eval_pure_axes2500_cartesian/run_config.json",
+      "sha256": "d1cd103f6bdabc24cae85944328639ab298bf138b28713a9f74d33770673dcbe",
+      "bytes": 14571
+    },
+    {
+      "filename": "gradual3000_train_result.json",
+      "source": "runs/gradual_wholebody_v8/result.json",
+      "sha256": "d7c344e773cb5feb937d23df2299b16d31175f2570a8ac39dfaae16075e91521",
+      "bytes": 678
+    },
+    {
+      "filename": "gradual3000_train_config.json",
+      "source": "runs/gradual_wholebody_v8/run_config.json",
+      "sha256": "e94bd3c1e1fd3bbce311676edc83c0744b9d05dcfb2cbd0237c4adad1b7eb825",
+      "bytes": 13057
+    },
+    {
+      "filename": "gradual3000_stand_result.json",
+      "source": "runs/eval_gradual3000_stand/result.json",
+      "sha256": "ad98c9bc3be66b17bed01b90452cc7eee152fcbe17a995423413d968d9f8daf4",
+      "bytes": 17912
+    },
+    {
+      "filename": "gradual3000_stand_config.json",
+      "source": "runs/eval_gradual3000_stand/run_config.json",
+      "sha256": "ec91e77e7fe6945f286755e59a6fbbdb5e905164809f50106cf4fcbe21e684c6",
+      "bytes": 14772
+    },
+    {
+      "filename": "gradual3000_cartesian_result.json",
+      "source": "runs/eval_gradual3000_cartesian/result.json",
+      "sha256": "38bbb70b4b9a3003c85d7bc266bfbea81edb65e098648fbc6557afd1d7c9a888",
+      "bytes": 17870
+    },
+    {
+      "filename": "gradual3000_cartesian_config.json",
+      "source": "runs/eval_gradual3000_cartesian/run_config.json",
+      "sha256": "db482e666476bee4b83fbef816942109db678e6367dbebbd3ca62e52cb2fdd45",
+      "bytes": 14773
+    },
+    {
+      "filename": "gradual3000_whole_body_result.json",
+      "source": "runs/whole_body_gradual3000/result.json",
+      "sha256": "0727ba89e3a11bb5ded9d981e2801bd2dd0617403d72cd22bc52896ef786c6cc",
+      "bytes": 1831
+    },
+    {
+      "filename": "gradual3000_whole_body_analysis.json",
+      "source": "runs/whole_body_gradual3000/scenario_analysis.json",
+      "sha256": "2b1c3e0600c387dee866a369f319288d70ede54dc0b256db2d63ef46901f91fd",
+      "bytes": 73897
+    },
+    {
+      "filename": "gradual3000_whole_body_config.json",
+      "source": "runs/whole_body_gradual3000/run_config.json",
+      "sha256": "6d5a24c14f025c2ececf4df14d0084a57258792d6bd755aca01aa1555c4bed1c",
+      "bytes": 12957
+    },
+    {
+      "filename": "gradual3000_guarded_comparison.json",
+      "source": "runs/analysis_gradual3000_comparison/comparison.json",
+      "sha256": "8371215c9c108e474be103bb1b52cbabe47055baf3ab2bb672f5997b0a8dff7d",
+      "bytes": 17457
+    },
+    {
+      "filename": "head1100_portable_r2_result.json",
+      "source": "/home/railabchan/g1_portable_validation_r2/runs/portable_export_check_r2/result.json",
+      "sha256": "5968dd9954b7387c37ac2d325b357d660007833c090f8b90526c79820618271e",
+      "bytes": 3022
+    },
+    {
+      "filename": "head1100_portable_r2_config.json",
+      "source": "/home/railabchan/g1_portable_validation_r2/runs/portable_export_check_r2/run_config.json",
+      "sha256": "72eae9fc6d03b7c3c404ccacbc3e19cc1ceec690a390737013841dbcba46ca1f",
+      "bytes": 11985
+    },
+    {
+      "filename": "head1100_portable_r2_path_receipt.json",
+      "source": "/home/railabchan/g1_portable_validation_r2/runs/portable_export_check_r2/portable_path_receipt.json",
+      "sha256": "8a1d69685633edb909c7f03583dbbc83f5f30a1f958c736e4cf33c918b3a0d0d",
+      "bytes": 1435
+    },
+    {
+      "filename": "head1100_portable_r2_comparison.json",
+      "source": "/home/railabchan/g1_portable_validation_r2/runs/portable_export_check_r2/comparison.json",
+      "sha256": "2675bf9986ce0dfa9584b4588240a62464194213641c0108fdb637e1a22524de",
+      "bytes": 948
+    },
+    {
+      "filename": "balance3500_train_result.json",
+      "source": "runs/locomotion_balance_v9/result.json",
+      "sha256": "a2652bbd86eb8ef19ade65097d1dd1d9e17bc1be2654d5b7a17029f575260d1e",
+      "bytes": 681
+    },
+    {
+      "filename": "balance3500_train_config.json",
+      "source": "runs/locomotion_balance_v9/run_config.json",
+      "sha256": "97940bd720f1e702d47f0b113c341d96937105a39323d0e1802a4c87fd6b4f7b",
+      "bytes": 13070
+    },
+    {
+      "filename": "balance3500_stand_result.json",
+      "source": "runs/eval_balance3500_stand/result.json",
+      "sha256": "978a229255d54f3c340e8383f113ac8360a05c28dca5197ad39931d8adcde9b7",
+      "bytes": 17877
+    },
+    {
+      "filename": "balance3500_stand_config.json",
+      "source": "runs/eval_balance3500_stand/run_config.json",
+      "sha256": "228cd9922dc15cb36f026a632281824ce2216e1a9bc4f6e7c5d3efcb7aa69cab",
+      "bytes": 14789
+    },
+    {
+      "filename": "balance3500_cartesian_result.json",
+      "source": "runs/eval_balance3500_cartesian/result.json",
+      "sha256": "2887bedd38bc0b722944c787ced433ff9f5c6839a152927a6b2d65029889b57f",
+      "bytes": 17874
+    },
+    {
+      "filename": "balance3500_cartesian_config.json",
+      "source": "runs/eval_balance3500_cartesian/run_config.json",
+      "sha256": "de9c44540e3269812c627c32074db08c30bb905e6ae6bcb9dc24a9eccbdb6cf6",
+      "bytes": 14790
+    },
+    {
+      "filename": "balance3500_whole_body_result.json",
+      "source": "runs/whole_body_balance3500/result.json",
+      "sha256": "fa5fc781fbd42e4248d57f704d8ffb1e7443bec966208c9a1a91727a42460db3",
+      "bytes": 1819
+    },
+    {
+      "filename": "balance3500_whole_body_analysis.json",
+      "source": "runs/whole_body_balance3500/scenario_analysis.json",
+      "sha256": "1c34837b371a8c677fdb2eb62804bfad90011a14a295f665b3c131e979aba2a5",
+      "bytes": 73731
+    },
+    {
+      "filename": "balance3500_whole_body_config.json",
+      "source": "runs/whole_body_balance3500/run_config.json",
+      "sha256": "13ee529452f969aa83602d4b15cb653d2de449dda14e28c68d49aded11c07bf9",
+      "bytes": 12974
+    },
+    {
+      "filename": "balance3500_guarded_comparison.json",
+      "source": "runs/analysis_balance3500_comparison/comparison.json",
+      "sha256": "1eb5e348e45e8e3ea2b15366d7b5c318764f1b73dcc42de4ba5533244cfb0acd",
+      "bytes": 17415
+    },
+    {
+      "filename": "v7_portable_result.json",
+      "source": "/home/railabchan/g1_portable_velocity_v7/runs/portable_v7_cartesian/result.json",
+      "sha256": "0bd218fe9efb89967c385a127ff273b90ebf1c38c406ac2fe0567272eb364550",
+      "bytes": 17857
+    },
+    {
+      "filename": "v7_portable_config.json",
+      "source": "/home/railabchan/g1_portable_velocity_v7/runs/portable_v7_cartesian/run_config.json",
+      "sha256": "04b677b17d2feaff3a8c630f2f87a03b575db8ddfd372ff5c43d699fc3d245ef",
+      "bytes": 14588
+    },
+    {
+      "filename": "v7_portable_paths.json",
+      "source": "/home/railabchan/g1_portable_velocity_v7/runs/portable_v7_cartesian/portable_path_receipt.json",
+      "sha256": "ac193da0bf87389fd22bc1fa0b654d19a9624485d2425af87f10882686ef2857",
+      "bytes": 2225
+    },
+    {
+      "filename": "v9_portable_result.json",
+      "source": "/home/railabchan/g1_portable_wholebody_v9/runs/portable_v9_cartesian/result.json",
+      "sha256": "4e7278573929c0e485897d808af049efe23648dd7f7c3143261993d4bca7ac1f",
+      "bytes": 17886
+    },
+    {
+      "filename": "v9_portable_config.json",
+      "source": "/home/railabchan/g1_portable_wholebody_v9/runs/portable_v9_cartesian/run_config.json",
+      "sha256": "ab1960c975be059a5d36ed638d58de6125e0c7cca4546fff6daffe5d3e742262",
+      "bytes": 14810
+    },
+    {
+      "filename": "v9_portable_paths.json",
+      "source": "/home/railabchan/g1_portable_wholebody_v9/runs/portable_v9_cartesian/portable_path_receipt.json",
+      "sha256": "b01aab3729c8831f2fda4b9fc69dc6f61c4849dab09b0418889196e2b6ae2577",
+      "bytes": 2227
     }
   ],
-  "portable_default_model_verified_on_same_pc": true
+  "portable_default_model_verified_on_same_pc": true,
+  "default_stationary_archive": "artifacts/g1_stationary_v6_r2_20260930.tar.gz",
+  "default_stationary_archive_sha256": "a3789f470318f872859a60b0b9b8e604baba1c6cb8c863df8d6dfff925ffbb37",
+  "experimental_models": [
+    "velocity_pure_axes_v7",
+    "locomotion_balance_v9"
+  ],
+  "training_for_this_delivery_finished": true
 }

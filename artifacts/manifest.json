@@ -3,6 +3,45 @@
   "default_model": "teleop_head_precision_v6",
   "artifacts": [
     {
+      "file": "g1_stationary_v6_r2_20260930.tar.gz",
+      "bytes": 24834732,
+      "sha256": "a3789f470318f872859a60b0b9b8e604baba1c6cb8c863df8d6dfff925ffbb37",
+      "model_directory": "models/teleop_head_precision_v6",
+      "checkpoint": "models/teleop_head_precision_v6/model.pt",
+      "policy": "models/teleop_head_precision_v6/policy.pt",
+      "policy_sha256": "6443fdab6c3af8bea57a64c9a31cdac9dbc7773494c984695acef5e1d8b43208",
+      "checkpoint_sha256": "ca8de5aa271f95a7fdea7736b936d0f04fcec19d2987239ba0d21a39273e3d70",
+      "role": "default stationary sparse head-and-hands teleoperation; r2 runtime and documentation",
+      "command_velocity_limits": [
+        0,
+        0,
+        0
+      ],
+      "body_actions": 29,
+      "actor_observation_dimensions": 126,
+      "heldout_evaluation": {
+        "environments": 64,
+        "steps": 3000,
+        "seed": 2026,
+        "head_error_m": 0.01030839180527255,
+        "hand_error_m": 0.013243202386423946,
+        "falls": 0,
+        "completed_episodes": 192,
+        "mean_completed_episode_seconds": 19.979999542236328
+      },
+      "udp_nine_axis_response_passed": true,
+      "known_limitations": [
+        "Approximately -26.22 degrees uncommanded yaw drift in a 90-second synthetic test.",
+        "Combined head Y response gain .462; single-axis provisional threshold success is not arbitrary-motion validation.",
+        "No wrist orientation, fingers, or inferred human leg pose control."
+      ],
+      "portable_fresh_environment_evaluated": true,
+      "physical_quest_verified": false,
+      "remote_server_verified": false,
+      "runtime_snapshot": "Immutable r2 archive; same model weights as the original v6 release, 180-test source snapshot, corrected clutch documentation, automated runtime validation.",
+      "portable_verification": "docs/g1/verification/portable_model_v6_r2_paths.json"
+    },
+    {
       "file": "g1_stationary_v6_20260930.tar.gz",
       "bytes": 25324622,
       "sha256": "0ff37616f97c253a9a0a8355adee5546c83a00bab080bb7c8ee7d288da183861",
@@ -11,7 +50,7 @@
       "policy": "models/teleop_head_precision_v6/policy.pt",
       "policy_sha256": "6443fdab6c3af8bea57a64c9a31cdac9dbc7773494c984695acef5e1d8b43208",
       "checkpoint_sha256": "ca8de5aa271f95a7fdea7736b936d0f04fcec19d2987239ba0d21a39273e3d70",
-      "role": "stationary sparse head-and-hands teleoperation",
+      "role": "historical immutable stationary v6 snapshot; r2 is the current default",
       "command_velocity_limits": [
         0,
         0,
@@ -39,6 +78,125 @@
       "physical_quest_verified": false,
       "remote_server_verified": false,
       "runtime_snapshot": "This archive is immutable and contains its tested runtime. The repository can add later experiments without modifying it."
+    },
+    {
+      "file": "g1_velocity_v7_20260930.tar.gz",
+      "bytes": 26737538,
+      "sha256": "fd922a0437b417952c365d062b9e0b52b2e83ec0d122d5106270ffbf6d60bb73",
+      "model_directory": "models/velocity_pure_axes_v7",
+      "checkpoint": "models/velocity_pure_axes_v7/model.pt",
+      "policy": "models/velocity_pure_axes_v7/policy.pt",
+      "checkpoint_sha256": "431c1566c2c92dba45f929a5f6bd684bbfbea820f6a70302b59ced2c72e43cdc",
+      "policy_sha256": "9b27da5f8486afeb5db2c248b8c45f721e7c9afaa0a251f3e6b336e892881523",
+      "role": "experimental commanded velocity and sparse Cartesian teleoperation",
+      "experimental": true,
+      "body_actions": 29,
+      "actor_observation_dimensions": 126,
+      "training_velocity_limits": [
+        0.3,
+        0.15,
+        0.4
+      ],
+      "recommended_initial_input_velocity_limits": [
+        0,
+        0,
+        0
+      ],
+      "heldout_evaluation": {
+        "dataset": "g1_teleop_v3.npz",
+        "environments": 18,
+        "steps": 4500,
+        "seed": 2027,
+        "falls": 0,
+        "completed_episodes": 72,
+        "mean_completed_episode_seconds": 19.979999542236328,
+        "head_error_m": 0.043992864738275975,
+        "hand_error_m": 0.04861020646603019,
+        "moving_velocity_gains": [
+          0.8846129330312691,
+          0.7237832555515019,
+          0.7917552008200495
+        ]
+      },
+      "synthetic_udp": {
+        "duration_seconds": 110,
+        "active_seconds": 72.0,
+        "falls": 0,
+        "control_state_passed": true,
+        "tracking_quality_passed": false,
+        "whole_body_checks_passed": false
+      },
+      "portable_fresh_environment_evaluated": true,
+      "physical_quest_verified": false,
+      "remote_server_verified": false,
+      "known_limitations": [
+        "Whole-body pose and yaw response did not pass the synthetic UDP criteria.",
+        "Velocity scores do not establish a clean walking gait.",
+        "No wrist orientation, finger control, or recovery of human leg pose.",
+        "Large uncommanded yaw bias remains in simultaneous pose+velocity input tests."
+      ],
+      "portable_verification": "docs/g1/verification/portable_velocity_v7_paths.json",
+      "portable_compared_metrics_exactly_equal": 10
+    },
+    {
+      "file": "g1_wholebody_v9_20260930.tar.gz",
+      "bytes": 31544967,
+      "sha256": "2cacd5f8c2b55c0026a41fc8918a98841ac56c651594324e3ed02973ebb7d69c",
+      "model_directory": "models/locomotion_balance_v9",
+      "checkpoint": "models/locomotion_balance_v9/model.pt",
+      "policy": "models/locomotion_balance_v9/policy.pt",
+      "checkpoint_sha256": "24a423d05e84643913f3284b287badf93f5948fc20ab7fffd04b4de1d54c468d",
+      "policy_sha256": "a5cd9d2fd4270ea7dab0f78990d5513e037d01608a395876b95b383b0b32246f",
+      "role": "experimental commanded velocity and sparse Cartesian teleoperation",
+      "experimental": true,
+      "body_actions": 29,
+      "actor_observation_dimensions": 126,
+      "training_velocity_limits": [
+        0.3,
+        0.15,
+        0.4
+      ],
+      "recommended_initial_input_velocity_limits": [
+        0.15,
+        0.08,
+        0
+      ],
+      "heldout_evaluation": {
+        "dataset": "g1_teleop_v3.npz",
+        "environments": 18,
+        "steps": 4500,
+        "seed": 2027,
+        "falls": 6,
+        "completed_episodes": 75,
+        "mean_completed_episode_seconds": 19.505332883199056,
+        "head_error_m": 0.03480109704938936,
+        "hand_error_m": 0.04434205608529809,
+        "moving_velocity_gains": [
+          0.954261113251137,
+          0.901990492584509,
+          0.7953353899391777
+        ]
+      },
+      "synthetic_udp": {
+        "duration_seconds": 110,
+        "active_seconds": 72.0,
+        "falls": 0,
+        "control_state_passed": true,
+        "tracking_quality_passed": false,
+        "whole_body_checks_passed": false
+      },
+      "portable_fresh_environment_evaluated": true,
+      "physical_quest_verified": false,
+      "remote_server_verified": false,
+      "known_limitations": [
+        "Whole-body pose and yaw response did not pass the synthetic UDP criteria.",
+        "Velocity scores do not establish a clean walking gait.",
+        "No wrist orientation, finger control, or recovery of human leg pose.",
+        "Six falls in75 completed Cartesian+velocity evaluation episodes; eleven in76 stand+velocity episodes."
+      ],
+      "portable_verification": "docs/g1/verification/portable_wholebody_v9_paths.json",
+      "portable_compared_metrics_exactly_equal": 10
     }
-  ]
+  ],
+  "default_artifact": "g1_stationary_v6_r2_20260930.tar.gz"
 }
