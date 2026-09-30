@@ -110,6 +110,79 @@ class TaskCatalogTests(unittest.TestCase):
 
 
 class LaunchCommandTests(unittest.TestCase):
+    def test_conda_exec_wrapper_removes_a_nested_virtualenv(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            conda_base = root / "conda"
+            conda_environment = conda_base / "envs" / "unitree_sim_env"
+            virtual_environment = root / "venv"
+            conda_executable = conda_base / "bin" / "conda"
+            conda_hook = conda_base / "etc" / "profile.d" / "conda.sh"
+            conda_python = conda_environment / "bin" / "python"
+            venv_python = virtual_environment / "bin" / "python"
+            for parent in (
+                conda_executable.parent,
+                conda_hook.parent,
+                conda_python.parent,
+                venv_python.parent,
+            ):
+                parent.mkdir(parents=True, exist_ok=True)
+            conda_executable.write_text(
+                "#!/usr/bin/env bash\n"
+                "[[ $1 == info && $2 == --base ]] || exit 2\n"
+                "printf '%s\\n' \"$FAKE_CONDA_BASE\"\n",
+                encoding="utf-8",
+            )
+            conda_hook.write_text(
+                "conda() {\n"
+                "  [[ $1 == activate ]] || return 2\n"
+                "  export CONDA_PREFIX=\"$FAKE_CONDA_ENV\"\n"
+                "  PATH=$(printf '%s' \"$PATH\" | sed \"s|$FAKE_CONDA_BASE/bin|$FAKE_CONDA_ENV/bin|\")\n"
+                "  export PATH\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            conda_python.write_text(
+                "#!/usr/bin/env bash\n"
+                "printf 'conda:%s\\n' \"${VIRTUAL_ENV-unset}\"\n",
+                encoding="utf-8",
+            )
+            venv_python.write_text(
+                "#!/usr/bin/env bash\n"
+                "printf 'venv:%s\\n' \"${VIRTUAL_ENV-unset}\"\n",
+                encoding="utf-8",
+            )
+            conda_executable.chmod(0o755)
+            conda_python.chmod(0o755)
+            venv_python.chmod(0o755)
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "CONDA_EXE": str(conda_executable),
+                    "CONDA_PREFIX": str(conda_base),
+                    "FAKE_CONDA_BASE": str(conda_base),
+                    "FAKE_CONDA_ENV": str(conda_environment),
+                    "PATH": f"{virtual_environment / 'bin'}:{conda_base / 'bin'}:/usr/bin:/bin",
+                    "VIRTUAL_ENV": str(virtual_environment),
+                    "VIRTUAL_ENV_PROMPT": "(.venv)",
+                }
+            )
+
+            result = subprocess.run(
+                [
+                    str(ALVR_ROOT / "scripts" / "conda_env_exec.sh"),
+                    "unitree_sim_env",
+                    "python",
+                ],
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "conda:unset\n")
+
     def setUp(self):
         self.xr_root = Path("/tmp/test-xr-teleoperate")
         self.sim_root = Path("/tmp/test-unitree-sim")
