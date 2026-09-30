@@ -67,6 +67,19 @@ bash scripts/g1/run.sh train --headless --num-envs 2048 --iterations 3000 \
 
 같은 `--output`을 재사용하지 않고 새로운 폴더를 지정한다. `run_config.json`, 소스 사본, TensorBoard 이벤트, `progress.json`, `result.json`을 함께 보관한다. 모델 단독으로 전달하지 말고 관절·좌표·제어 주기 계약도 함께 전달한다.
 
+`--learning-rate 0.0001`로 학습률을 명시할 수 있다. 재개 시에는 저장된 optimizer의 학습률과 PPO의 adaptive learning-rate 상태를 함께 복원한다. `progress.json`의 전체 진행 추정치를 확인한다. RSL-RL 내부 ETA는 100회 묶음 호출의 누적 시간 때문에 크게 표시될 수 있다.
+
+`--precision-training`은 표식 추종 가중치/오차 분산을 `6/0.01`, 높이 가중치/오차 분산을 `2/0.0025`, 낙상 비용을 `5`로 바꾼다. 기본값은 각각 `4/0.04`, `1/0.01`, `2`다. 낙상 비용은 사건당 부과하며 `dt`를 곱하지 않는다. 이 설정은 자동 성능 향상을 보장하지 않으므로 원래 체크포인트를 보존하고 낙상과 축별 추종을 함께 평가한다. 저장된 `reward_contract`는 재개·평가 시 복원한다.
+
+완료한 학습의 전체 scalar 로그를 이전용 JSON과 그림으로 저장할 수 있다.
+
+```bash
+"$G1_PYTHON" scripts/g1/export_training_log.py runs/선택한_run \
+  --plot runs/선택한_run/training_metrics.png
+```
+
+진행 중 로그는 `snapshot_only=true`로 표시하며 완료 로그로 취급하지 않는다.
+
 ## Teacher → Student 선택 경로
 
 ```bash

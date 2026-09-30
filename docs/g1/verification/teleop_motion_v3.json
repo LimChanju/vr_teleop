@@ -1,0 +1,105 @@
+{
+  "dataset": "data/motions/g1_teleop_v3.npz",
+  "sha256": "00a55b19792d817725aa490c33e7b84b70f6eb6c2d1f676181755577dad0d675",
+  "generator_revision": 3,
+  "generator_source_matches_recorded_hash": true,
+  "clips": 24,
+  "frames": 11520,
+  "train_clips": 19,
+  "heldout_clips": 5,
+  "finite": true,
+  "fk_stored_max_error_m": 1.4900105538284691e-08,
+  "soft_limit_max_violation_rad": 0.0,
+  "stance_foot_mean_error_m": 3.940403159094277e-06,
+  "stance_foot_max_error_m": 4.589211724112328e-05,
+  "max_joint_speed_rad_s": 2.9590773582458496,
+  "p99_joint_speed_rad_s": 0.6614997625350939,
+  "root_height_range_m": [
+    0.7131791114807129,
+    0.7717821598052979
+  ],
+  "actual_axis_range_m": [
+    [
+      0.05986979720841256,
+      0.06576715774395989,
+      0.058701112472857586
+    ],
+    [
+      0.15465162992163886,
+      0.15794162683363344,
+      0.14764961909782637
+    ],
+    [
+      0.15690555237100243,
+      0.1567929830493742,
+      0.14332102369502178
+    ]
+  ],
+  "knot_interval_range_s": [
+    1.503026608789746,
+    3.49338766043292
+  ],
+  "kinematic_only": true,
+  "dynamic_stability_verified": false,
+  "metrics": {
+    "all": {
+      "head": {
+        "mean_m": 0.002975034615159046,
+        "p95_m": 0.014812502495168219,
+        "max_m": 0.02841225115833356
+      },
+      "left_wrist": {
+        "mean_m": 0.003310181551571645,
+        "p95_m": 0.02280346716950561,
+        "max_m": 0.03636793545638808
+      },
+      "right_wrist": {
+        "mean_m": 0.002343082087043026,
+        "p95_m": 0.017982623445228822,
+        "max_m": 0.05105921830007871
+      }
+    },
+    "train": {
+      "head": {
+        "mean_m": 0.0029952012210678067,
+        "p95_m": 0.014914629759782295,
+        "max_m": 0.02841225115833356
+      },
+      "left_wrist": {
+        "mean_m": 0.003089584147119456,
+        "p95_m": 0.022120829047684306,
+        "max_m": 0.03636793545638808
+      },
+      "right_wrist": {
+        "mean_m": 0.002603037130827911,
+        "p95_m": 0.019555085277817897,
+        "max_m": 0.05105921830007871
+      }
+    },
+    "heldout": {
+      "head": {
+        "mean_m": 0.0028984015127057577,
+        "p95_m": 0.01450162944586697,
+        "max_m": 0.022553284469134443
+      },
+      "left_wrist": {
+        "mean_m": 0.004148451688489962,
+        "p95_m": 0.02486013128573002,
+        "max_m": 0.03249248908941849
+      },
+      "right_wrist": {
+        "mean_m": 0.0013552529206604625,
+        "p95_m": 0.010569732955065105,
+        "max_m": 0.028693652108994556
+      }
+    }
+  },
+  "merged": {
+    "path": "data/motions/g1_teleop_mixed_v3.npz",
+    "frames": 29339,
+    "clips": 85,
+    "train_clips": 69,
+    "heldout_clips": 16,
+    "old_data_and_splits_bit_identical": true
+  }
+}

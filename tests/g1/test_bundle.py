@@ -87,6 +87,10 @@ class BundleTests(unittest.TestCase):
         evidence = self.evidence()
         (evidence / "model_999.pt").write_bytes(b"unselected checkpoint")
         (evidence / "input.jsonl").write_bytes(b"unselected large tracking log")
+        for name in ("scenario.jsonl", "scenario_analysis.json", "scenario_analysis_tracking_v2.json"):
+            (evidence / name).write_text("{}\n")
+        for name in ("scenario_other.jsonl", "unrelated.json", "private.key", ".env.secret"):
+            (evidence / name).write_text("must remain excluded")
         archive = self.root / "portable.tar.gz"
         descriptor = bundle.create_bundle(self.run, archive, repo=self.repo, evidence=[evidence])
         self.assertEqual(descriptor["observation_version"], "sparse_positions_v1")
@@ -100,6 +104,11 @@ class BundleTests(unittest.TestCase):
         self.assertTrue((unpacked / "evidence/eval/trace.npz").is_file())
         self.assertFalse((unpacked / "evidence/eval/model_999.pt").exists())
         self.assertFalse((unpacked / "evidence/eval/input.jsonl").exists())
+        for name in ("scenario.jsonl", "scenario_analysis.json", "scenario_analysis_tracking_v2.json"):
+            self.assertTrue((unpacked / "evidence/eval" / name).is_file())
+            self.assertIn(name, descriptor["evidence"][0]["files"])
+        for name in ("scenario_other.jsonl", "unrelated.json", "private.key", ".env.secret"):
+            self.assertFalse((unpacked / "evidence/eval" / name).exists())
 
     def test_missing_or_changed_source_snapshot_is_rejected(self):
         self.metadata["source_sha256"] = {"g1_teleop/training.py": "0" * 64}
@@ -122,6 +131,25 @@ class BundleTests(unittest.TestCase):
         (evidence / "trace.npz").symlink_to(other)
         with self.assertRaisesRegex(ValueError, "non-symlink"):
             bundle.copy_evidence(evidence, self.root / "bad", bundle.sha256(self.run / "model_final.pt"))
+
+    def test_scenario_evidence_obeys_symlink_size_and_file_count_guards(self):
+        evidence = self.evidence()
+        checkpoint_hash = bundle.sha256(self.run / "model_final.pt")
+        scenario = evidence / "scenario.jsonl"
+        scenario.symlink_to(evidence / "result.json")
+        with self.assertRaisesRegex(ValueError, "non-symlink"):
+            bundle.copy_evidence(evidence, self.root / "symlink", checkpoint_hash)
+        scenario.unlink()
+        # Sparse file exercises the real 64 MiB preflight without allocating it.
+        with scenario.open("wb") as stream:
+            stream.truncate(bundle.MAX_EVIDENCE_BYTES + 1)
+        with self.assertRaisesRegex(ValueError, "64 MiB"):
+            bundle.copy_evidence(evidence, self.root / "oversized", checkpoint_hash)
+        scenario.unlink()
+        for index in range(199):
+            (evidence / f"scenario_analysis_{index}.json").write_text("{}")
+        with self.assertRaisesRegex(ValueError, "200 files"):
+            bundle.copy_evidence(evidence, self.root / "too_many", checkpoint_hash)
 
 
 if __name__ == "__main__":

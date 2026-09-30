@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "tested_run": "/home/railabchan/quest3_g1_teleop/runs/stand_2048_v2",
+  "temporary_bundle_removed_after_test": true,
+  "bundle_bytes": 4915789,
+  "verified_files": 94,
+  "observation_version": "sparse_positions_v1",
+  "training_source_snapshot_files": 5,
+  "evidence": [
+    {
+      "directory": "eval_stand_500",
+      "status": "evaluated",
+      "source_directory": "eval_stand_500",
+      "checkpoint_relation": "same_checkpoint",
+      "reported_checkpoint": "/home/railabchan/quest3_g1_teleop/runs/stand_2048_v2/model_final.pt",
+      "reported_checkpoint_sha256": "cca2bf9f8eae3e3ebdc37bcff46aa0ae8bfe207a23f537def51f22f0f99ba4e1",
+      "zero_policy": false,
+      "files": [
+        "result.json",
+        "run_config.json",
+        "nominal_targets.json",
+        "trace.npz"
+      ]
+    },
+    {
+      "directory": "teleop_synthetic_stand500",
+      "status": "teleop_stopped",
+      "source_directory": "teleop_synthetic_stand500",
+      "checkpoint_relation": "same_checkpoint",
+      "reported_checkpoint": "/home/railabchan/quest3_g1_teleop/runs/stand_2048_v2/model_final.pt",
+      "reported_checkpoint_sha256": "cca2bf9f8eae3e3ebdc37bcff46aa0ae8bfe207a23f537def51f22f0f99ba4e1",
+      "zero_policy": false,
+      "files": [
+        "result.json",
+        "run_config.json",
+        "nominal_targets.json",
+        "trace.npz",
+        "analysis/analysis.json",
+        "analysis/teleop_synthetic_stand500_trace.png"
+      ]
+    }
+  ],
+  "exported_actor_weights_equal_checkpoint": true,
+  "actor_tensors": 8,
+  "physical_quest_verified": false,
+  "gpu_launched": false
+}

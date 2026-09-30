@@ -23,6 +23,29 @@ from isaaclab.utils.math import quat_apply, quat_apply_inverse, yaw_quat
 from .asset import BODY_JOINT_NAMES, HAND_JOINT_NAMES, TRACKED_BODY_NAMES, FOOT_BODY_NAMES, make_robot_cfg
 
 
+def _failure_snapshot(*, env_id, global_step, episode_seconds, root_height, gravity_z,
+                      finite_state, joint_names, requested_targets, soft_limits,
+                      clip_index=None, clip_name=None, reflected_phase=None):
+    """Build a JSON-safe immutable CPU snapshot of one terminal state."""
+    finite = bool(finite_state and math.isfinite(root_height) and math.isfinite(gravity_z))
+    clamped, invalid_targets = [], []
+    for name, requested, (lower, upper) in zip(joint_names, requested_targets, soft_limits):
+        if not math.isfinite(requested):
+            invalid_targets.append(name)
+        elif requested < lower or requested > upper:
+            clamped.append({"joint": name, "requested_target_rad": float(requested),
+                            "applied_target_rad": float(min(max(requested, lower), upper)),
+                            "soft_lower_rad": float(lower), "soft_upper_rad": float(upper)})
+    return {"env_id": int(env_id), "global_step": int(global_step),
+            "episode_seconds": float(episode_seconds),
+            "clip_index": None if clip_index is None else int(clip_index), "clip_name": clip_name,
+            "reflected_phase_frame": float(reflected_phase) if reflected_phase is not None and math.isfinite(reflected_phase) else None,
+            "root_height_m": float(root_height) if math.isfinite(root_height) else None,
+            "tilt_deg": math.degrees(math.acos(min(1.0, max(-1.0, -gravity_z)))) if math.isfinite(gravity_z) else None,
+            "finite_state": finite, "soft_limit_clamped_joints": clamped,
+            "nonfinite_target_joints": invalid_targets}
+
+
 @configclass
 class G1WholeBodyEnvCfg(DirectRLEnvCfg):
     decimation = 4
@@ -40,6 +63,12 @@ class G1WholeBodyEnvCfg(DirectRLEnvCfg):
     reference_state_initialization = True
     command_max = (0.5, 0.25, 0.6)
     reference_height = 0.76792282
+    tracking_reward_weight = 4.0
+    tracking_error_variance = 0.04
+    height_reward_weight = 1.0
+    height_error_variance = 0.01
+    fall_cost = 2.0
+    record_failure_events = False
     sim: SimulationCfg = SimulationCfg(dt=0.005, render_interval=4,
         physics_material=sim_utils.RigidBodyMaterialCfg(static_friction=1.0, dynamic_friction=1.0,
                                                         restitution=0.0))
@@ -50,6 +79,14 @@ class G1WholeBodyEnv(DirectRLEnv):
     cfg: G1WholeBodyEnvCfg
 
     def __init__(self, cfg: G1WholeBodyEnvCfg, render_mode=None, **kwargs):
+        for name in ("tracking_reward_weight", "height_reward_weight", "fall_cost"):
+            value = getattr(cfg, name)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and nonnegative")
+        for name in ("tracking_error_variance", "height_error_variance"):
+            value = getattr(cfg, name)
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError(f"{name} must be finite and positive")
         actor_size, critic_size = (126, 156) if cfg.rich_observations else (105, 138)
         cfg.observation_space = critic_size if cfg.teacher else actor_size
         cfg.state_space = critic_size
@@ -81,6 +118,10 @@ class G1WholeBodyEnv(DirectRLEnv):
         self._external_target_initialized = False
         self.external_mode = False
         self.metrics = {}
+        self.failure_events = []
+        self.failure_events_total_count = 0
+        self.failure_events_truncated_count = 0
+        self._failure_reference_phase = None
         self._motion = None
         self._clip_selection = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
         self._clip_phase = torch.zeros(self.num_envs, device=self.device)
@@ -182,6 +223,8 @@ class G1WholeBodyEnv(DirectRLEnv):
                 "lengths": torch.as_tensor(lengths[mask], device=self.device),
                 "fps": float(data["fps"]),
                 "path": str(Path(path).resolve()), "split": split,
+                "clip_indices": np.flatnonzero(mask).tolist(),
+                "clip_names": np.asarray(data["clip_names"]).astype(str)[mask].tolist() if "clip_names" in data else None,
             }
             if "command_velocity" in data:
                 self._motion["command_velocity"] = torch.as_tensor(np.asarray(data["command_velocity"], dtype=np.float32), device=self.device)
@@ -215,6 +258,10 @@ class G1WholeBodyEnv(DirectRLEnv):
         span = (length - 1).clamp(min=1)
         phase = torch.remainder(phase, 2 * span)
         reflected = torch.where(phase <= span, phase, 2 * span - phase)
+        if getattr(self.cfg, "record_failure_events", False):
+            # Keep the exact target phase used by the actor. Recomputing after
+            # the physics step would advance this label by one control step.
+            self._failure_reference_phase = reflected
         low = reflected.long()
         high = torch.minimum(low + 1, length - 1)
         weight = reflected - low
@@ -317,10 +364,12 @@ class G1WholeBodyEnv(DirectRLEnv):
         slide = (data.body_lin_vel_w[:, self.foot_body_ids, :2].square().sum(-1) * foot_contact).sum(-1)
         terms = {
             "alive": torch.ones_like(height),
-            "sparse_tracking": 4. * torch.exp(-point_error.square() / 0.04).mean(-1),
+            "sparse_tracking": self.cfg.tracking_reward_weight * torch.exp(
+                -point_error.square() / self.cfg.tracking_error_variance).mean(-1),
             "linear_velocity": 2. * torch.exp(-velocity_error / 0.25),
             "yaw_velocity": torch.exp(-yaw_error / 0.25),
-            "height": torch.exp(-(height - self.reference_height).square() / 0.01),
+            "height": self.cfg.height_reward_weight * torch.exp(
+                -(height - self.reference_height).square() / self.cfg.height_error_variance),
             "upright": torch.exp(-tilt / 0.10),
             "reference_q": torch.exp(-qerr / 0.25),
             "foot_slide": -0.5 * slide,
@@ -330,7 +379,7 @@ class G1WholeBodyEnv(DirectRLEnv):
             "joint_velocity": -1.e-3 * data.joint_vel[:, self.body_joint_ids].square().sum(-1),
             "action_rate": -0.02 * (self.actions - self.previous_actions).square().sum(-1),
         }
-        reward = torch.stack(list(terms.values())).sum(0) * self.step_dt - 2. * self.reset_terminated.float()
+        reward = torch.stack(list(terms.values())).sum(0) * self.step_dt - self.cfg.fall_cost * self.reset_terminated.float()
         for key, value in terms.items():
             if key not in self._episode_sums:
                 self._episode_sums[key] = torch.zeros_like(value)
@@ -340,7 +389,46 @@ class G1WholeBodyEnv(DirectRLEnv):
             "head_error_m": point_error[:, 0].clone(), "hand_error_m": point_error[:, 1:].mean(-1).clone(),
             "velocity_error": velocity_error.sqrt().clone(), "root_height": height.clone(),
             "fallen": self.reset_terminated.clone(), "episode_steps": self.episode_length_buf.clone()}
+        if getattr(self.cfg, "record_failure_events", False):
+            self._record_failure_events()
         return reward
+
+    def _record_failure_events(self):
+        """Opt-in terminal snapshots before automatic reset; no normal-path sync."""
+        ids = self.reset_terminated.nonzero(as_tuple=False).flatten()
+        count = len(ids)
+        if not count:
+            return
+        self.failure_events_total_count += count
+        capacity = max(0, 10000 - len(self.failure_events))
+        self.failure_events_truncated_count += max(0, count - capacity)
+        if capacity == 0:
+            return
+        ids = ids[:capacity]
+        data = self.robot.data
+        root_height = data.root_pos_w[ids, 2] - self.scene.env_origins[ids, 2]
+        finite = torch.isfinite(data.root_state_w[ids]).all(-1) & torch.isfinite(data.joint_pos[ids]).all(-1)
+        summary = torch.stack((root_height, data.projected_gravity_b[ids, 2],
+                               self.episode_length_buf[ids] * self.step_dt, finite), dim=-1).cpu().tolist()
+        requested = (self.nominal_q + self.cfg.action_scale * self.actions[ids]).cpu().tolist()
+        limits = self.joint_limits.cpu().tolist()
+        selected = self._clip_selection[ids].cpu().tolist() if self._motion is not None and not self.external_mode else None
+        phases = self._failure_reference_phase[ids].cpu().tolist() if selected is not None and self._failure_reference_phase is not None else None
+        for row, env_id in enumerate(ids.cpu().tolist()):
+            clip_index, clip_name = None, None
+            if selected is not None:
+                selection = selected[row]
+                source_indices = self._motion.get("clip_indices")
+                clip_index = source_indices[selection] if source_indices is not None else selection
+                names = self._motion.get("clip_names")
+                clip_name = names[selection] if names is not None else None
+            height, gravity_z, seconds, is_finite = summary[row]
+            self.failure_events.append(_failure_snapshot(
+                env_id=env_id, global_step=self.common_step_counter, episode_seconds=seconds,
+                root_height=height, gravity_z=gravity_z, finite_state=bool(is_finite),
+                joint_names=BODY_JOINT_NAMES, requested_targets=requested[row], soft_limits=limits,
+                clip_index=clip_index, clip_name=clip_name,
+                reflected_phase=phases[row] if phases is not None else None))
 
     def _get_dones(self):
         data = self.robot.data
@@ -404,6 +492,9 @@ class G1WholeBodyEnv(DirectRLEnv):
             "physics_dt": self.physics_dt, "control_dt": self.step_dt, "decimation": self.cfg.decimation,
             "action_scale": self.cfg.action_scale, "action_clip": [-self.cfg.action_clip, self.cfg.action_clip],
             "reference_state_initialization": self.cfg.reference_state_initialization,
+            "reward_contract": {name: getattr(self.cfg, name) for name in (
+                "tracking_reward_weight", "tracking_error_variance", "height_reward_weight",
+                "height_error_variance", "fall_cost")},
             "motion_playback": "linear interpolation with reflected clip endpoints",
             "teacher": self.cfg.teacher, "actor_observations": self.cfg.observation_space,
             "critic_observations": self.cfg.state_space, "coordinate_version": "g1-yaw-floor-relative-v1",

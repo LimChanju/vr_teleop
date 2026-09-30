@@ -172,7 +172,8 @@ python3 scripts/g1/bundle.py verify dist/g1_teleop_bundle.tar.gz
 그 체크포인트를 대상으로 export한 폴더를 함께 지정한다.
 
 `--evidence`는 반복 지정할 수 있다. 선택한 평가·텔레옵 폴더의 `result.json`,
-설정, `trace.npz`, `analysis/`의 작은 분석 결과만 `evidence/`에 넣는다.
+설정, `trace.npz`, `analysis/`의 작은 분석 결과를 `evidence/`에 넣는다.
+가상 입력 검증의 `scenario.jsonl`과 최상위 `scenario_analysis*.json`도 포함한다.
 각 폴더는 200개 파일·64 MiB 이하여야 하며 다른 학습 체크포인트나 원시
 `input.jsonl`은 포함하지 않는다. `BUNDLE.json`에는 평가가 선택한 모델과 같은
 체크포인트인지, 다른 비교 모델인지 또는 확인할 수 없는지 기록한다.

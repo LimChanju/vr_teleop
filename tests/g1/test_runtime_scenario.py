@@ -15,10 +15,101 @@ sys.path.insert(0, str(ROOT))
 
 from g1_teleop.runtime import TeleopGate
 from g1_teleop.vr.protocol import DEFAULT_NOMINAL, UDPReceiver
-from scripts.g1.runtime_scenario import analyze_scenario
+from g1_teleop.vr.calibration import TargetMapper
+from scripts.g1.runtime_scenario import (SWEEP_AXES, SWEEP_PHASES, analyze_scenario,
+                                         axis_tracking_metrics, make_sweep_raw, phase_plan)
 
 
 class RuntimeScenarioTests(unittest.TestCase):
+    def test_axis_tracking_detects_small_response_despite_high_correlation(self):
+        target = np.tile(DEFAULT_NOMINAL, (101, 1, 1))
+        wave = 0.06 * np.sin(np.linspace(0, 2 * np.pi, 101))
+        target[:, 1, 2] += wave
+        target[:, 2, 0] += wave
+        actual = np.tile(DEFAULT_NOMINAL, (101, 1, 1))
+        actual[:, 1, 2] += 0.07 * wave
+        actual[:, 2, 0] += 0.9 * wave + 0.01
+        report = axis_tracking_metrics(target, actual)
+        self.assertEqual(set(report), {"left_hand.z", "right_hand.x"})
+        self.assertAlmostEqual(report["left_hand.z"]["ls_gain"], 0.07)
+        self.assertAlmostEqual(report["left_hand.z"]["correlation"], 1.0)
+        self.assertFalse(report["left_hand.z"]["provisional_quality_passed"])
+        self.assertAlmostEqual(report["right_hand.x"]["range_ratio"], 0.9)
+        self.assertTrue(report["right_hand.x"]["provisional_quality_passed"])
+
+    def test_sweep_mapper_excites_only_declared_axis_and_returns_neutral(self):
+        self.assertAlmostEqual(sum(duration for _, duration, _ in phase_plan(tracking_sweep=True)), 59.0)
+        mapper = TargetMapper(nominal=DEFAULT_NOMINAL)
+        mapper.update(make_sweep_raw("calibrate", 0, 0.65, 0.5))
+        mapper.update(make_sweep_raw("tracking_warmup", 0, 0.65, 2))
+        for phase, (point, axis) in SWEEP_AXES.items():
+            targets = []
+            for fraction in np.linspace(0, 1, 151):
+                raw = make_sweep_raw(phase, fraction, 0.65, 5)
+                frame = mapper.update(raw)
+                self.assertTrue(frame.enabled)
+                self.assertGreaterEqual(min(raw.grips), 0.7)
+                targets.append(frame.positions - DEFAULT_NOMINAL)
+            targets = np.asarray(targets)
+            np.testing.assert_allclose(targets[[0, -1]], 0, atol=1e-12)
+            wanted = targets[:, point, axis].copy()
+            targets[:, point, axis] = 0
+            np.testing.assert_allclose(targets, 0, atol=1e-12)
+            if (point, axis) == (0, 2):
+                self.assertLessEqual(wanted.max(), 1e-12)
+                self.assertLess(wanted.min(), -0.039)
+            else:
+                amplitude = 0.025 if point == 0 else 0.06
+                self.assertGreater(wanted.max(), 0.9 * amplitude)
+                self.assertLess(wanted.min(), -0.9 * amplitude)
+                self.assertLessEqual(np.abs(wanted).max(), amplitude + 1e-12)
+
+    def test_sweep_analysis_separates_control_states_from_tracking_quality(self):
+        # Mathematical trace fixture only; not simulator or hardware evidence.
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            rows = [dict(kind="start", scenario_mode="tracking_sweep", phase_plan=[
+                dict(phase=name, duration_s=duration, expected_enabled=enabled)
+                for name, duration, enabled in SWEEP_PHASES])]
+            mapper = TargetMapper(nominal=DEFAULT_NOMINAL)
+            wall, targets, enabled = [], [], []
+            start = 10.0
+            for phase, duration, expected in SWEEP_PHASES:
+                rows.append(dict(kind="phase_begin", phase=phase, expected_enabled=expected,
+                                 timestamp_unix_ns=round(start * 1e9)))
+                count = round(duration * 50)
+                for offset in np.arange(count) / 50:
+                    frame = mapper.update(make_sweep_raw(phase, offset / duration, 0.65, duration))
+                    sequence = len(wall)
+                    rows.append(dict(kind="frame", phase=phase, target=dict(seq=sequence,
+                        enabled=frame.enabled, target_positions_m=frame.positions.tolist())))
+                    wall.append(start + offset)
+                    targets.append(frame.positions)
+                    enabled.append(frame.enabled)
+                start += duration
+                rows.append(dict(kind="phase_end", phase=phase, timestamp_unix_ns=round(start * 1e9)))
+            rows.append(dict(kind="summary", producer_completed=True))
+            events = directory / "events.jsonl"
+            events.write_text("\n".join(json.dumps(row) for row in rows))
+            (directory / "result.json").write_text(json.dumps(dict(mode="teleop", status="teleop_stopped",
+                input_sources=["synthetic"], falls=0, manual_resets=0, physical_quest_verified=False)))
+            n = len(wall)
+            actual = np.asarray(targets).copy()
+            actual[:, 1, 2] = DEFAULT_NOMINAL[1, 2]
+            np.savez(directory / "trace.npz", wall_time=wall, input_sequence=np.arange(n),
+                input_fresh=np.ones(n, dtype=bool), manual_reset=np.zeros(n, dtype=bool), enabled=enabled,
+                done=np.zeros(n, dtype=bool), q=np.zeros((n, 29)), action=np.zeros((n, 29)),
+                target=targets, actual=actual)
+            report = analyze_scenario(events, directory)
+            self.assertTrue(report["control_state_passed"], report["checks"])
+            self.assertTrue(report["simulator_checks_passed"])
+            self.assertFalse(report["tracking_quality_passed"])
+            self.assertEqual(report["tracking_quality"]["flagged_axes"], ["left_hand.z"])
+            self.assertEqual(len(report["tracking_quality"]["axis_results"]), 9)
+            self.assertTrue(report["checks"]["no_manual_reset"]["passed"])
+            self.assertFalse(report["physical_quest_verified"])
+            json.dumps(report, allow_nan=False)
+
     def test_real_udp_outage_held_arm_reset_and_stop(self):
         with tempfile.TemporaryDirectory() as directory, UDPReceiver(port=0) as receiver:
             directory = Path(directory)

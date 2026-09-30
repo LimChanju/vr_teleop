@@ -1,0 +1,39 @@
+{
+  "verification_date": "2026-09-30",
+  "mode": "fresh_conda_install_same_host",
+  "prefix": "/home/railabchan/anaconda3/envs/g1_server_check",
+  "python": "3.10.21",
+  "no_user_site": true,
+  "isaaclab_source": "/home/railabchan/quest3_g1_teleop/vendor/IsaacLab-g1/source/isaaclab/isaaclab/__init__.py",
+  "isaaclab_commit": "91ad4944f2b7fad29d52c04a5264a082bcaad71d",
+  "versions": {
+    "isaacsim": "4.5.0.0",
+    "torch": "2.5.1+cu121",
+    "torchvision": "0.20.1+cu121",
+    "numpy": "1.26.4",
+    "rsl-rl-lib": "2.3.3",
+    "pyglet": "1.5.31"
+  },
+  "pip_check_passed": true,
+  "vr_tests_passed": 14,
+  "existing_env_cloned": false,
+  "existing_kit_license_acceptance_reused": true,
+  "fresh_requirements_correction": "Added pyglet==1.5.31 after first pip check; then installed corrected requirements into new prefix only.",
+  "physical_quest_verified": false,
+  "remote_server_verified": false,
+  "smoke": {
+    "mode": "train",
+    "stage": "sparse",
+    "status": "training_finished_evaluation_required",
+    "physical_quest_verified": false,
+    "output": "/home/railabchan/quest3_g1_teleop/runs/g1_server_check_smoke",
+    "metadata": "/home/railabchan/quest3_g1_teleop/runs/g1_server_check_smoke/run_config.json",
+    "checkpoint": "/home/railabchan/quest3_g1_teleop/runs/g1_server_check_smoke/model_final.pt",
+    "completed_iterations": 3,
+    "additional_iterations": 3,
+    "actor_max_parameter_change": 0.011395776644349098,
+    "export_max_abs_error": 4.470348358154297e-08,
+    "stop_reason": null,
+    "elapsed_seconds": 8.799941466189921
+  }
+}

@@ -132,8 +132,12 @@ def copy_evidence(folder, destination, checkpoint_hash):
     if not result_path.is_file():
         raise ValueError(f"evidence directory needs result.json: {folder}")
     result = json.loads(result_path.read_text())
-    files = [folder / name for name in ("result.json", "run_config.json", "nominal_targets.json", "trace.npz")
+    files = [folder / name for name in ("result.json", "run_config.json", "nominal_targets.json", "trace.npz",
+                                       "scenario.jsonl", "failure_events.json")
              if (folder / name).is_file()]
+    # Only the named scenario recorder and root analysis reports are added;
+    # other raw tracking logs and unrelated root JSON remain excluded.
+    files.extend(path for path in sorted(folder.glob("scenario_analysis*.json")) if path.is_file())
     analysis = folder / "analysis"
     if analysis.is_dir():
         allowed = {".json", ".png", ".svg", ".csv", ".npz", ".md", ".txt"}

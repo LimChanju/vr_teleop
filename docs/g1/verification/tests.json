@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-30",
+  "scope": "same development host; simulator integration recorded separately",
+  "unique_tests_passed_across_environments": 121,
+  "main_python_suite": {
+    "command": "PYTHONNOUSERSITE=1 $G1_PYTHON -m unittest discover -s tests/g1 -p 'test_*.py' -q",
+    "run": 121,
+    "passed": 104,
+    "skipped": 17,
+    "skipped_reason": "9 OpenVR API tests need the separate input venv; 8 XR math tests need USD library paths",
+    "log": "/tmp/g1_tests_precision_and_failures.log"
+  },
+  "input_venv_suite": {
+    "command": ".venv-alvr/bin/python -m unittest discover -s tests/g1 -p 'test_vr*.py' -q",
+    "run": 26,
+    "passed": 26,
+    "skipped": 0,
+    "scope": "Includes real OpenVR ctypes with mocked runtime APIs; not a headset connection test",
+    "log": "/tmp/g1_vr_tests_precision_and_failures.log"
+  },
+  "usd_math_suite": {
+    "run": 8,
+    "passed": 8,
+    "skipped": 0,
+    "scope": "Actual pxr/Gf bindings, mocked compositor and robot state; Kit and SteamVR not launched"
+  },
+  "physical_quest_verified": false,
+  "remote_server_verified": false
+}

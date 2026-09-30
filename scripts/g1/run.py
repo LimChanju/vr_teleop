@@ -57,6 +57,10 @@ def main():
                         help="Initialize actor/critic weights with an explicitly checked observation migration")
     parser.add_argument("--warm-start-noise", type=float, default=None)
     parser.add_argument("--rich-observations", action="store_true")
+    parser.add_argument("--precision-training", action="store_true",
+                        help="Use tighter head/hand tracking rewards and a stronger fall penalty")
+    parser.add_argument("--learning-rate", type=float,
+                        help="Explicit training optimizer learning rate (saved in run configuration)")
     parser.add_argument("--motion-file", type=Path)
     parser.add_argument("--motion-split", choices=("train", "eval"), default=None)
     parser.add_argument("--velocity-training", action="store_true",
@@ -83,6 +87,10 @@ def main():
                         help="Evaluation baseline: hold nominal joint targets")
     AppLauncher.add_app_launcher_args(parser)
     args = parser.parse_args()
+    if args.precision_training and args.mode != "train":
+        parser.error("--precision-training is a training option; evaluation restores the saved reward settings")
+    if args.learning_rate is not None and (args.mode != "train" or not 0 < args.learning_rate <= 0.01):
+        parser.error("--learning-rate requires train mode and a value in (0,0.01]")
     if args.velocity_evaluation:
         if args.mode != "evaluate":
             parser.error("--velocity-evaluation requires evaluate mode")
@@ -203,6 +211,15 @@ def main():
         cfg.seed = args.seed
         cfg.teacher = args.stage == "teacher"
         cfg.rich_observations = args.rich_observations
+        cfg.record_failure_events = args.mode == "evaluate"
+        reward_fields = ("tracking_reward_weight", "tracking_error_variance", "height_reward_weight",
+                         "height_error_variance", "fall_cost")
+        if checkpoint_meta and checkpoint_meta.get("reward_contract"):
+            for key in reward_fields:
+                setattr(cfg, key, checkpoint_meta["reward_contract"][key])
+        if args.precision_training:
+            for key, value in zip(reward_fields, (6.0, 0.01, 2.0, 0.0025, 5.0)):
+                setattr(cfg, key, value)
         if args.velocity_training:
             cfg.velocity_evaluation = args.velocity_evaluation
         cfg.motion_file = str(args.motion_file.resolve()) if args.motion_file else None
@@ -236,6 +253,11 @@ def main():
         env = SparseWrapper(raw, clip_actions=cfg.action_clip)
         obs, _ = env.get_observations()
         agent_cfg = runner_config(args.stage, args.seed, args.device)
+        if checkpoint_meta and args.mode == "train":
+            agent_cfg = copy.deepcopy(checkpoint_meta["runner"])
+            agent_cfg.update(seed=args.seed, device=args.device)
+        if args.learning_rate is not None:
+            agent_cfg["algorithm"]["learning_rate"] = args.learning_rate
         metadata = raw.policy_metadata()
         metadata.setdefault("training_velocity_limits", [0.0, 0.0, 0.0])
         if args.mode != "train" and checkpoint_meta:
@@ -292,6 +314,13 @@ def main():
             saved_info = runner.load(str(args.checkpoint), load_optimizer=args.mode == "train")
             if args.mode == "train":
                 runner.current_learning_iteration = saved_info["next_iteration"] if isinstance(saved_info, dict) and "next_iteration" in saved_info else runner.current_learning_iteration + 1
+                # RSL restores optimizer groups but not PPO's separate adaptive-LR scalar.
+                restored_lr = runner.alg.optimizer.param_groups[0]["lr"] if args.learning_rate is None else args.learning_rate
+                runner.alg.learning_rate = restored_lr
+                for group in runner.alg.optimizer.param_groups:
+                    group["lr"] = restored_lr
+                metadata["resume_learning_rate"] = restored_lr
+                write_json(output / "run_config.json", metadata)
         if args.teacher_checkpoint:
             teacher_meta = json.loads((args.teacher_checkpoint.parent / "run_config.json").read_text())
             teacher_meta.setdefault("observation_version", "sparse_positions_v1")
@@ -349,14 +378,18 @@ def main():
                     stop_reason = "time budget reached"
                     break
             delta = max((p - initial[name]).abs().max().item() for name, p in runner.alg.policy.named_parameters())
-            if not delta > 0:
-                raise RuntimeError("Training did not update policy parameters")
+            actor_prefix = "student." if args.stage == "student" else "actor."
+            actor_delta = max((p - initial[name]).abs().max().item()
+                              for name, p in runner.alg.policy.named_parameters() if name.startswith(actor_prefix))
+            if not actor_delta > 0:
+                raise RuntimeError("Training did not update actor parameters")
             runner.save(str(output / "model_final.pt"), infos={**metadata, "next_iteration": runner.current_learning_iteration})
             export_error = export_policy()
             report.update(status="training_finished_evaluation_required", checkpoint=str(output / "model_final.pt"),
                           completed_iterations=runner.current_learning_iteration,
                           additional_iterations=runner.current_learning_iteration - first_iter,
-                          actor_max_parameter_change=delta, export_max_abs_error=export_error,
+                          actor_max_parameter_change=actor_delta, policy_max_parameter_change=delta,
+                          export_max_abs_error=export_error,
                           stop_reason=stop_reason)
         elif args.mode == "export":
             report.update(status="exported", export_max_abs_error=export_policy())
@@ -466,13 +499,14 @@ def main():
                     elapsed_steps += 1
                     timeout_mask = extras.get("time_outs", torch.zeros_like(dones)).bool()
                     done_mask = dones.bool()
-                    fallen = done_mask & ~timeout_mask
+                    # A fall on the time-limit step remains a fall, counted once.
+                    fallen = raw.metrics["fallen"].bool()
                     if receiver and done_mask.any():
                         gate.trip("fall" if fallen.any() else "episode_end")
                         raw.set_external_targets(raw.current_keypoints().detach(), torch.zeros((1, 3), device=env.device), reset_velocity=True)
                         print("[G1] Simulator reset; release controls and explicitly arm again.", flush=True)
                     falls += int(fallen.sum().item())
-                    timeouts += int((done_mask & timeout_mask).sum().item())
+                    timeouts += int((done_mask & timeout_mask & ~fallen).sum().item())
                     durations.extend((elapsed_steps[done_mask].float() * raw.step_dt).cpu().tolist())
                     elapsed_steps[done_mask] = 0
                     for key, value in raw.metrics.items():
@@ -523,6 +557,14 @@ def main():
                           checkpoint=str(args.checkpoint), zero_policy=args.zero_policy)
             if velocity_stats is not None:
                 report["velocity_evaluation"] = velocity_stats.summary()
+            if cfg.record_failure_events:
+                write_json(output / "failure_events.json", {
+                    "scope": "terminated states captured before automatic reset; all environments",
+                    "total_count": raw.failure_events_total_count,
+                    "truncated_count": raw.failure_events_truncated_count,
+                    "events": raw.failure_events,
+                })
+                report["failure_events"] = str(output / "failure_events.json")
         report["elapsed_seconds"] = time.monotonic() - started
         write_json(output / "result.json", report)
         print("[G1] RESULT " + json.dumps(report, default=str), flush=True)
