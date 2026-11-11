@@ -1,0 +1,72 @@
+[
+  {
+    "path": "vendor/IsaacLab",
+    "commit": "91ad4944f2b7fad29d52c04a5264a082bcaad71d",
+    "url": "https://github.com/isaac-sim/IsaacLab.git"
+  },
+  {
+    "path": "vendor/unitree_sdk2_python",
+    "commit": "814556d15970dd2ecf1c9984e845ca02ab07e206",
+    "url": "https://github.com/unitreerobotics/unitree_sdk2_python.git"
+  },
+  {
+    "path": "vendor/unitree_sim_isaaclab",
+    "commit": "e30c25b1dffdf92ada1d6c8c1fe9a47bdde0fecc",
+    "url": "https://github.com/unitreerobotics/unitree_sim_isaaclab.git"
+  },
+  {
+    "path": "vendor/xr_teleoperate",
+    "commit": "817fb00c63cde15e5f24a0f8fa08e1e33ed89d3b",
+    "url": "https://github.com/unitreerobotics/xr_teleoperate.git"
+  },
+  {
+    "path": "TWIST2/external/GMR",
+    "commit": "bb1bbe40774794fceb2a7c579a3464a28e68c844",
+    "url": "https://github.com/YanjieZe/GMR.git"
+  },
+  {
+    "path": "TWIST2/external/SparsePoser",
+    "commit": "6d40a03d71379d59c3b0469f87e5113c6bf0d4d2",
+    "url": "https://github.com/UPC-ViRVIG/SparsePoser.git"
+  },
+  {
+    "path": "TWIST2/external/openvr-2.12.14",
+    "commit": "91825305130f446f82054c1ec3d416321ace0072",
+    "url": "https://github.com/ValveSoftware/openvr.git"
+  },
+  {
+    "path": "TWIST2/external/openvr-space-calibrator-linux",
+    "commit": "28e3f83f7bc9808f145fac03ff8a8e455ab211fe",
+    "url": "https://github.com/xi-ve/openvr-space-calibrator-linux.git"
+  },
+  {
+    "path": "TWIST2/external/vive-ultimate-tracker-sdk",
+    "commit": "8685112780734c2513c66d53b9eb104db47afcf9",
+    "url": "https://github.com/ViveRoboticsSoftware/vive-ultimate-tracker-sdk.git"
+  },
+  {
+    "path": "vendor/unitree_sim_isaaclab/teleimager",
+    "commit": "b81de448bca9c696d7ce145f4af71c66146d0b69",
+    "url": "https://github.com/unitreerobotics/teleimager"
+  },
+  {
+    "path": "vendor/xr_teleoperate/teleop/teleimager",
+    "commit": "57cf2a40572227273fa001cd17833b755331ec97",
+    "url": "https://github.com/unitreerobotics/teleimager.git"
+  },
+  {
+    "path": "vendor/xr_teleoperate/teleop/televuer",
+    "commit": "766de45e74373ae0ea66321d942ce538385655a5",
+    "url": "https://github.com/unitreerobotics/televuer"
+  },
+  {
+    "path": "TWIST2/external/openvr-space-calibrator-linux/lib/imgui",
+    "commit": "d27dce58cda087f72418f891c7f95d9ce596fd6d",
+    "url": "https://github.com/ocornut/imgui.git"
+  },
+  {
+    "path": "vendor/xr_teleoperate/teleop/robot_control/dex-retargeting",
+    "commit": "d7753d38c9ff11f80bafea6cd168351fd3db9b0e",
+    "url": "https://github.com/silencht/dex-retargeting"
+  }
+]

@@ -15,3 +15,5 @@ Drive archive는 원본 절대경로에서 선행 /를 제거한 경로를 보�
 기존 HRC 및 별도 g1_teleop_run 프로젝트는 이 vr_teleop 전용 분리본의 범위에 포함하지 않는다.
 
 Drive 업로드 파일: `01-vr-project-data-assets-env.tar.zst`, `02-vr-runtime-and-settings.tar.zst`, `03-isaac45-related-conda.tar.zst`, `04-environment-and-verification.tar.gz` 및 `SHA256SUMS`. 네 번째 파일에는 환경 export·파일 목록·Git 이력·검증/복원 도구가 있다. 새 서버에서 네 번째 파일을 먼저 풀어 안내를 읽는다.
+
+Drive 여유 공간이 약5GB이면 기존 보존용 압축본 대신 [5GB 경량 프로필](LOW_STORAGE.md)을 사용한다. 데이터·모델·보정과 고정 VR runtime은 유지하고 Isaac/Python 환경은 새 서버에서 설치한다.
