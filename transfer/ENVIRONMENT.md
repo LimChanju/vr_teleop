@@ -1,5 +1,7 @@
 # 실행 환경 확인
 
+새 서버의 합의된 목표 구조는 [새 서버 환경 분리 기준](NEW_SERVER_ENVIRONMENT.md)을 따른다. 아래 표와 package origin은 **기존 서버의 재현 기록**이며 새 서버에서 그대로 사용할 환경 설계가 아니다.
+
 실제 interpreter와 package origin을 읽어 확인했다. VR/Isaac 프로세스를 시작하지 않았다.
 
 | 실행 경로 | Python | 패키지 공유 |
@@ -17,6 +19,6 @@ ALVR/Browser venv의 base_prefix가 isaac_vr인 것은 생성한 Python의 출�
 
 Isaac launcher의 conda_env_exec.sh는 VIRTUAL_ENV와 해당 PATH를 제거한 뒤 unitree_sim_env를 activate한다. 이 방어 처리는 기존 Git commit 33c03ba에 있으며, 새 이식 작업에서 만든 변경은 아니다. launcher_python override나 일반 python 수동 실행 등 모든 과거 실행이 같았음을 보장하는 검사는 아니다.
 
-새 서버에서는 기존 환경을 그대로 겹쳐 activate하지 말고 실행기에 지정된 Python을 사용한다. prefix가 달라지면 venv symlink, shebang, editable install, activation hook, build cache의 절대경로도 점검한다. venv binary는 원본 비교용으로 보존하며 재생성에는 해당 Conda base/export와 venv 추가 의존성을 함께 사용한다.
+원본 재현 시에는 실행기에 지정된 Python을 사용한다. prefix가 달라지면 venv symlink, shebang, editable install, activation hook, build cache의 절대경로도 점검한다. venv binary와 Conda base/export는 원본 비교·의존성 확인 자료로 보존한다. 새 서버에서는 VR/센서 및 robot I/O에 각각 독립 venv를 만들고, 과거 SparsePoser의 Conda 상속 구조는 새 설치 절차로 교체한다.
 
 현재 4.5 코드와 환경은 수정하지 않았다. Isaac6.2용 Python/XR 환경 구성은 이후 별도 작업이다.

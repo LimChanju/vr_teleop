@@ -12,6 +12,8 @@ Drive archive는 원본 절대경로에서 선행 /를 제거한 경로를 보�
 
 [환경 공유 구조](ENVIRONMENT.md)를 먼저 읽는다. 실제 캘리브레이션과 신뢰 장치/개인키는 GitHub에 포함하지 않았다.
 
+새 서버는 [합의된 환경 분리 기준](NEW_SERVER_ENVIRONMENT.md)에 따라 simulation/RL을 Conda 계열 또는 Pixi, VR/센서와 실제 로봇 연결을 각각 독립 venv로 구성한다. 기존 환경 export는 원본 참고 자료다.
+
 기존 HRC 및 별도 g1_teleop_run 프로젝트는 이 vr_teleop 전용 분리본의 범위에 포함하지 않는다.
 
 Drive 업로드 파일: `01-vr-project-data-assets-env.tar.zst`, `02-vr-runtime-and-settings.tar.zst`, `03-isaac45-related-conda.tar.zst`, `04-environment-and-verification.tar.gz` 및 `SHA256SUMS`. 네 번째 파일에는 환경 export·파일 목록·Git 이력·검증/복원 도구가 있다. 새 서버에서 네 번째 파일을 먼저 풀어 안내를 읽는다.

@@ -56,7 +56,7 @@ python3 restore/restore_dependency_git.py --workspace /새경로/vr_teleop --res
 
 이 도구는 공개 upstream에서 고정 commit을 fetch하고 **없는 tracked 파일만** 채운다. 이미 다른 HEAD/origin이 있는 경로는 변경하지 않고 중단/보고한다. 기본값(`--restore-git` 생략)은 읽기 전용 검사다. 실제 old host에서는 읽기 전용 확인만 수행했고, 쓰기 동작은 임시 fixture에서 기존 파일·사용자 데이터를 보존하는지 검증했다.
 
-6. 원본 실행을 재현하려면 Isaac4.5와 관련 Conda/Python 환경을 환경 export/기존 README 기준으로 설치한다. clone의 `_isaac_sim` 링크·Conda activation hook·venv·editable install·build cache를 새 prefix로 만든다. `.venv-sparseposer`는 `.conda-vr`를 상속하므로 부모 환경을 먼저 구성한다. ALVR/Browser venv도 새 base Python으로 재생성한다.
+6. **새 서버 환경은 [합의된 분리 기준](NEW_SERVER_ENVIRONMENT.md)을 먼저 적용한다.** simulation/RL은 Conda 계열 또는 Pixi, VR/센서와 실제 로봇 I/O는 각각 독립 venv로 구성한다. 환경 export는 과거 dependency를 확인하는 자료이며 과거 `.venv-sparseposer`의 Conda 상속을 새 서버에서 그대로 재생성하지 않는다. 현재 setup/실행기의 결합 부분은 이전 후 별도 변경이 필요하다. `_isaac_sim` 링크·editable install·build cache 등의 prefix도 새 설치 위치에 맞춘다. 원본4.5 동작 재현과6.2 이식은 구분한다.
 7. ALVR/Steam client·시스템 GPU/udev 권한을 준비하고, 보존한 Scout/Sniper·고정 SteamVR와 driver/wrapper 경로를 맞춘다. `openvrpaths.vrpath`와 OpenXR active_runtime symlink는 옛 절대경로다. 특히 active_runtime은 제외한 Steam 관리본을 가리킬 수 있으므로 고정2.12.14의 `steamxr_linux64.json`과 XR_RUNTIME_JSON을 확인한다.
 8. ALVR 첫 영상과 양손 입력 확인 뒤 VIVE bridge를 시작한다. 새 방/장착에서는 SpaceCal·T-pose를 재검증한다. 기존 보정의 보존이 새 공간에서의 유효성을 보장하지는 않는다.
 
