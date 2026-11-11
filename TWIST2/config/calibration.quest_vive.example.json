@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "calibrated": false,
+  "calibration_id": "UNSET",
+  "source_frame": "vive_hub_world",
+  "target_frame": "openvr_standing",
+  "source_to_target_matrix": [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0]
+  ],
+  "warning": "This identity is not usable. Run vive-linux-align with one tracker rigidly attached to a Quest controller."
+}

@@ -1,0 +1,27 @@
+{
+  "action_manifest_version": 1,
+  "alias_info": {},
+  "bindings": {
+    "/actions/teleop": {
+      "poses": [
+        { "path": "/user/hand/left/pose/tip", "output": "/actions/teleop/in/left_aim_pose" },
+        { "path": "/user/hand/right/pose/tip", "output": "/actions/teleop/in/right_aim_pose" }
+      ],
+      "sources": [
+        { "path": "/user/hand/left/input/trigger", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/left_trigger" } } },
+        { "path": "/user/hand/left/input/grip", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/left_grip" } } },
+        { "path": "/user/hand/left/input/joystick", "mode": "joystick", "inputs": { "position": { "output": "/actions/teleop/in/left_thumbstick" }, "click": { "output": "/actions/teleop/in/left_thumbstick_click" } } },
+        { "path": "/user/hand/left/input/x", "mode": "button", "inputs": { "click": { "output": "/actions/teleop/in/left_primary" } } },
+        { "path": "/user/hand/left/input/y", "mode": "button", "inputs": { "click": { "output": "/actions/teleop/in/left_secondary" } } },
+        { "path": "/user/hand/right/input/trigger", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/right_trigger" } } },
+        { "path": "/user/hand/right/input/grip", "mode": "trigger", "inputs": { "pull": { "output": "/actions/teleop/in/right_grip" } } },
+        { "path": "/user/hand/right/input/joystick", "mode": "joystick", "inputs": { "position": { "output": "/actions/teleop/in/right_thumbstick" }, "click": { "output": "/actions/teleop/in/right_thumbstick_click" } } },
+        { "path": "/user/hand/right/input/a", "mode": "button", "inputs": { "click": { "output": "/actions/teleop/in/right_primary" } } },
+        { "path": "/user/hand/right/input/b", "mode": "button", "inputs": { "click": { "output": "/actions/teleop/in/right_secondary" } } }
+      ]
+    }
+  },
+  "controller_type": "oculus_touch",
+  "description": "Quest Touch controls for TWIST2 simulation teleoperation",
+  "name": "TWIST2 Quest Touch"
+}

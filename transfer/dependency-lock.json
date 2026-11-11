@@ -1,0 +1,62 @@
+[
+  {
+    "path": ".",
+    "url": "https://github.com/LimChanju/vr_teleop.git",
+    "commit": "7746861e730a71201ed4acd7393a7d760c5c009e"
+  },
+  {
+    "path": "TWIST2",
+    "url": "https://github.com/amazon-far/TWIST2.git",
+    "commit": "514564b50748a4ae5cc3c09dcc1ad21f05353118"
+  },
+  {
+    "path": "TWIST2/external/GMR",
+    "url": "https://github.com/YanjieZe/GMR.git",
+    "commit": "bb1bbe40774794fceb2a7c579a3464a28e68c844"
+  },
+  {
+    "path": "TWIST2/external/SparsePoser",
+    "url": "https://github.com/UPC-ViRVIG/SparsePoser.git",
+    "commit": "6d40a03d71379d59c3b0469f87e5113c6bf0d4d2"
+  },
+  {
+    "path": "TWIST2/external/openvr",
+    "url": "https://github.com/ValveSoftware/openvr.git",
+    "commit": "0924064316de3effbcd1acf1e309182a2deb1c05"
+  },
+  {
+    "path": "TWIST2/external/openvr-2.12.14",
+    "url": "https://github.com/ValveSoftware/openvr.git",
+    "commit": "91825305130f446f82054c1ec3d416321ace0072"
+  },
+  {
+    "path": "TWIST2/external/openvr-space-calibrator-linux",
+    "url": "https://github.com/xi-ve/openvr-space-calibrator-linux.git",
+    "commit": "28e3f83f7bc9808f145fac03ff8a8e455ab211fe"
+  },
+  {
+    "path": "TWIST2/external/vive-ultimate-tracker-sdk",
+    "url": "https://github.com/ViveRoboticsSoftware/vive-ultimate-tracker-sdk.git",
+    "commit": "8685112780734c2513c66d53b9eb104db47afcf9"
+  },
+  {
+    "path": "vendor/IsaacLab",
+    "url": "https://github.com/isaac-sim/IsaacLab.git",
+    "commit": "91ad4944f2b7fad29d52c04a5264a082bcaad71d"
+  },
+  {
+    "path": "vendor/unitree_sdk2_python",
+    "url": "https://github.com/unitreerobotics/unitree_sdk2_python.git",
+    "commit": "814556d15970dd2ecf1c9984e845ca02ab07e206"
+  },
+  {
+    "path": "vendor/unitree_sim_isaaclab",
+    "url": "https://github.com/unitreerobotics/unitree_sim_isaaclab.git",
+    "commit": "e30c25b1dffdf92ada1d6c8c1fe9a47bdde0fecc"
+  },
+  {
+    "path": "vendor/xr_teleoperate",
+    "url": "https://github.com/unitreerobotics/xr_teleoperate.git",
+    "commit": "817fb00c63cde15e5f24a0f8fa08e1e33ed89d3b"
+  }
+]

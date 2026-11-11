@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "max_stale_s": 0.2,
+  "notes": "Quest arm direct-input validation. Pose smoothing and synthetic linear/angular speed rejection were removed; OpenVR validity, monotonic timestamps, reconnect, and stale tracking checks remain active."
+}

@@ -1,0 +1,79 @@
+{
+  "twist2": {
+    "url": "https://github.com/amazon-far/TWIST2.git",
+    "commit": "b06178f19a22f2138cbd31f60c6d494bc263f67d",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2"
+  },
+  "sparseposer": {
+    "url": "https://github.com/UPC-ViRVIG/SparsePoser.git",
+    "commit": "6d40a03d71379d59c3b0469f87e5113c6bf0d4d2",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2/external/SparsePoser",
+    "code_license": "MIT",
+    "weights_and_data_license": "CC BY-SA 4.0",
+    "model": "python/models/model_xsens (generator + learned IK)",
+    "sha256": {
+      "generator.pt": "c90fb4cce16a3751bc0f3252686dc6f5ca5a76b10ba8c6731f8309779e4d92c5",
+      "ik.pt": "efc6ed9b7fd8dd576e1745b76806eae6b436ad7c3799fea37fdfb817cec496b0",
+      "data.pt": "4505c7957f8504eeb7d7882227de3e9eebee2dbde2a4c6b5d852cf0c5dbddeb9",
+      "male_170_85.txt": "0dfb4de222dc3a09cc0aa9c7925d643151a687845cc79afc458aa5881e4d4200"
+    },
+    "note": "Unmodified official code/weights; local six-input wrapper and separate bilateral shin refinement. Not retrained as an eight-input model. Inference/preview only; no GMR or robot publishing from this entry point."
+  },
+  "gmr": {
+    "url": "https://github.com/YanjieZe/GMR.git",
+    "commit": "bb1bbe40774794fceb2a7c579a3464a28e68c844",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2/external/GMR"
+  },
+  "vive_ultimate_tracker_linux_sdk": {
+    "url": "https://github.com/ViveRoboticsSoftware/vive-ultimate-tracker-sdk.git",
+    "commit": "8685112780734c2513c66d53b9eb104db47afcf9",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2/external/vive-ultimate-tracker-sdk",
+    "note": "Unmodified upstream reference. Runtime integration targets VIVE Hub Linux VUT protocol v1."
+  },
+  "vive_hub_linux": {
+    "url": "https://github.com/ViveRoboticsSoftware/vivehub-linux",
+    "version": "v1.0.3",
+    "x86_64_sha256": "4bd87a7d7cb7d580a8dce0a5b2b5d4c32c1bd44822fec4a7bbf5971da277bc07",
+    "install_location": "/home/railab/Desktop/vr_teleop/TWIST2/external/VIVEHub-Linux-v1.0.3",
+    "note": "Proprietary beta downloaded only after explicit EULA acknowledgement; not committed."
+  },
+  "space_calibrator_linux": {
+    "url": "https://github.com/xi-ve/openvr-space-calibrator-linux.git",
+    "commit": "28e3f83f7bc9808f145fac03ff8a8e455ab211fe",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2/external/openvr-space-calibrator-linux",
+    "note": "Unmodified upstream plus pinned ImGui submodule. Built out of tree; local VUT-to-OpenVR driver is separate in tools/vut_openvr."
+  },
+  "openvr_sdk": {
+    "url": "https://github.com/ValveSoftware/openvr.git",
+    "commit": "0924064316de3effbcd1acf1e309182a2deb1c05",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2/external/openvr",
+    "note": "Original unmodified SDK checkout preserved. Superseded for builds by openvr_sdk_steamvr_2_12_14: this SDK requests IVRSystem_026, unavailable in SteamVR 2.12.14."
+  },
+  "openvr_sdk_steamvr_2_12_14": {
+    "url": "https://github.com/ValveSoftware/openvr.git",
+    "tag": "v2.12.14",
+    "commit": "91825305130f446f82054c1ec3d416321ace0072",
+    "checked_out_at": "/home/railab/Desktop/vr_teleop/TWIST2/external/openvr-2.12.14",
+    "note": "Unmodified release, IVRSystem_023. Selected build dependency for xi-ve UI and subsequent separate tracker driver builds; no xi-ve source patch. UI runtime search path prioritizes host GLVND (/usr/lib/x86_64-linux-gnu) over conda GLX to avoid ImGui loader failure."
+  },
+  "steamvr_pinned": {
+    "version": "2.12.14",
+    "build_id": "19617312",
+    "version_timestamp": "1755290071",
+    "install_location": "runtime/steamvr-2.12.14",
+    "source": "Valve Steam CDN, fixed depot manifests, anonymous licensed download via DepotDownloader 3.4.0",
+    "depot_manifests": {
+      "250823": "1611892435221362243",
+      "250824": "68568225326918729",
+      "250827": "9126840328386630080",
+      "250828": "7972087267127211047",
+      "250830": "7391958373704501609",
+      "250832": "710963398945632302"
+    },
+    "note": "Separate from Steam-managed install. Unmodified Valve binaries; executable permissions restored and standard ALVR 20.14.1 compositor wrapper symlink installed. Optional retired depot 250829 (resources/readme.txt, 22 bytes) unavailable anonymously and omitted. Core binary hashes: config/steamvr_2.12.14.sha256."
+  },
+  "checkpoint": {
+    "path": "assets/ckpts/twist2_1017_20k.onnx",
+    "sha256": "2d1fb3a31e4e967f70ecfefc3ad1e7b2ac491677068b89f60b565a94e7735061"
+  }
+}

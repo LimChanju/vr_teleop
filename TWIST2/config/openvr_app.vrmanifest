@@ -1,0 +1,18 @@
+{
+  "source": "builtin",
+  "applications": [
+    {
+      "app_key": "io.github.amazon-far.twist2.vr_input",
+      "is_self_identified": true,
+      "launch_type": "binary",
+      "binary_path_linux": "../scripts/run_live_dry.sh",
+      "arguments": "",
+      "action_manifest_path": "openvr_actions.json",
+      "strings": {
+        "en_us": {
+          "name": "TWIST2 Quest input"
+        }
+      }
+    }
+  ]
+}

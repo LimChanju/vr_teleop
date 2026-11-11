@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "mode": "sparse_kinematic_estimate",
+  "minimum_measured_roles": ["Head", "Pelvis", "Left_Wrist", "Right_Wrist", "Left_Foot", "Right_Foot"],
+  "left_elbow_bend_hint": [0.0, 1.0, -0.2],
+  "right_elbow_bend_hint": [0.0, -1.0, -0.2],
+  "knee_bend_hint": [1.0, 0.0, 0.0],
+  "neutral_positions_m": {
+    "Pelvis": [0.0, 0.0, 0.95],
+    "Left_Hip": [0.0, 0.10, 0.90],
+    "Right_Hip": [0.0, -0.10, 0.90],
+    "Left_Knee": [0.03, 0.10, 0.50],
+    "Right_Knee": [0.03, -0.10, 0.50],
+    "Left_Foot": [0.08, 0.10, 0.05],
+    "Right_Foot": [0.08, -0.10, 0.05],
+    "Spine3": [0.0, 0.0, 1.38],
+    "Left_Shoulder": [0.0, 0.24, 1.48],
+    "Right_Shoulder": [0.0, -0.24, 1.48],
+    "Left_Elbow": [0.04, 0.43, 1.35],
+    "Right_Elbow": [0.04, -0.43, 1.35],
+    "Left_Wrist": [0.25, 0.48, 1.25],
+    "Right_Wrist": [0.25, -0.48, 1.25],
+    "Head": [0.0, 0.0, 1.70]
+  },
+  "warning": "Only configured tracker roles are measured; all other joints are explicitly estimated and this mode is simulation-only until validated."
+}

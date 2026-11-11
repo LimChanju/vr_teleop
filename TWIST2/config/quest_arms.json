@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "profile": "quest_arms_sim_only",
+  "required_devices": ["Head", "Left_Wrist", "Right_Wrist"],
+  "ignore_extra_trackers": true,
+  "grip_press_threshold": 0.65,
+  "grip_release_threshold": 0.35,
+  "neutral_samples": 15,
+  "neutral_duration_s": 0.25,
+  "neutral_max_position_std_m": 0.015,
+  "ik_root_height_m": 0.793,
+  "reference_root_height_m": 0.8,
+  "ik_iterations": 30,
+  "ik_damping": 0.01,
+  "orientation_tracking": false,
+  "notes": "Simulation-only direct arm test: fixed root/legs/waist/wrists; Touch translation is passed 1:1 to shoulder pitch/roll/yaw and elbow IK without pose smoothing, Cartesian clipping, target/joint slew, joint-limit margin, neutral regularization, or residual projection. HMD yaw is captured once and never applied per-frame. The G1 XML joint ranges remain physical constraints."
+}

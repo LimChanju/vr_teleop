@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "default_input": "mock",
+  "default_sink": "dry_run",
+  "robot_hardware_enabled": false,
+  "redis_simulation_host": "localhost",
+  "control_frequency_hz": 50,
+  "reference_timeout_s": 0.2,
+  "notes": "The official pretrained ONNX is a student controller. Physical Unitree SDK communication is intentionally absent from twist2_vr."
+}

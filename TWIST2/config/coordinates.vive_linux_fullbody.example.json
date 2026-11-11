@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "profile": "quest_vive_linux_fullbody",
+  "source_frame": "openvr_standing",
+  "target_frame": "twist2_world",
+  "source_convention": "+X right, +Y up, -Z forward; meters; quaternion xyzw",
+  "target_convention": "+X forward, +Y left, +Z up; meters; quaternion xyzw",
+  "axis_matrix": [
+    [0.0, 0.0, -1.0],
+    [-1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0]
+  ],
+  "position_scale": 1.0,
+  "translation_m": [0.0, 0.0, 0.0],
+  "mounts_calibrated": false,
+  "tracker_to_body": {
+    "Head": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Left_Wrist": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Right_Wrist": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Pelvis": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Left_Knee": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Right_Knee": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Left_Foot": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]},
+    "Right_Foot": {"translation_m": [0.0, 0.0, 0.0], "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]}
+  },
+  "warning": "Zero mount transforms are dry-run placeholders. Measure device-to-anatomical transforms before enabling simulation publication."
+}

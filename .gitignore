@@ -9,3 +9,20 @@ __pycache__/
 *.key
 .env
 .env.*
+
+# Private runtime/data, supplied by the separate Drive payload.
+/TWIST2/assets/
+/TWIST2/external/
+/TWIST2/runtime/
+/TWIST2/config/local/
+/TWIST2/.conda-vr/
+/TWIST2/.venv-sparseposer/
+/TWIST2/.spacecal-build-env/
+/migration/
+**/.pytest_cache/
+**/*.egg-info/
+*.hdf5
+*.npz
+*.pt
+*.onnx
+*.mp4

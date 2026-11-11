@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Read corrected OpenVR poses directly; never reapply calibration.quest_vive.json.
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$ROOT"
+exec "$ROOT/.conda-vr/bin/python" -u -m twist2_vr.mount_capture "$@" --source openvr

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "profile": "vive_linux_fullbody",
+  "runtime": "vive_hub_linux_vut_v1",
+  "socket": "/tmp/vut.sock",
+  "automatic_quest_roles": {
+    "hmd": "Head",
+    "left_touch_controller": "Left_Wrist",
+    "right_touch_controller": "Right_Wrist"
+  },
+  "serial_to_role": {
+    "REPLACE_WITH_PELVIS_TRACKER_SERIAL": "Pelvis",
+    "REPLACE_WITH_LEFT_KNEE_TRACKER_SERIAL": "Left_Knee",
+    "REPLACE_WITH_RIGHT_KNEE_TRACKER_SERIAL": "Right_Knee",
+    "REPLACE_WITH_LEFT_FOOT_TRACKER_SERIAL": "Left_Foot",
+    "REPLACE_WITH_RIGHT_FOOT_TRACKER_SERIAL": "Right_Foot"
+  },
+  "allowed_roles": [
+    "Pelvis", "Left_Knee", "Right_Knee", "Left_Foot", "Right_Foot"
+  ],
+  "required_tracker_roles": [
+    "Pelvis", "Left_Knee", "Right_Knee", "Left_Foot", "Right_Foot"
+  ],
+  "simulation_publish_verified": false,
+  "warning": "Map stable Pose.serial values only. VUT device_id 1..5 is a dongle slot and must never be used as persistent identity."
+}

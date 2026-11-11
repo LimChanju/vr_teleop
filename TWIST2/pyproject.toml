@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twist2-vr-adapter"
+version = "0.1.0"
+description = "Hardware-isolated VR tracker adapter for the official TWIST2 G1 pipeline"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.23,<2.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+openvr = ["openvr==2.12.1401"]
+vr-render = ["openvr==2.12.1401", "PyOpenGL>=3.1.10,<4", "glfw>=2.10,<3", "mujoco>=3.3,<4"]
+redis = ["redis[hiredis]>=5,<7"]
+validation = ["onnx>=1.16,<2", "onnxruntime>=1.18,<2"]
+
+[project.scripts]
+twist2-vr = "twist2_vr.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["twist2_vr*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/vr_adapter"]
+addopts = "-q"

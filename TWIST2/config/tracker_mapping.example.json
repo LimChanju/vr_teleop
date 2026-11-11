@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "runtime": "openvr",
+  "automatic_roles": {
+    "hmd": "Head",
+    "left_controller": "Left_Wrist",
+    "right_controller": "Right_Wrist"
+  },
+  "serial_to_role": {
+    "REPLACE_WITH_PELVIS_TRACKER_SERIAL": "Pelvis",
+    "REPLACE_WITH_LEFT_FOOT_TRACKER_SERIAL": "Left_Foot",
+    "REPLACE_WITH_RIGHT_FOOT_TRACKER_SERIAL": "Right_Foot"
+  },
+  "allowed_roles": [
+    "Head", "Pelvis", "Spine3",
+    "Left_Hip", "Right_Hip", "Left_Knee", "Right_Knee",
+    "Left_Foot", "Right_Foot",
+    "Left_Shoulder", "Right_Shoulder", "Left_Elbow", "Right_Elbow",
+    "Left_Wrist", "Right_Wrist"
+  ],
+  "warning": "Device indexes are not stable. Replace placeholders with serial numbers reported by live-inventory."
+}

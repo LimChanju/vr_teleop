@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "profile": "vive_fullbody",
+  "runtime": "openvr",
+  "automatic_roles": {
+    "hmd": "Head",
+    "left_touch_controller": "Left_Wrist",
+    "right_touch_controller": "Right_Wrist"
+  },
+  "serial_to_role": {
+    "REPLACE_WITH_PELVIS_TRACKER_SERIAL": "Pelvis",
+    "REPLACE_WITH_LEFT_FOOT_TRACKER_SERIAL": "Left_Foot",
+    "REPLACE_WITH_RIGHT_FOOT_TRACKER_SERIAL": "Right_Foot"
+  },
+  "allowed_roles": [
+    "Head", "Pelvis", "Spine3",
+    "Left_Hip", "Right_Hip", "Left_Knee", "Right_Knee",
+    "Left_Foot", "Right_Foot",
+    "Left_Shoulder", "Right_Shoulder", "Left_Elbow", "Right_Elbow",
+    "Left_Wrist", "Right_Wrist"
+  ],
+  "minimum_sparse_roles": [
+    "Head", "Pelvis", "Left_Wrist", "Right_Wrist", "Left_Foot", "Right_Foot"
+  ],
+  "simulation_publish_verified": false,
+  "warning": "Replace serial placeholders after live-inventory. This profile stays dry-run until mount calibration and recorded-replay stability validation pass."
+}

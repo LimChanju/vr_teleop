@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "max_stale_s": 0.2,
+  "notes": "Direct-input validation for mock/replay/live/full-body dry-run paths. Pose smoothing and synthetic speed rejection were removed; validity, monotonic timestamp, reconnect, and stale checks remain active."
+}
